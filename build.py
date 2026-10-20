@@ -1,0 +1,69 @@
+"""Build a portable static classroom website. Python standard library only."""
+from pathlib import Path
+import json,html,shutil,hashlib
+
+ROOT=Path(__file__).resolve().parent
+DIST=ROOT/'dist'
+data=json.loads((ROOT/'site.json').read_text())
+if DIST.exists():shutil.rmtree(DIST)
+DIST.mkdir()
+shutil.copytree(ROOT/'assets',DIST/'assets')
+(DIST/'.nojekyll').write_text('')
+E=html.escape
+style_version=hashlib.sha256((ROOT/'assets/reference.css').read_bytes()+(ROOT/'assets/site.css').read_bytes()).hexdigest()[:12]
+icon='''<svg class="brand-mark" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 24V4M4 24h20" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 24 21 8" fill="none" stroke="var(--teal)" stroke-width="2.6"/><circle cx="21" cy="8" r="3.3" fill="var(--coral)"/></svg>'''
+
+def document(title,desc,body,prefix,lesson=False,pdfasset=None):
+    assets=prefix+'assets/'
+    pdf=f'<a class="header-query-link" href="{assets}{E(pdfasset)}" download>نسخهٔ PDF <span aria-hidden="true">↓</span></a>' if pdfasset else f'<a class="header-query-link" href="{prefix}index.html#classes">همهٔ کلاس‌ها <span aria-hidden="true">←</span></a>'
+    course_nav=''.join(f'<a href="{prefix}{E(c["slug"])}/">{E(c["title"])}</a>' for c in data['courses'])
+    return f'''<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="{E(desc,quote=True)}"><meta name="theme-color" content="#f3f6f1"><title>{E(title)} | دفتر کلاس</title>
+<link rel="icon" href="{assets}favicon.svg"><link rel="preload" href="{assets}fonts/Vazirmatn-Regular.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="{assets}reference.css?v={style_version}"><link rel="stylesheet" href="{assets}site.css?v={style_version}">{f'<link rel="stylesheet" href="{assets}katex/katex.min.css"><script defer src="{assets}katex/katex.min.js"></script>' if lesson else ''}<script defer src="{assets}app.js"></script></head>
+<body><a class="skip-link" href="#main">رفتن به محتوای اصلی</a>{'<div id="reading-progress" aria-hidden="true"></div>' if lesson else ''}
+<header class="site-header"><div class="shell header-inner"><a class="brand" href="{prefix}index.html" aria-label="دفتر کلاس، صفحهٔ اصلی">{icon}<span>دفتر کلاس</span></a><button type="button" class="menu-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="باز کردن فهرست">فهرست <span aria-hidden="true">☰</span></button><nav class="site-nav" id="main-nav" aria-label="پیمایش اصلی"><a href="{prefix}index.html#classes">کلاس‌ها</a>{course_nav}{'<a href="#exercise">تمرین این درس</a>' if lesson and 'id="exercise"' in body else ''}</nav>{pdf}</div></header>
+<main id="main">{body}</main><footer class="site-footer"><div class="shell"><a class="brand" href="{prefix}index.html">{icon}<span>دفتر کلاس</span></a><p>برای فهمیدن، تمرین کردن و دوباره برگشتن.</p><a href="#top">بازگشت به بالا ↑</a></div></footer><div id="toast" role="status" aria-live="polite"></div></body></html>'''
+
+def figure(prefix):
+    return f'''<figure class="hero-figure"><div class="figure-topline"><span class="figure-label">فضای ویژگی‌ها</span><span class="figure-status"><span class="status-dot" aria-hidden="true"></span>یک پرس‌وجو، چند نمونه</span></div><img src="{prefix}assets/hero-space.svg" width="520" height="400" alt="نمای مفهومیِ هشت نمونه و یک پرس‌وجو در فضای سه‌ویژگی"><figcaption>نمای مفهومی؛ جایگاه نقاط، نمایش واقعی جدولِ تمرین نیست.</figcaption></figure>'''
+
+cards=[]
+total=sum(len(c['lessons']) for c in data['courses'])
+for course in data['courses']:
+    lessons=course['lessons']; first=lessons[0]
+    tags=' '.join(t for l in lessons for t in l['tags'])
+    cards.append(f'''<article class="course-card" data-search="{E(course['title']+' '+course['description']+' '+tags,quote=True)}"><div class="course-card-copy"><div class="course-card-meta"><span class="course-type">کلاس</span><span>{len(lessons)} یادداشت منتشرشده</span></div><h3><a href="{course['slug']}/">{E(course['title'])}</a></h3><p>{E(course['description'])}</p><a class="text-link" href="{course['slug']}/">ورود به کلاس <span aria-hidden="true">←</span></a></div><div class="course-latest"><span class="latest-label">از اینجا شروع کنید</span><span class="lesson-number" dir="ltr">{first['number']}</span><a href="{course['slug']}/{first['slug']}/">{E(first['title'])}</a><div class="tag-list">{''.join('<span>'+E(t)+'</span>' for t in first['tags'])}</div></div></article>''')
+home=f'''<section class="hero" id="top"><div class="shell hero-grid"><div class="hero-copy"><p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span>یادداشت‌های کلاس</p><h1>یک جا برای<br><em>یاد گرفتن.</em></h1><p class="hero-lede">درس‌ها را با حوصله بخوانید، کدها را امتحان کنید و با تمرین جلو بروید. اینجا نقطهٔ شروعِ جزوه‌ها و مطالب کلاس است.</p><div class="hero-actions"><a class="button-primary" href="#classes">کلاس‌ها را ببینید <span aria-hidden="true">←</span></a><p class="hero-meta"><span>{len(data['courses'])} کلاس</span><span>{total} جزوه</span><span>فارسی و همراه با کد</span></p></div></div>{figure('')}</div><div class="shell"><ul class="hero-strip"><li><span class="strip-number">01</span><span class="strip-text">بخوانید؛ از یک سؤال روشن شروع کنید.</span></li><li><span class="strip-number">02</span><span class="strip-text">اجرا کنید؛ هر خط کد را بفهمید.</span></li><li><span class="strip-number">03</span><span class="strip-text">تمرین کنید؛ پاسخ را خودتان بسازید.</span></li></ul></div></section>
+<section class="shell catalog-section" id="classes" aria-labelledby="classes-title"><div class="catalog-head"><div><p class="section-kicker"><span>کلاس‌ها</span>مسیر یادگیری شما</p><h2 id="classes-title">کلاس را انتخاب کنید.</h2></div><div class="catalog-search"><label for="course-search">جست‌وجو در کلاس‌ها و موضوع‌ها</label><div><input type="search" id="course-search" placeholder="مثلاً NumPy یا بردار…" autocomplete="off"><button type="button" id="clear-search" aria-label="پاک کردن جست‌وجو" hidden>×</button></div></div></div><div class="course-grid">{''.join(cards)}</div><p id="search-empty" class="empty-state" hidden>نتیجه‌ای پیدا نشد. عبارت دیگری بنویسید.</p><p id="search-status" class="sr-only" aria-live="polite"></p></section>'''
+(DIST/'index.html').write_text(document('کلاس‌ها',data['description'],home,''))
+
+for course in data['courses']:
+    course_dir=DIST/course['slug'];course_dir.mkdir()
+    lesson_cards=[]
+    for lesson in course['lessons']:
+        lesson_cards.append(f'''<article class="lesson-list-card"><span class="lesson-number" dir="ltr">{lesson['number']}</span><div><p class="table-kicker">جزوهٔ آموزشی</p><h3><a href="{lesson['slug']}/">{E(lesson['title'])}</a></h3><p>{E(lesson['description'])}</p><div class="tag-list">{''.join('<span>'+E(t)+'</span>' for t in lesson['tags'])}</div></div><a class="text-link" href="{lesson['slug']}/">مطالعهٔ جزوه <span aria-hidden="true">←</span></a></article>''')
+        prefix='../../';assets=prefix+'assets/'
+        rail=''.join(f'<li><a href="#{s["id"]}" data-rail="{s["id"]}"><span class="rail-num">{i:02}</span><span>{E(s["label"])}</span></a></li>' for i,s in enumerate(lesson['sections'],1))
+        mobile=''.join(f'<a href="#{s["id"]}">{E(s["label"])}</a>' for s in lesson['sections'])
+        inner=(ROOT/lesson['source']).read_text().replace('{{ASSETS}}',assets)
+        intro=lesson['hero_intro'].replace('class=""','class="hero-lede"',1)
+        hero_title=lesson.get('hero_title',E(lesson['title']))
+        start_id=lesson['sections'][0]['id']
+        hero_meta=''.join('<span>'+E(t)+'</span>' for t in lesson.get('hero_meta',lesson['tags']))
+        takeaway_items=''.join(f'<li><span class="strip-number">{i:02}</span><span class="strip-text">{E(t)}</span></li>' for i,t in enumerate(lesson.get('takeaways',[]),1))
+        takeaway_strip=f'<div class="shell"><ul class="hero-strip">{takeaway_items}</ul></div>' if takeaway_items else ''
+        teaching_fact=f'<div class="rail-fact"><p>دادهٔ مرجع کلاس</p><strong dir="ltr">{E(lesson["teaching_shape"])}</strong><span>{E(lesson.get("teaching_shape_note",""))}</span></div>' if lesson.get('teaching_shape') else ''
+        download=f'<a class="rail-download" href="{assets}{E(lesson["pdf"])}" download>دریافت جزوهٔ PDF ↓</a>' if lesson.get('pdf') else ''
+        hero_figure=figure(prefix) if lesson.get('hero_figure') else ''
+        hero_grid='hero-grid' if hero_figure else 'hero-grid hero-grid--single'
+        body=f'''<section class="hero lesson-hero" id="top"><div class="shell {hero_grid}"><div class="hero-copy"><a class="breadcrumb" href="../">{E(course['title'])} <span aria-hidden="true">/</span> یادداشت {lesson['number']}</a><p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span>{E(lesson['subtitle'])}</p><h1>{hero_title}</h1>{intro}<div class="hero-actions"><a class="button-primary" href="#{start_id}">شروع مطالعه <span aria-hidden="true">←</span></a><p class="hero-meta">{hero_meta}</p></div></div>{hero_figure}</div>{takeaway_strip}</section>
+<div class="shell lesson-shell"><aside class="lesson-rail" aria-label="فهرست درس"><p class="rail-title">مسیر این درس</p><ol class="rail-list">{rail}</ol>{teaching_fact}<div class="reading-state"><span id="reading-label">۰٪ مطالعه شده</span><div aria-hidden="true"><i id="sidebar-progress"></i></div></div>{download}</aside><div class="lesson-body"><nav class="mobile-toc" aria-label="فهرست بخش‌های درس">{mobile}</nav>{inner}<footer class="lesson-footer"><p>این یادداشت بخشی از کلاس {E(course['title'])} است.</p><a href="../">بازگشت به فهرست کلاس ←</a></footer></div></div>'''
+        folder=course_dir/lesson['slug'];folder.mkdir()
+        (folder/'index.html').write_text(document(lesson['title'],lesson['description'],body,prefix,lesson=True,pdfasset=lesson.get('pdf')))
+    course_hero_title=course.get('hero_title',E(course['title']))
+    course_hero_figure=figure('../') if course.get('hero_figure') else ''
+    course_grid='hero-grid' if course_hero_figure else 'hero-grid hero-grid--single'
+    body=f'''<section class="hero course-hero" id="top"><div class="shell {course_grid}"><div class="hero-copy"><a class="breadcrumb" href="../index.html#classes">همهٔ کلاس‌ها ←</a><p class="eyebrow"><span class="eyebrow-rule"></span>جزوه‌ها و تمرین‌های کلاس</p><h1>{course_hero_title}</h1><p class="hero-lede">{E(course['description'])}</p><div class="hero-actions"><a class="button-primary" href="{course['lessons'][0]['slug']}/">اولین یادداشت را بخوانید <span aria-hidden="true">←</span></a><p class="hero-meta"><span>{len(course['lessons'])} یادداشت منتشرشده</span><span>جزوه‌ها و تمرین‌های کلاس</span></p></div></div>{course_hero_figure}</div></section><section class="shell catalog-section course-lessons" aria-labelledby="lessons-title"><div class="catalog-head"><div><p class="section-kicker"><span>مسیر کلاس</span>یک گام در هر یادداشت</p><h2 id="lessons-title">یادداشت‌های کلاس</h2></div></div><div class="lesson-list">{''.join(lesson_cards)}</div></section>'''
+    (course_dir/'index.html').write_text(document(course['title'],course['description'],body,'../'))
+
+print('Built classroom hub, course page, and all published lessons in dist/.')
