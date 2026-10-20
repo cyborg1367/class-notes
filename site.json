@@ -72,8 +72,9 @@
           "teaching_shape_note": "نمونه‌ها × ویژگی‌ها"
         }
       ],
-      "hero_title": "ماشین<br><em>لرنینگ.</em>",
+      "hero_title": "<span class=\"course-title-line\" lang=\"en\" dir=\"ltr\">Machine <em>Learning</em></span>",
       "hero_figure": true
     }
-  ]
+  ],
+  "instructor": "Masoud Ahangary"
 }
