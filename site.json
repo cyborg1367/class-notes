@@ -70,6 +70,64 @@
           ],
           "teaching_shape": "8 × 3",
           "teaching_shape_note": "نمونه‌ها × ویژگی‌ها"
+        },
+        {
+          "slug": "prediction-problem",
+          "title": "از مشورت گرفتن تا طبقه‌بندی باینری",
+          "subtitle": "دو ویژگی، دو کلاس؛ فهم kNN با دادهٔ پزشکیِ ساختگی",
+          "description": "با تمثیلِ مشورت گرفتن شروع می‌کنیم، دو کلاس را روی صفحه می‌بینیم و رأی همسایه‌ها را با NumPy محاسبه می‌کنیم.",
+          "number": "02",
+          "source": "content/machine-learning/prediction-problem.html",
+          "hero_intro": "<p class=\"\">وقتی برای یک تصمیمِ تازه مشورت می‌گیریم، تجربهٔ کسانی را جدی‌تر می‌گیریم که شرایطشان به ما نزدیک‌تر است. در این یادداشت، همین ایده را به یک الگوریتم تبدیل می‌کنیم: ده پروندهٔ پزشکیِ ساختگی، دو امتیاز، دو کلاس و یک پرس‌وجوی تازه.</p>",
+          "hero_title": "از مشورت گرفتن<br>تا طبقه‌بندیِ <em>باینری</em>",
+          "hero_figure": false,
+          "hero_meta": [
+            "۱۰ پروندهٔ ساختگی",
+            "۲ ویژگی",
+            "۲ کلاس"
+          ],
+          "sections": [
+            {
+              "id": "consult",
+              "label": "تمثیلِ مشورت"
+            },
+            {
+              "id": "patients",
+              "label": "پرونده‌ها و پاسخ‌های معلوم"
+            },
+            {
+              "id": "binary",
+              "label": "دو ویژگی، دو کلاس"
+            },
+            {
+              "id": "neighbors",
+              "label": "یک همسایه یا چند همسایه؟"
+            },
+            {
+              "id": "numpy",
+              "label": "از نمودار تا NumPy"
+            },
+            {
+              "id": "exercise",
+              "label": "تمرینِ شما"
+            }
+          ],
+          "tags": [
+            "طبقه‌بندی باینری",
+            "kNN",
+            "NumPy"
+          ],
+          "pdf": "prediction-problem-tutorial.pdf",
+          "scripts": [
+            "medical-knn.js"
+          ],
+          "takeaways": [
+            "دو ویژگی، مختصاتِ هر نمونه را می‌سازند.",
+            "دو کلاس، پاسخ‌های ممکن را مشخص می‌کنند.",
+            "k تعدادِ همسایه‌هایی است که رأی می‌دهند."
+          ],
+          "teaching_shape": "10 × 2",
+          "teaching_shape_note": "۱۰ نمونه، ۲ ویژگی؛ هدف شامل ۲ کلاس"
         }
       ],
       "hero_title": "<span class=\"course-title-line\" lang=\"en\" dir=\"ltr\">Machine <em>Learning</em></span>",
