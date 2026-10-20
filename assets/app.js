@@ -141,15 +141,42 @@ if (typeof document !== "undefined") {
   $("#reset-example")?.addEventListener("click", () => { [4, 6, 3].forEach((value, i) => { ranges[i].value = String(value); }); updateExample(); });
 
   const answerFields = $$("[data-answer]");
-  const answerPrefix = `class-notes:${location.pathname}:answer:`;
-  answerFields.forEach((field) => {
-    try { field.value = localStorage.getItem(answerPrefix + field.dataset.answer) || ""; }
-    catch { $("#answer-note").textContent = "ذخیرهٔ محلی در این مرورگر در دسترس نیست؛ پاسخ‌ها را پیش از بستن صفحه کپی کنید."; }
-    field.addEventListener("input", () => {
-      try { localStorage.setItem(answerPrefix + field.dataset.answer, field.value); }
-      catch { $("#answer-note").textContent = "پاسخ در این مرورگر ذخیره نشد؛ پیش از بستن صفحه آن را کپی کنید."; }
+  let answerOwner = null;
+  const answerPrefix = () => `class-notes:${location.pathname}:${answerOwner ? `user:${answerOwner}:` : ""}answer:`;
+  function draftNote(message) { if ($("#answer-note")) $("#answer-note").textContent = message; }
+  function saveDraft(field) {
+    try { localStorage.setItem(answerPrefix() + field.dataset.answer, field.value); }
+    catch { draftNote("پاسخ در این مرورگر ذخیره نشد؛ پیش از بستن صفحه آن را کپی کنید."); }
+  }
+  function restoreDraft() {
+    draftNote(answerOwner ? "پیش‌نویس این حساب در همین مرورگر ذخیره می‌شود. برای ذخیره در حساب، دکمهٔ زیر را بزنید." : "یادداشت‌های این جدول فقط در همین مرورگر ذخیره می‌شوند.");
+    answerFields.forEach((field) => {
+      field.value = "";
+      try { field.value = localStorage.getItem(answerPrefix() + field.dataset.answer) || ""; }
+      catch { draftNote("ذخیرهٔ محلی در این مرورگر در دسترس نیست؛ پاسخ‌ها را پیش از بستن صفحه کپی کنید."); }
     });
+  }
+  answerFields.forEach((field) => {
+    field.maxLength = 10000;
+    field.addEventListener("input", () => saveDraft(field));
   });
+  restoreDraft();
+  document.addEventListener("class-notes-user", (event) => {
+    const nextOwner = event.detail.userId || null;
+    if (answerOwner === nextOwner) return;
+    answerOwner = nextOwner;
+    restoreDraft();
+  });
+  window.ClassNotesDrafts = {
+    owner: () => answerOwner,
+    ids: () => answerFields.map((field) => field.dataset.answer),
+    snapshot: () => Object.fromEntries(answerFields.map((field) => [field.dataset.answer, field.value])),
+    guestSnapshot: () => Object.fromEntries(answerFields.map((field) => {
+      try { return [field.dataset.answer, localStorage.getItem(`class-notes:${location.pathname}:answer:${field.dataset.answer}`) || ""]; }
+      catch { return [field.dataset.answer, ""]; }
+    })),
+    apply: (answers) => answerFields.forEach((field) => { field.value = answers[field.dataset.answer] || ""; saveDraft(field); })
+  };
 
   const sections = $$(".lesson-section[id]");
   if (sections.length) {
