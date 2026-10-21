@@ -189,7 +189,7 @@ if(typeof document!=="undefined"){
   }).join('')||'<div class="panel-card"><p>هنوز نتیجهٔ آزمونی ثبت نشده است. پس از مطالعهٔ هر یادداشت، از صفحهٔ کلاس به تمرین و آزمون آن برو.</p></div>'}</div>`;  if(new URL(location.href).hash==='#results'){resultsRoot.focus();resultsRoot.scrollIntoView({block:'start'});}
  }
 
- async function privateBlob(path){const{data,error}=await app.client.storage.from('class-materials').download(path);if(error)throw error;const mime=path.endsWith('.js')?'text/javascript':path.endsWith('.svg')?'image/svg+xml':path.endsWith('.pdf')?'application/pdf':data.type;const blob=mime?new Blob([data],{type:mime}):data;const u=URL.createObjectURL(blob);objectURLs.add(u);return u;}
+ async function privateBlob(path){const{data,error}=await app.client.storage.from('class-materials').download(path);if(error)throw error;const mime=path.endsWith('.js')?'text/javascript':path.endsWith('.svg')?'image/svg+xml':path.endsWith('.pdf')?'application/pdf':path.endsWith('.ipynb')?'application/x-ipynb+json':data.type;const blob=mime?new Blob([data],{type:mime}):data;const u=URL.createObjectURL(blob);objectURLs.add(u);return u;}
  async function loadLesson(){
   const info=lesson(lid),root=$('#main'),gen=app.generation;
   if(!app.user||app.serviceError||!member(info.course.id)){root.innerHTML=lessonTrail(info)+'<section class="shell portal-main" id="top"><header class="page-head"><h1>'+E(info.title)+'</h1></header><div data-lesson-gate></div></section>';renderGate($('[data-lesson-gate]'),info.course.id);return;}
@@ -197,12 +197,17 @@ if(typeof document!=="undefined"){
    const payload=await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
    root.innerHTML=payload.body;document.body.classList.add('classroom-loaded');
    portalMountLessonHero(root,info.hero_kind);
+   if(info.notebook){
+    const section=document.createElement('section');section.className='notebook-download';section.setAttribute('aria-labelledby','notebook-title');
+    section.innerHTML='<h3 id="notebook-title">تمرین را در نوت‌بوک ادامه بده</h3><p>توضیحات آموزشی انگلیسی، مثال‌های قابل اجرا، نمودار و تمرین‌های این یادداشت را دانلود کن.</p><a class="button-outline" href="#" data-private-download="'+E(info.course.id+'/'+info.notebook)+'">دانلود نوت‌بوک انگلیسی <bdi dir="ltr">(.ipynb)</bdi> ↓</a><p class="small-note">فایل را با Jupyter Notebook یا JupyterLab باز کن. راهنمای شروع و کتابخانه‌های لازم داخل فایل آمده است؛ پاسخ تمرین اصلی ارائه نشده است.</p>';
+    root.querySelector('#exercise .lesson-prose')?.append(section);
+   }
    root.querySelector('.breadcrumb')?.remove();const navigation=document.createElement('div');navigation.innerHTML=lessonTrail(info)+lessonAccess(info);root.prepend(navigation);
    for(const image of $$('[data-private-path]',root)){const path=image.dataset.privatePath;privateBlob(path).then(u=>{if(gen===app.generation&&image.isConnected)image.src=u;}).catch(()=>{image.alt+=' — تصویر دریافت نشد؛ صفحه را دوباره باز کن.';});}
-   $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();const label=a.textContent;a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(friendly(err));}finally{a.textContent=label;}}));
+   $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();if(a.dataset.downloading==='true')return;const children=Array.from(a.childNodes);a.dataset.downloading='true';a.setAttribute('aria-disabled','true');a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(a.dataset.privateDownload.endsWith('.ipynb')?'دریافت نوت‌بوک کامل نشد. اتصال را بررسی و دوباره تلاش کن؛ اگر ادامه داشت، با مدرس در میان بگذار.':friendly(err));}finally{a.replaceChildren(...children);delete a.dataset.downloading;a.removeAttribute('aria-disabled');}}));
    for(const path of payload.scripts){const u=await privateBlob(path);if(gen!==app.generation)return;await loadScript(u);}
    await loadScript(new URL('space3d.js',assets).href);
-   if(lid==='machine-learning/vector-distance'){
+   if(['machine-learning/vector-distance','machine-learning/prediction-problem'].includes(lid)){
     try{
      const lab=new URL('python-lab.js',assets),worker=new URL('python-worker.mjs',assets);
      lab.search=worker.search=new URL(entry.src).search;

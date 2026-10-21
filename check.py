@@ -28,6 +28,7 @@ for p in DIST.rglob('*.css'):
  for v in re.findall(r'url\([\'\"]?([^\)\'\"]+)',p.read_text()):
   if not v.startswith(('data:','http:','https:')):assert (p.parent/urlsplit(v).path).exists(),(p,v)
 assert not list(DIST.rglob('*.pdf')),'Private PDFs cannot be in the public build'
+assert not list(DIST.rglob('*.ipynb')),'Private notebooks cannot be in the public build'
 for p in DIST.rglob('*'):
  if p.is_file() and p.suffix in ['.html','.js','.mjs','.json']:
   s=p.read_text()

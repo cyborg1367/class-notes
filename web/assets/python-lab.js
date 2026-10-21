@@ -8,22 +8,41 @@ print("query.shape:", query.shape)
 # TODO: find the nearest sample and the three nearest samples.
 # TODO: repeat with prices expressed in millions.
 `;
+  const BINARY_STARTER = `# np, names, X, y, query and q_new are ready.
+# query is the worked example; q_new is your exercise.
+print("X.shape:", X.shape)
+print("y.shape:", y.shape)
+print("q_new.shape:", q_new.shape)
+
+# TODO: compute distances from every reference row to q_new.
+# TODO: sort the distances and select neighbors for k = 1, 3, 5.
+# TODO: count class votes and explain each prediction.
+`;
   const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let current = null;
   function mount(root, {userId, workerURL, lessonId}) {
-    if (lessonId !== 'machine-learning/vector-distance' || !userId) return null;
-    if (current?.element.isConnected) return current;
+    const binary = lessonId === 'machine-learning/prediction-problem';
+    if ((!binary && lessonId !== 'machine-learning/vector-distance') || !userId) return null;
+    if (current?.element.isConnected && current.userId === userId && current.lessonId === lessonId) return current;
     current?.dispose();
     const target = root.querySelector('#exercise .lesson-prose');
-    const source = root.querySelector('#vectors .code-block pre');
+    const source = root.querySelector(binary ? '#numpy .code-block pre' : '#vectors .code-block pre');
     if (!target || !source || !source.textContent.includes('query =')) return null;
-    const bootstrap = source.textContent;
+    let bootstrap = source.textContent;
+    if (binary) {
+      const exerciseQuery = Array.from(root.querySelectorAll('#exercise code')).find(code => /^q_new\s*=\s*np\.array\(/.test(code.textContent.trim()));
+      if (!exerciseQuery) return null;
+      bootstrap += '\n' + exerciseQuery.textContent.trim() + '\n';
+    }
+    const starter = binary ? BINARY_STARTER : STARTER;
+    const variables = binary ? 'np, names, X, y, query, q_new' : 'np, names, X, query';
+    const instruction = binary ? 'پیش از اجرا، همسایه‌های پرس‌وجوی تازهٔ <code>q_new</code> را حدس بزن. <code>query</code> مربوط به مثال حل‌شدهٔ جزوه است. برای دیدن نتیجه از <code>print()</code> استفاده کن.' : 'اول شکلِ خروجی هر مرحله را پیش‌بینی کن؛ بعد کدت را بنویس و نتیجه را بررسی کن. برای دیدن نتیجه از <code>print()</code> استفاده کن.';
     const el = document.createElement('section');
     el.className = 'python-lab';
     el.setAttribute('aria-labelledby', 'python-lab-title');
     el.innerHTML = `<div class="python-lab-heading"><h3 id="python-lab-title">کدت را همین‌جا اجرا کن</h3><span lang="en" dir="ltr">Python + NumPy</span></div>
-      <p>اول شکلِ خروجی هر مرحله را پیش‌بینی کن؛ بعد کدت را بنویس و نتیجه را بررسی کن. برای دیدن نتیجه از <code>print()</code> استفاده کن.</p>
-      <details class="python-lab-data"><summary>داده‌های آماده: <bdi dir="ltr">np, names, X, query</bdi></summary><pre dir="ltr" tabindex="0">${escape(bootstrap)}</pre></details>
+      <p>${instruction}</p>
+      <details class="python-lab-data"><summary>داده‌های آماده: <bdi dir="ltr">${variables}</bdi></summary><pre dir="ltr" tabindex="0">${escape(bootstrap)}</pre></details>
       <label class="python-lab-label" for="python-lab-code">کد تمرین</label>
       <textarea id="python-lab-code" dir="ltr" lang="en" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" maxlength="20000" rows="10" aria-describedby="python-lab-help python-lab-save"></textarea>
       <p id="python-lab-help" class="small-note">هر اجرا با داده‌های اولیه شروع می‌شود؛ متغیرهای اجرای قبلی باقی نمی‌مانند. میان‌بر اجرا: <bdi dir="ltr">Ctrl / ⌘ + Enter</bdi>. برای تورفتگی از فاصله استفاده کن.</p>
@@ -39,7 +58,7 @@ print("query.shape:", query.shape)
       notice = $('[data-python-status]'), output = $('[data-python-output]'), save = $('[data-python-save]');
     const key = `classroom-python:${userId}:${lessonId}:v1`;
     let worker = null, state = 'idle', timer = null, epoch = 0, disposed = false, hasOutput = false, size = 0;
-    editor.value = STARTER;
+    editor.value = starter;
     try { const saved = localStorage.getItem(key); if (saved !== null && saved.length <= 20000) editor.value = saved; }
     catch { /* The editor remains usable if browser storage is unavailable. */ }
     function persist() {
@@ -95,14 +114,14 @@ print("query.shape:", query.shape)
     });
     stop.addEventListener('click', () => { terminate(); show('idle', 'محیط متوقف شد؛ کدت حفظ شده است. برای اجرای دوباره، محیط را فعال کن.'); });
     reset.addEventListener('click', () => {
-      if (editor.value !== STARTER && !window.confirm('کد فعلی با کد اولیه جایگزین شود؟')) return;
-      editor.value = STARTER; persist(); hasOutput = false; size = 0; output.textContent = 'کد اولیه بازگردانده شد؛ هنوز اجرا نشده است.';
+      if (editor.value !== starter && !window.confirm('کد فعلی با کد اولیه جایگزین شود؟')) return;
+      editor.value = starter; persist(); hasOutput = false; size = 0; output.textContent = 'کد اولیه بازگردانده شد؛ هنوز اجرا نشده است.';
       show(worker ? 'ready' : 'idle', 'کد اولیه بازگردانده شد.'); editor.focus();
     });
     download.addEventListener('click', () => {
       const blob = new Blob([bootstrap + '\n\n' + editor.value], {type:'text/x-python;charset=utf-8'});
       const href = URL.createObjectURL(blob), a = document.createElement('a');
-      a.href = href; a.download = 'vector-distance-practice.py'; document.body.append(a); a.click(); a.remove();
+      a.href = href; a.download = lessonId.split('/')[1] + '-practice.py'; document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(href), 1000);
     });
     editor.addEventListener('input', persist);
@@ -111,7 +130,7 @@ print("query.shape:", query.shape)
     function dispose() { if (disposed) return; disposed = true; terminate(); window.removeEventListener('pagehide', pause); el.remove(); if (current?.element === el) current = null; }
     window.addEventListener('pagehide', pause);
     persist();
-    current = {element: el, dispose};
+    current = {element: el, dispose, userId, lessonId};
     return current;
   }
   window.ClassNotesPython = {mount, dispose: () => current?.dispose()};
