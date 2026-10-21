@@ -483,7 +483,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .python-lab-actions { gap: 10px; }
   .python-lab-actions button { flex: 1 1 130px; }
 }
+@keyframes class-notes-scroll-in {
+  from { opacity: var(--scroll-start-opacity, .12); transform: translateY(24px) var(--scroll-base-transform, translateY(0px)); }
+  to { opacity: var(--scroll-base-opacity, 1); transform: var(--scroll-base-transform, translateY(0px)); }
+}
+.scroll-entering {
+  animation: class-notes-scroll-in 400ms cubic-bezier(0.16,1,0.3,1) both;
+  animation-delay: var(--scroll-delay, 0ms);
+}
 @media print {
+  .scroll-entering { animation: none!important; }
   .python-lab { display: none; }
   body { background: white; color: black; }
   .portal-header, .portal-footer, .route-trail, .lesson-shortcuts, .nav-menu { display: none!important; }
