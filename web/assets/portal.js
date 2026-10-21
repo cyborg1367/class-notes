@@ -38,7 +38,29 @@ function portalFigure(f){
  }
  return s+'</svg>';
 }
-if(typeof module!=="undefined"&&module.exports)module.exports={portalEscape,portalInline,portalReturn,portalConfig,portalFigure,portalBlankValue,portalBlankError,portalBlankHelp,portalQuizCode};
+// Read the already-authorized lesson data; no medical records live in this file.
+function portalBinaryHero(data){
+ if(!data||!Array.isArray(data.X)||!Array.isArray(data.y)||!Array.isArray(data.names)||data.X.length!==data.y.length||data.X.length!==data.names.length)return '';
+ const valid=p=>Array.isArray(p)&&p.length===2&&p.every(v=>Number.isFinite(v)&&v>=0&&v<=10);
+ if(!valid(data.query)||!data.X.every(valid)||!data.y.every(y=>y===0||y===1))return '';
+ const e=portalEscape,xy=p=>[64+37.6*p[0],426-37.6*p[1]];
+ let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 510" role="img" aria-label="'+e('ده پروندهٔ پزشکیِ ساختگی در فضای دو ویژگی. محور افقی M1 و محور عمودی M2 است. دایره کلاس صفر، مربع کلاس یک و لوزی پرس‌وجوی q با مختصات '+data.query.join(', ')+' است. برچسب q هنوز معلوم نیست.')+'">';
+ for(let t=0;t<=10;t+=2){const[x,y]=xy([t,t]);s+=`<path d="M${x} 50V426M64 ${y}H440" fill="none" stroke="#b9b7a1" stroke-opacity=".45"/><g fill="#585e4e" font-size="16"><text x="${x}" y="453" text-anchor="middle">${t}</text><text x="48" y="${y+5}" text-anchor="end">${t}</text></g>`;}
+ s+='<path d="M64 40V426H452m-394-375 6-11 6 11m371 369 11 6-11 6" fill="none" stroke="#24241f" stroke-width="1.8" stroke-linejoin="round"/><g fill="#24241f" font-size="19"><text x="252" y="489" text-anchor="middle">M1</text><text x="20" y="238" transform="rotate(-90 20 238)" text-anchor="middle">M2</text></g>';
+ data.X.forEach((p,i)=>{const[x,y]=xy(p),positive=data.y[i]===1,title=e(data.names[i]+': M1 = '+p[0]+', M2 = '+p[1]+', class '+data.y[i]);s+=positive?`<rect data-hero-class="1" x="${x-7}" y="${y-7}" width="14" height="14" fill="#a35236" stroke="#24241f" stroke-width="1.4"><title>${title}</title></rect>`:`<circle data-hero-class="0" cx="${x}" cy="${y}" r="7" fill="#21665d" stroke="#24241f" stroke-width="1.4"><title>${title}</title></circle>`;const[dx,dy]=i===4?[-33,-12]:i===5?[13,27]:[13,-12];s+=`<text x="${x+dx}" y="${y+dy}" fill="#3e4438" font-size="16">${e(data.names[i])}</text>`;});
+ const[qx,qy]=xy(data.query);s+=`<path data-hero-query d="M${qx} ${qy-10}l10 10-10 10-10-10z" fill="#f4d835" stroke="#24241f" stroke-width="1.8"/><text x="${qx+18}" y="${qy+3}" fill="#24241f" font-weight="700" font-size="22">q</text></svg>`;
+ return s;
+}
+function portalMountLessonHero(root,kind){
+ if(kind!=='binary2d'||root.querySelector('.binary-hero'))return;
+ const source=root.querySelector('#medical-knn-data'),grid=root.querySelector('.lesson-hero .hero-grid');if(!source||!grid)return;
+ let data;try{data=JSON.parse(source.textContent);}catch{return;}
+ const plot=portalBinaryHero(data);if(!plot)return;
+ const figure=root.ownerDocument.createElement('figure');figure.className='hero-figure binary-hero';
+ figure.innerHTML=plot+'<div class="binary-hero-legend"><span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="#21665d" stroke="#24241f"/></svg>کلاس <bdi>0</bdi></span><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12" fill="#a35236" stroke="#24241f"/></svg>کلاس <bdi>1</bdi></span><span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 8 8-8 8-8-8z" fill="#f4d835" stroke="#24241f"/></svg>پرس‌وجوی <bdi>q</bdi></span></div><p class="binary-hero-axes"><bdi>M1</bdi>: امتیاز تنفسی · <bdi>M2</bdi>: امتیاز خستگی</p><figcaption>پرونده‌ها و امتیازها کاملاً ساختگی‌اند؛ کلاسِ <bdi>q</bdi> هنوز مشخص نیست.</figcaption>';
+ grid.classList.remove('hero-grid--single');grid.append(figure);
+}
+if(typeof module!=="undefined"&&module.exports)module.exports={portalEscape,portalInline,portalReturn,portalConfig,portalFigure,portalBlankValue,portalBlankError,portalBlankHelp,portalQuizCode,portalBinaryHero,portalMountLessonHero};
 
 if(typeof document!=="undefined"){
  const $=(s,p=document)=>p.querySelector(s),$$=(s,p=document)=>Array.from(p.querySelectorAll(s)),E=portalEscape;
@@ -174,6 +196,7 @@ if(typeof document!=="undefined"){
   try{
    const payload=await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
    root.innerHTML=payload.body;document.body.classList.add('classroom-loaded');
+   portalMountLessonHero(root,info.hero_kind);
    root.querySelector('.breadcrumb')?.remove();const navigation=document.createElement('div');navigation.innerHTML=lessonTrail(info)+lessonAccess(info);root.prepend(navigation);
    for(const image of $$('[data-private-path]',root)){const path=image.dataset.privatePath;privateBlob(path).then(u=>{if(gen===app.generation&&image.isConnected)image.src=u;}).catch(()=>{image.alt+=' — تصویر دریافت نشد؛ صفحه را دوباره باز کن.';});}
    $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();const label=a.textContent;a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(friendly(err));}finally{a.textContent=label;}}));
