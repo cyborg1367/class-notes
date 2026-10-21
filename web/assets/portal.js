@@ -141,7 +141,7 @@ if(typeof document!=="undefined"){
   if(!active){renderGate(access,c.id);return;}
   access.innerHTML=`<div class="course-access-status"><span>عضویت این کلاس فعال است.</span><a class="quiet-link" href="${E(url('dashboard/'))}">داشبورد من ←</a></div>`;
   const state=studyState(c),last=c.lessons.find(l=>l.id===state.last);
-  if(last){$('[data-course-continue]').href=url(last.id+'/');$('[data-course-continue]').textContent='ادامهٔ مطالعه ←';$('#course-start-title').textContent='آخرین یادداشت بازشده در این مرورگر';$('[data-course-start-description]').textContent=last.title;}
+  if(last){$('[data-course-continue]').href=url(last.id+'/');$('[data-course-continue]').textContent='ادامهٔ مطالعه ←';$('#course-start-title').textContent='آخرین یادداشت بازشده در این مرورگر';$('[data-course-start-description]').textContent=last.title;$('.course-start-copy').hidden=false;}
   for(const l of c.lessons){
    const row=$(`[data-course-lesson="${l.id}"]`),result=app.state?.results?.find(r=>r.lesson_id===l.id&&Number(r.version)===Number(l.quiz_version));
    $('[data-study-status]',row).textContent=state.opened.includes(l.id)?'در این مرورگر باز شده است.':'هنوز در این مرورگر باز نشده است.';

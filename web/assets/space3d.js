@@ -33,7 +33,7 @@ if (typeof document !== "undefined") {
     const home = mode === "distance" ? {yaw:0.52,pitch:0.28} : SPACE_HOME;
     let yaw = home.yaw, pitch = home.pitch, drag = null;
     const ns = "http://www.w3.org/2000/svg";
-    const colors = ["#0f766e", "#b64d32", "#536fa0"];
+    const colors = ["#21665d", "#9a4e32", "#555f79"];
     function el(tag, attrs, text) {
       const node = document.createElementNS(ns, tag);
       Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
@@ -53,11 +53,11 @@ if (typeof document !== "undefined") {
       const floor = [[0,0,0],[1,0,0],[1,0,1],[0,0,1]];
       scene.append(el("polygon", { points: floor.map(p => {
         const q = point(p); return `${q.x},${q.y}`;
-      }).join(" "), fill: "#e1ebe4", "fill-opacity": 0.65 }));
+      }).join(" "), fill: "#ded6bd", "fill-opacity": 0.48 }));
       for (let i = 0; i <= 4; i++) {
         const t = i / 4;
-        scene.append(line([t,0,0],[t,0,1],"#b9cbc0",0.8));
-        scene.append(line([0,0,t],[1,0,t],"#b9cbc0",0.8));
+        scene.append(line([t,0,0],[t,0,1],"#aaa88f",0.8));
+        scene.append(line([0,0,t],[1,0,t],"#aaa88f",0.8));
       }
       for (let axis = 0; axis < 3; axis++) {
         const others = [0,1,2].filter(i => i !== axis);
@@ -65,7 +65,7 @@ if (typeof document !== "undefined") {
           const u = [0,0,0], v = [0,0,0];
           u[others[0]] = v[others[0]] = a;
           u[others[1]] = v[others[1]] = b; v[axis] = 1;
-          scene.append(line(u,v,"#9eb5a7",0.9,"3 5",0.65));
+          scene.append(line(u,v,"#8f9785",0.9,"3 5",0.65));
         }
         const end = [0,0,0]; end[axis] = 1.13;
         scene.append(line([0,0,0],end,colors[axis],2));
@@ -81,21 +81,20 @@ if (typeof document !== "undefined") {
         scene.append(line(u,a,colors[0],2,"5 5"));
         scene.append(line(a,b,colors[1],2,"5 5"));
         scene.append(line(b,v,colors[2],2,"5 5"));
-        scene.append(line(u,v,"#15211f",3));
+        scene.append(line(u,v,"#24241f",3));
         points = [{p:u,label:"u",color:colors[0]}, {p:v,label:"v",color:colors[1]}];
       } else {
-        points = SPACE_POINTS.map(p => ({p,color:"#0f766e"}));
-        points.push({p:[0.49,0.48,0.48],label:"q",color:"#b64d32",query:true});
-        points.forEach(({p}) => scene.append(line(p,[p[0],0,p[2]],"#95aea0",0.8,"2 5",0.4)));
+        points = SPACE_POINTS.map(p => ({p,color:"#21665d"}));
+        points.push({p:[0.49,0.48,0.48],label:"q",color:"#f4d835",query:true});
+        points.forEach(({p}) => scene.append(line(p,[p[0],0,p[2]],"#8f9785",0.8,"2 5",0.4)));
       }
       points.map(p => ({...p,screen:point(p.p)})).sort((a,b)=>a.screen.z-b.screen.z).forEach(p => {
         const {x,y,scale,z} = p.screen;
         const r = (p.query ? 9 : 6.5) * scale;
         const alpha = Math.max(0.62, Math.min(1, 0.82 + z * 0.22));
         if (p.query) scene.append(el("circle",{cx:x,cy:y,r:r+7,fill:"none",stroke:p.color,"stroke-opacity":0.22,"stroke-width":2}));
-        scene.append(el("circle",{cx:x,cy:y,r,fill:p.color,opacity:alpha,stroke:"#fbfdfa","stroke-width":1.5}));
-        scene.append(el("circle",{cx:x-r*0.25,cy:y-r*0.3,r:r*0.22,fill:"white",opacity:0.45}));
-        if (p.label) scene.append(el("text",{x:x+r+7,y:y-8,fill:p.color,
+        scene.append(el("circle",{cx:x,cy:y,r,fill:p.color,opacity:p.query?1:alpha,stroke:"#24241f","stroke-width":1.4}));
+        if (p.label) scene.append(el("text",{x:x+r+7,y:y-8,fill:p.query?"#24241f":p.color,
           "font-size":17,"font-weight":700},p.label));
       });
       svg.replaceChildren(scene);
@@ -135,6 +134,7 @@ if (typeof document !== "undefined") {
     });
     render();
     svg.removeAttribute("hidden"); fallback.hidden=true;
+    if (mode === "samples") root.querySelector(".space-legend").textContent = "نقاط سبز: نمونه‌ها · نقطهٔ زرد: پرس‌وجوی q";
     root.classList.add("is-ready");
   });
 }
