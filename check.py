@@ -29,7 +29,7 @@ for p in DIST.rglob('*.css'):
   if not v.startswith(('data:','http:','https:')):assert (p.parent/urlsplit(v).path).exists(),(p,v)
 assert not list(DIST.rglob('*.pdf')),'Private PDFs cannot be in the public build'
 for p in DIST.rglob('*'):
- if p.is_file() and p.suffix in ['.html','.js','.json']:
+ if p.is_file() and p.suffix in ['.html','.js','.mjs','.json']:
   s=p.read_text()
   assert 'vd-05' not in s and 'kn-05' not in s,'Quiz bank leaked'
   assert 'q_new = np.array' not in s,'Lesson source leaked'

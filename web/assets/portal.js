@@ -88,7 +88,7 @@ if(typeof document!=="undefined"){
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
  async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;app.state=null;clearObjects();}
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;app.state=null;clearObjects();window.ClassNotesPython?.dispose();}
   authUI();
   if(!initializing&&old!==next){if(old){if(['lesson','quiz','dashboard','instructor','course'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
  }
@@ -202,6 +202,16 @@ if(typeof document!=="undefined"){
    $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();const label=a.textContent;a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(friendly(err));}finally{a.textContent=label;}}));
    for(const path of payload.scripts){const u=await privateBlob(path);if(gen!==app.generation)return;await loadScript(u);}
    await loadScript(new URL('space3d.js',assets).href);
+   if(lid==='machine-learning/vector-distance'){
+    try{
+     const lab=new URL('python-lab.js',assets),worker=new URL('python-worker.mjs',assets);
+     lab.search=worker.search=new URL(entry.src).search;
+     if(!window.ClassNotesPython)await loadScript(lab.href);
+     if(gen===app.generation)window.ClassNotesPython?.mount(root,{userId:app.user.id,lessonId:lid,workerURL:worker.href});
+    }catch{
+     if(gen===app.generation){const note=document.createElement('p');note.className='small-note';note.textContent='محیط اجرای Python دریافت نشد؛ برای تلاش دوباره صفحه را بازخوانی کن.';root.querySelector('#exercise .lesson-prose')?.append(note);}
+    }
+   }
    document.dispatchEvent(new CustomEvent('class-notes-user',{detail:{userId:app.user.id}}));
    worksheet();recordStudy(info);
   }catch(err){if(gen===app.generation){root.innerHTML=lessonTrail(info)+'<section class="shell portal-main" id="top"><div class="gate-card"><h2>دریافت یادداشت کامل نشد.</h2><p>'+E(friendly(err))+'</p><a class="button-outline" href="'+E(url('dashboard/'))+'">داشبورد ←</a></div></section>';}}

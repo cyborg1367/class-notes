@@ -452,7 +452,36 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .dataset-table td:before { content: none; }
   .dataset-table tr.is-selected td, .dataset-table tr:hover td { background: #eee7b9!important; }
 }
+.python-lab { margin-block: 32px; padding: 24px; border: 1px solid var(--line-strong); background: var(--teal-tint-2); min-width: 0; }
+.python-lab-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+.python-lab-heading h3 { margin: 0; font-size: 22px; color: var(--ink); }
+.python-lab-heading > span { color: var(--teal-deep); font-size: 14px; }
+.python-lab > p { margin-block: 12px; }
+.python-lab-data { margin-block: 16px; }
+.python-lab-data summary { cursor: pointer; color: var(--teal-deep); padding-block: 8px; }
+.python-lab-data pre { direction: ltr; text-align: left; white-space: pre; overflow: auto; max-height: 300px; margin: 8px 0 0; padding: 16px; background: var(--white); color: var(--ink); font: 14px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.python-lab-label { display: block; margin: 18px 0 8px; font-weight: 700; }
+.python-lab textarea { display: block; width: 100%; max-width: 100%; min-height: 270px; box-sizing: border-box; border: 1px solid var(--ink); border-radius: 0; padding: 16px; resize: vertical; direction: ltr; text-align: left; white-space: pre; overflow: auto; background: var(--dark); color: var(--dark-text); caret-color: var(--highlight); font: 16px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; }
+.python-lab textarea[readonly] { opacity: .85; }
+.python-lab textarea::selection { background: var(--highlight); color: var(--ink); }
+.python-lab-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-block: 20px 12px; }
+.python-lab button { min-height: 44px; }
+.python-lab button:disabled { cursor: default; box-shadow: none; opacity: .55; }
+.python-lab :is(textarea, summary, pre, button):focus-visible { outline: 3px solid var(--teal); outline-offset: 4px; }
+.python-lab-status { color: var(--teal-deep); min-height: 1.8em; }
+.python-lab-status[data-error="true"] { color: var(--coral-ink); }
+.python-lab-result { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 16px; }
+.python-lab-result h4 { margin: 0 0 10px; color: var(--ink); font-size: 16px; }
+.python-lab-result pre { margin: 0; padding: 16px; min-height: 72px; max-height: 340px; overflow: auto; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--white); color: var(--ink); font: 14px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace; }
+@media (max-width: 600px) {
+  .python-lab { padding: 16px 12px; margin-inline: -4px; }
+  .python-lab-heading h3 { font-size: 20px; }
+  .python-lab textarea { padding: 12px; }
+  .python-lab-actions { gap: 10px; }
+  .python-lab-actions button { flex: 1 1 130px; }
+}
 @media print {
+  .python-lab { display: none; }
   body { background: white; color: black; }
   .portal-header, .portal-footer, .route-trail, .lesson-shortcuts, .nav-menu { display: none!important; }
   .lesson-body { padding: 0; background: white; }
