@@ -58,7 +58,7 @@ if(typeof document!=="undefined"){
  function storageSet(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
  function clearObjects(){for(const u of objectURLs)URL.revokeObjectURL(u);objectURLs.clear();}
  function authUI(){
-  $$('[data-account-link]').forEach(a=>{a.textContent=app.user?'داشبورد ←':'ورود به حساب ←';a.href=app.user?url('dashboard/'):url('account/');});
+  $$('[data-account-link]').forEach(a=>{if(page==='dashboard'&&app.user)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');a.textContent=app.user?'داشبورد ←':'ورود به حساب ←';a.href=app.user?url('dashboard/'):url('account/');});
   if($('[data-account-guest]'))$('[data-account-guest]').hidden=!!app.user;
   if($('[data-account-member]'))$('[data-account-member]').hidden=!app.user;
   if($('[data-user-name]'))$('[data-user-name]').textContent=app.user?.user_metadata?.full_name||'';
@@ -68,7 +68,7 @@ if(typeof document!=="undefined"){
  async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
  function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;app.state=null;clearObjects();}
   authUI();
-  if(!initializing&&old!==next){if(old){if(['lesson','quiz','dashboard','instructor'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
+  if(!initializing&&old!==next){if(old){if(['lesson','quiz','dashboard','instructor','course'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
  }
  async function loadScript(src){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.head.append(s);});}
  async function boot(){
@@ -110,36 +110,78 @@ if(typeof document!=="undefined"){
  }
  async function mount(){
   if(page==='dashboard')await dashboard();
+  if(page==='course')course();
   if(page==='instructor')await teacher();
   if(page==='lesson')await loadLesson();
   if(page==='quiz')await loadQuiz();
  }
- function resultSummary(id){return app.state?.results?.filter(r=>r.lesson_id===id).sort((a,b)=>b.version-a.version)[0];}
- async function dashboard(){
-  const root=$('[data-dashboard]'),notice=$('[data-page-status]');status(notice,'');
-  if(!app.user||app.serviceError){renderGate(root,catalog[0].id);return;}
-  const results=app.state?.results||[],active=(app.state?.memberships||[]).filter(m=>m.status==='active');
-  root.innerHTML=`<div class="stats-row"><div class="stat-tile"><strong>${fa(active.length)}</strong><span>کلاس فعال</span></div><div class="stat-tile"><strong>${fa(results.length)}</strong><span>نسخه‌های پاسخ‌داده‌شده</span></div><div class="stat-tile"><strong>${fa(results.reduce((s,r)=>s+Number(r.attempts),0))}</strong><span>تلاش ثبت‌شده</span></div></div>`;
-  for(const c of catalog){const section=document.createElement('section');root.append(section);
-   if(!member(c.id)){section.innerHTML=`<div class="section-heading"><h2>${E(c.title)}</h2></div><div data-course-gate></div>`;renderGate($('[data-course-gate]',section),c.id);continue;}
-   let last=storageGet(`classroom-last:${app.user.id}`);if(!c.lessons.some(l=>l.id===last))last=c.lessons[0].id;
-   section.innerHTML=`<div class="section-heading"><div><p class="eyebrow">کلاس فعال</p><h2>${E(c.title)}</h2></div><a class="quiet-link" href="${E(url(last+'/'))}">ادامهٔ مطالعه ←</a></div><div class="dashboard-lessons">${c.lessons.map(l=>{const r=resultSummary(l.id);return `<article class="dashboard-lesson"><span class="lesson-order" dir="ltr">${l.number}</span><div><h2>${E(l.title)}</h2><p>${E(l.description)}</p>${r?`<span class="score-tag">اولین ثبت: ${score(r.first_score,r.maximum)} · بهترین: ${score(r.best_score,r.maximum)} · ${num(r.attempts)} تلاش</span>`:'<span class="score-tag">هنوز در این آزمون شرکت نکرده‌ای.</span>'}</div><div class="portal-actions"><a class="button-forest" href="${E(url(l.id+'/'))}">مطالعهٔ یادداشت ←</a><a class="button-outline" href="${E(url('quiz/'+l.id+'/'))}">تمرین و آزمون</a>${r?`<a class="quiet-link" href="${E(url('quiz/'+l.id+'/?attempt='+r.last_id))}">آخرین نتیجه</a>`:''}</div></article>`;}).join('')}</div>`;
+ function studyState(course){
+  if(!app.user)return {last:null,opened:[]};
+  const ids=course.lessons.map(l=>l.id),raw=storageGet(`classroom-study:${app.user.id}:${course.id}`);
+  const opened=Array.isArray(raw?.opened)?[...new Set(raw.opened.filter(id=>ids.includes(id)))]:[];
+  const legacy=storageGet(`classroom-last:${app.user.id}`);
+  const last=ids.includes(raw?.last)?raw.last:ids.includes(legacy)?legacy:null;
+  if(last&&!opened.includes(last))opened.push(last);
+  return {last,opened};
+ }
+ function recordStudy(info){
+  const state=studyState(info.course);state.last=info.id;if(!state.opened.includes(info.id))state.opened.push(info.id);
+  storageSet(`classroom-study:${app.user.id}:${info.course.id}`,state);
+  storageSet(`classroom-last:${app.user.id}`,info.id);
+ }
+ function lessonTrail(info){
+  return `<nav class="shell route-trail" aria-label="مسیر صفحه"><ol><li><a href="${E(url('index.html'))}">صفحهٔ اصلی</a></li><li><a href="${E(url('index.html#classes'))}">کلاس‌ها</a></li><li><a dir="auto" href="${E(url(info.course.id+'/'))}">${E(info.course.display_title||info.course.title)}</a></li><li><span aria-current="page">یادداشت <bdi dir="ltr">${E(info.number)}</bdi> · ${E(info.title)}</span></li></ol></nav>`;
+ }
+ function lessonAccess(info){
+  return `<nav class="shell lesson-shortcuts" aria-label="دسترسی‌های یادداشت"><a class="quiet-link" href="${E(url(info.course.id+'/'))}">فهرست یادداشت‌های کلاس ←</a><a class="button-outline" href="${E(url('quiz/'+info.id+'/'))}">تمرین و آزمون این یادداشت</a></nav>`;
+ }
+ function course(){
+  const c=catalog.find(c=>c.id===lid);if(!c)return;
+  const access=$('[data-course-membership]'),active=!app.serviceError&&member(c.id);
+  if(!active){renderGate(access,c.id);return;}
+  access.innerHTML=`<div class="course-access-status"><span>عضویت این کلاس فعال است.</span><a class="quiet-link" href="${E(url('dashboard/'))}">داشبورد من ←</a></div>`;
+  const state=studyState(c),last=c.lessons.find(l=>l.id===state.last);
+  if(last){$('[data-course-continue]').href=url(last.id+'/');$('[data-course-continue]').textContent='ادامهٔ مطالعه ←';$('#course-start-title').textContent='آخرین یادداشت بازشده در این مرورگر';$('[data-course-start-description]').textContent=last.title;}
+  for(const l of c.lessons){
+   const row=$(`[data-course-lesson="${l.id}"]`),result=app.state?.results?.find(r=>r.lesson_id===l.id&&Number(r.version)===Number(l.quiz_version));
+   $('[data-study-status]',row).textContent=state.opened.includes(l.id)?'در این مرورگر باز شده است.':'هنوز در این مرورگر باز نشده است.';
+   $('[data-course-result]',row).innerHTML=result?`آخرین نتیجهٔ نسخهٔ ${num(result.version)}: ${result.last_score!=null?score(result.last_score,result.maximum):'برای مشاهده باز کن'} · <a href="${E(url('quiz/'+l.id+'/?attempt='+encodeURIComponent(result.last_id)))}">مشاهدهٔ نتیجه</a>`:'برای این نسخه از آزمون هنوز نتیجه‌ای ثبت نشده است.';
   }
  }
+ async function dashboard(){
+  const root=$('[data-dashboard]'),notice=$('[data-page-status]');let resultsRoot=$('[data-dashboard-results]');if(!resultsRoot){resultsRoot=document.createElement('section');resultsRoot.id='results';resultsRoot.setAttribute('data-dashboard-results','');root.after(resultsRoot);}resultsRoot.setAttribute('tabindex','-1');status(notice,'');resultsRoot.hidden=true;
+  if(!app.user||app.serviceError){renderGate(root,catalog[0].id);return;}
+  const active=catalog.filter(c=>member(c.id)),other=catalog.filter(c=>!member(c.id));
+  const results=(app.state?.results||[]).filter(r=>{const l=lesson(r.lesson_id);return l&&member(l.course.id);}).sort((a,b)=>(Date.parse(b.last_at)||0)-(Date.parse(a.last_at)||0));
+  root.innerHTML=`<section aria-labelledby="my-classes-title"><div class="section-heading"><h2 id="my-classes-title">کلاس‌های من</h2><a class="quiet-link" href="${E(url('index.html#classes'))}">همهٔ کلاس‌ها ←</a></div><div class="continue-grid${active.length===1?' continue-grid-single':''}">${active.map(c=>{
+   const state=studyState(c),last=c.lessons.find(l=>l.id===state.last),target=last||c.lessons[0];
+   return `<article class="continue-card" data-continue-course="${E(c.id)}"><p class="eyebrow">عضویت فعال</p><h3 dir="auto">${E(c.display_title||c.title)}</h3><p class="continue-label">${last?'آخرین یادداشت بازشده در این مرورگر':'نقطهٔ شروع کلاس'}</p><p class="continue-title"><span dir="ltr">${E(target.number)}</span> · ${E(target.title)}</p><div class="portal-actions"><a class="button-forest" data-resume-study href="${E(url(target.id+'/'))}">${last?'ادامهٔ مطالعه':'شروع مطالعه'} ←</a><a class="button-outline" href="${E(url(c.id+'/'))}">فهرست یادداشت‌ها</a></div><p class="small-note">${fa(state.opened.length)} از ${fa(c.lessons.length)} یادداشت در این مرورگر باز شده است؛ این تعداد به معنی تکمیل مطالعه نیست.</p></article>`;
+  }).join('')||'<div class="panel-card"><p>هنوز عضویت فعالی نداری. از بخش زیر برای کلاس موردنظر درخواست دسترسی بده.</p></div>'}</div></section>`;
+  if(other.length){const section=document.createElement('section');section.className='membership-section';section.innerHTML='<div class="section-heading"><h2>عضویت و درخواست دسترسی</h2></div>';
+   for(const c of other){const item=document.createElement('article');item.innerHTML=`<h3 dir="auto">${E(c.display_title||c.title)}</h3><div data-course-gate></div>`;section.append(item);renderGate($('[data-course-gate]',item),c.id);}root.append(section);
+  }
+  resultsRoot.hidden=false;
+  resultsRoot.innerHTML=`<div class="section-heading"><div><p class="eyebrow">آزمون‌ها</p><h2>نتایج من</h2></div><p>${num(results.reduce((s,r)=>s+Number(r.attempts),0))} تلاش در ${num(results.length)} نسخهٔ آزمون ثبت شده است.</p></div><div class="dashboard-results">${results.map(r=>{
+   const l=lesson(r.lesson_id);
+   return `<article class="dashboard-result" data-result-lesson="${E(r.lesson_id)}"><div class="result-heading"><div><p class="eyebrow" dir="auto">${E(l.course.display_title||l.course.title)} · نسخهٔ ${num(r.version)}</p><h3>${E(l.title)}</h3></div>${r.last_at?'<p class="small-note">آخرین ثبت: '+E(date(r.last_at))+'</p>':''}</div>${summaryHTML(r,r.maximum)}<div class="portal-actions"><a class="button-forest" href="${E(url('quiz/'+l.id+'/?attempt='+encodeURIComponent(r.last_id)))}">مشاهدهٔ آخرین نتیجه ←</a><a class="button-outline" href="${E(url(l.id+'/'))}">مرور یادداشت</a><a class="quiet-link" href="${E(url('quiz/'+l.id+'/'))}">تمرین و آزمون</a></div></article>`;
+  }).join('')||'<div class="panel-card"><p>هنوز نتیجهٔ آزمونی ثبت نشده است. پس از مطالعهٔ هر یادداشت، از صفحهٔ کلاس به تمرین و آزمون آن برو.</p></div>'}</div>`;  if(new URL(location.href).hash==='#results'){resultsRoot.focus();resultsRoot.scrollIntoView({block:'start'});}
+ }
+
  async function privateBlob(path){const{data,error}=await app.client.storage.from('class-materials').download(path);if(error)throw error;const mime=path.endsWith('.js')?'text/javascript':path.endsWith('.svg')?'image/svg+xml':path.endsWith('.pdf')?'application/pdf':data.type;const blob=mime?new Blob([data],{type:mime}):data;const u=URL.createObjectURL(blob);objectURLs.add(u);return u;}
  async function loadLesson(){
   const info=lesson(lid),root=$('#main'),gen=app.generation;
-  if(!app.user||app.serviceError||!member(info.course.id)){root.innerHTML='<section class="shell portal-main" id="top"><header class="page-head"><h1>'+E(info.title)+'</h1></header><div data-lesson-gate></div></section>';renderGate($('[data-lesson-gate]'),info.course.id);return;}
+  if(!app.user||app.serviceError||!member(info.course.id)){root.innerHTML=lessonTrail(info)+'<section class="shell portal-main" id="top"><header class="page-head"><h1>'+E(info.title)+'</h1></header><div data-lesson-gate></div></section>';renderGate($('[data-lesson-gate]'),info.course.id);return;}
   try{
    const payload=await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
    root.innerHTML=payload.body;document.body.classList.add('classroom-loaded');
+   root.querySelector('.breadcrumb')?.remove();const navigation=document.createElement('div');navigation.innerHTML=lessonTrail(info)+lessonAccess(info);root.prepend(navigation);
    for(const image of $$('[data-private-path]',root)){const path=image.dataset.privatePath;privateBlob(path).then(u=>{if(gen===app.generation&&image.isConnected)image.src=u;}).catch(()=>{image.alt+=' — تصویر دریافت نشد؛ صفحه را دوباره باز کن.';});}
    $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();const label=a.textContent;a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(friendly(err));}finally{a.textContent=label;}}));
    for(const path of payload.scripts){const u=await privateBlob(path);if(gen!==app.generation)return;await loadScript(u);}
    await loadScript(new URL('space3d.js',assets).href);
    document.dispatchEvent(new CustomEvent('class-notes-user',{detail:{userId:app.user.id}}));
-   worksheet();storageSet(`classroom-last:${app.user.id}`,lid);
-  }catch(err){if(gen===app.generation){root.innerHTML='<section class="shell portal-main" id="top"><div class="gate-card"><h2>دریافت یادداشت کامل نشد.</h2><p>'+E(friendly(err))+'</p><a class="button-outline" href="'+E(url('dashboard/'))+'">داشبورد ←</a></div></section>';}}
+   worksheet();recordStudy(info);
+  }catch(err){if(gen===app.generation){root.innerHTML=lessonTrail(info)+'<section class="shell portal-main" id="top"><div class="gate-card"><h2>دریافت یادداشت کامل نشد.</h2><p>'+E(friendly(err))+'</p><a class="button-outline" href="'+E(url('dashboard/'))+'">داشبورد ←</a></div></section>';}}
  }
  function worksheet(){
   const root=$('[data-cloud-tools]');if(!root)return;
@@ -177,6 +219,7 @@ if(typeof document!=="undefined"){
   const root=$('[data-quiz-root]'),notice=$('[data-page-status]'),info=lesson(lid),gen=app.generation;
   status(notice,'');if(!app.user||app.serviceError||!member(info.course.id)){renderGate(root,info.course.id);return;}
   try{
+   root.parentElement.querySelector('.quiz-context')?.remove();const context=document.createElement('nav');context.className='quiz-context';context.setAttribute('aria-label','دسترسی‌های آزمون');context.innerHTML='<a class="quiet-link" href="'+E(url(info.id+'/'))+'">بازگشت به یادداشت ←</a><a class="quiet-link" href="'+E(url(info.course.id+'/'))+'">فهرست یادداشت‌های کلاس</a><a class="quiet-link" href="'+E(url('dashboard/#results'))+'">همهٔ نتایج من</a>';root.before(context);
    const prior=new URL(location.href).searchParams.get('attempt');
    if(prior){const record=await rpc('classroom_attempt',{p_id:prior});if(gen!==app.generation)return;if(record.lesson_id!==lid)throw Error('WRONG_LESSON');root.innerHTML=resultHTML(record,info,record.prompts||[],record.summary)+`<a class="button-outline" href="${E(url('quiz/'+info.id+'/'))}">بازگشت به تمرین و آزمون ←</a>`;return;}
    const quiz=await rpc('classroom_quiz',{p_lesson:lid});if(gen!==app.generation)return;
