@@ -88,7 +88,7 @@ if(typeof document!=="undefined"){
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
  async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;app.state=null;clearObjects();window.ClassNotesPython?.dispose();}
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;app.state=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
   if(!initializing&&old!==next){if(old){if(['lesson','quiz','dashboard','instructor','course'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
  }
@@ -192,6 +192,7 @@ if(typeof document!=="undefined"){
  async function privateBlob(path){const{data,error}=await app.client.storage.from('class-materials').download(path);if(error)throw error;const mime=path.endsWith('.js')?'text/javascript':path.endsWith('.svg')?'image/svg+xml':path.endsWith('.pdf')?'application/pdf':path.endsWith('.ipynb')?'application/x-ipynb+json':data.type;const blob=mime?new Blob([data],{type:mime}):data;const u=URL.createObjectURL(blob);objectURLs.add(u);return u;}
  async function loadLesson(){
   const info=lesson(lid),root=$('#main'),gen=app.generation;
+  window.ClassNotesMotion?.clearLesson();
   if(!app.user||app.serviceError||!member(info.course.id)){root.innerHTML=lessonTrail(info)+'<section class="shell portal-main" id="top"><header class="page-head"><h1>'+E(info.title)+'</h1></header><div data-lesson-gate></div></section>';renderGate($('[data-lesson-gate]'),info.course.id);return;}
   try{
    const payload=await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
@@ -218,7 +219,7 @@ if(typeof document!=="undefined"){
     }
    }
    document.dispatchEvent(new CustomEvent('class-notes-user',{detail:{userId:app.user.id}}));
-   worksheet();recordStudy(info);
+   worksheet();recordStudy(info);window.ClassNotesMotion?.refresh(root);
   }catch(err){if(gen===app.generation){root.innerHTML=lessonTrail(info)+'<section class="shell portal-main" id="top"><div class="gate-card"><h2>دریافت یادداشت کامل نشد.</h2><p>'+E(friendly(err))+'</p><a class="button-outline" href="'+E(url('dashboard/'))+'">داشبورد ←</a></div></section>';}}
  }
  function worksheet(){
