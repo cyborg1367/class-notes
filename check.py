@@ -39,6 +39,14 @@ assert lab.exists(),'Missing first-lesson lab route'
 assert 'data-page="lab"' in lab.read_text(),'Lab must use the existing authentication router'
 assert 'data-gate' in lab.read_text(),'Lab route must start gated'
 assert not list(DIST.rglob('__pycache__')),'Do not ship Python bytecode caches'
-for asset in ['coding-lab.js','coding-lab.css','coding-lab-model.mjs','coding-lab-worker.mjs','lab-checks.py']:
+for asset in ['coding-lab.js','coding-lab.css','coding-lab-model.mjs','coding-lab-worker.mjs','lab-service.json']:
  assert (DIST/'assets'/asset).exists(),('Missing lab dependency',asset)
 print(f'Checked {len(pages)} RTL routes, local links/assets, and public/private separation.')
+
+assert not (DIST/"server").exists(), "Trusted server code must not ship as website content"
+assert not (DIST/"supabase").exists(), "Edge Function source must stay in the instructor package"
+assert not any(p.name.startswith('.env') for p in DIST.rglob('*')), 'Do not publish environment files'
+for p in DIST.rglob('*'):
+ if p.is_file() and p.suffix in ['.json','.js','.mjs','.html','.py']:
+  assert not re.search(r'sb_secret_[A-Za-z0-9_-]{20,}',p.read_text()), 'A server-only key is present in the public build'
+  assert not re.search(r'\be2b_[A-Za-z0-9_-]{20,}',p.read_text()), 'An E2B key is present in the public build'

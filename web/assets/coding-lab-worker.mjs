@@ -1,6 +1,6 @@
 // This worker receives lesson data and code only, never auth credentials.
 const INDEX = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/';
-let py, checker, namespace, originalX, originalQuery, busy = false, request = 0, remaining = 12000;
+let py, namespace, originalX, originalQuery, busy = false, request = 0, remaining = 12000;
 const send = (type, extra = {}) => self.postMessage({type, request, ...extra});
 function output(text) {
   if (!remaining) return;
@@ -21,14 +21,9 @@ self.onmessage = async ({data: d}) => {
       await py.loadPackage('numpy');
       py.setStdin({error: true});
       py.setStdout({batched: output}); py.setStderr({batched: output});
-      const response = await fetch(new URL('lab-checks.py', import.meta.url), {cache: 'no-cache'});
-      if (!response.ok) throw Error('CHECKS_UNAVAILABLE');
-      const scope = py.toPy({__name__: '_lab_checks'});
-      try { await py.runPythonAsync(await response.text(), {globals: scope}); checker = scope.get('check_stage'); }
-      finally { scope.destroy(); }
       send('ready'); return;
     }
-    if (!py || typeof d.code !== 'string' || d.code.length > 20000 || !['run','check','console'].includes(d.type)) return;
+    if (!py || typeof d.code !== 'string' || d.code.length > 20000 || !['run','console'].includes(d.type)) return;
     if (d.type !== 'console') {
       if (typeof d.bootstrap !== 'string' || d.bootstrap.length > 20000) return;
       namespace?.destroy(); originalX?.destroy(); originalQuery?.destroy();
@@ -46,12 +41,7 @@ self.onmessage = async ({data: d}) => {
         try { output(repr(result)); } finally { repr.destroy(); }
       }
     } finally { result?.destroy?.(); }
-    if (d.type === 'check') {
-      if (!Number.isInteger(d.stage) || d.stage < 0 || d.stage > 6) return;
-      const verdict = checker(namespace, d.stage, originalX, originalQuery);
-      try { send('checked', {verdict: {ok: verdict.get('ok') === true, message: String(verdict.get('message'))}}); }
-      finally { verdict.destroy(); }
-    } else send('done');
+    send('done');
   } catch (error) {
     send(py && d.type !== 'init' ? 'error' : 'load-error', {text: String(error).slice(0, 12000)});
   } finally { busy = false; }

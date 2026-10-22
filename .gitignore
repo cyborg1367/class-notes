@@ -1,3 +1,18 @@
 dist/
 __pycache__/
 .DS_Store
+
+.lab-qa/
+.venv/
+.env
+.env.*
+!*.example
+
+# Keep the instructor-only evaluator and reference solutions out of this public repository.
+/server/
+/lab-tests/
+/migrations/
+/SETUP-SERVER.fa.md
+/supabase/
+/.env.example
+/QA-INSTRUCTOR.md

@@ -24,6 +24,11 @@ function portalReturn(value,base){
  }catch{return fallback;}
 }
 function portalConfig(c){try{const u=new URL(c.supabaseUrl);return u.protocol==="https:"&&!u.username&&!u.password&&!u.search&&!u.hash&&u.pathname==="/"&&/^sb_publishable_[\w-]+$/.test(c.publishableKey);}catch{return false;}}
+function portalLabEndpoint(value,projectURL){
+ const endpoint=new URL(value),project=new URL(projectURL);
+ if(endpoint.protocol!=='https:'||endpoint.origin!==project.origin||endpoint.pathname!=='/functions/v1/classroom-lab/check'||endpoint.username||endpoint.password||endpoint.search||endpoint.hash)throw Error('INVALID_LAB_ENDPOINT');
+ return endpoint;
+}
 function portalFigure(f){
  const e=portalEscape;const description=f.type==='distance2d'?`محورها هم‌مقیاس‌اند؛ U در (${f.u.join(', ')}) و V در (${f.v.join(', ')}) است.`:`محورها هم‌مقیاس‌اند؛ q در (${f.query.join(', ')}) است. `+f.points.map(p=>`${p.id}: (${p.x.join(', ')}), کلاس ${p.y}`).join('؛ ')+'. دایره کلاس صفر و مربع کلاس یک است.';let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 360" role="img" aria-label="'+e(description)+'">';
  const min=f.type==='knn2d'?3.8:0,max=f.type==='knn2d'?7.4:7,unit=270/(max-min),xy=p=>[65+(p[0]-min)*unit,305-(p[1]-min)*unit];
@@ -60,7 +65,7 @@ function portalMountLessonHero(root,kind){
  figure.innerHTML=plot+'<div class="binary-hero-legend"><span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="#21665d" stroke="#24241f"/></svg>کلاس <bdi>0</bdi></span><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12" fill="#a35236" stroke="#24241f"/></svg>کلاس <bdi>1</bdi></span><span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 8 8-8 8-8-8z" fill="#f4d835" stroke="#24241f"/></svg>پرس‌وجوی <bdi>q</bdi></span></div><p class="binary-hero-axes"><bdi>M1</bdi>: امتیاز تنفسی · <bdi>M2</bdi>: امتیاز خستگی</p><figcaption>پرونده‌ها و امتیازها کاملاً ساختگی‌اند؛ کلاسِ <bdi>q</bdi> هنوز مشخص نیست.</figcaption>';
  grid.classList.remove('hero-grid--single');grid.append(figure);
 }
-if(typeof module!=="undefined"&&module.exports)module.exports={portalEscape,portalInline,portalReturn,portalConfig,portalFigure,portalBlankValue,portalBlankError,portalBlankHelp,portalQuizCode,portalBinaryHero,portalMountLessonHero};
+if(typeof module!=="undefined"&&module.exports)module.exports={portalEscape,portalInline,portalReturn,portalConfig,portalLabEndpoint,portalFigure,portalBlankValue,portalBlankError,portalBlankHelp,portalQuizCode,portalBinaryHero,portalMountLessonHero};
 
 if(typeof document!=="undefined"){
  const $=(s,p=document)=>p.querySelector(s),$$=(s,p=document)=>Array.from(p.querySelectorAll(s)),E=portalEscape;
@@ -108,6 +113,7 @@ if(typeof document!=="undefined"){
    const response=await fetch(new URL('auth-config.json',assets),{cache:'no-cache',credentials:'same-origin'});if(!response.ok)throw Error('CONFIG_UNAVAILABLE');
    const config=await response.json();if(!portalConfig(config)){status($('[data-auth-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');status($('[data-page-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');return;}
    await loadScript(new URL('vendor/supabase/supabase.js',assets).href);
+   app.config=config;
    app.client=window.supabase.createClient(config.supabaseUrl,config.publishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,storageKey:`class-notes-auth:${base.pathname}`}});
    app.client.auth.onAuthStateChange((_event,session)=>onUser(session?.user||null));
    const{data,error}=await app.client.auth.getSession();if(error)throw error;onUser(data.session?.user||null);
@@ -166,14 +172,28 @@ if(typeof document!=="undefined"){
   if(!app.user||app.serviceError||!member(info.course.id)){renderGate(host,info.course.id);return;}
   status(host,'در حال دریافت داده‌های لابراتور…');
   try{
-   const payload=await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
-   const source=new DOMParser().parseFromString(payload.body,'text/html').querySelector('#vectors .code-block pre')?.textContent;
-   if(!source||!source.includes('query ='))throw Error('LAB_DATA_UNAVAILABLE');
+   const snapshot=await rpc('classroom_lab_mission');if(gen!==app.generation)return;
    const moduleURL=new URL('coding-lab.js',assets);moduleURL.search=new URL(entry.src).search;
    if(!window.ClassNotesCodingLab)await loadScript(moduleURL.href);
    if(gen!==app.generation)return;
    const owner=app.user.id;
-   await window.ClassNotesCodingLab.mount(host,{userId:owner,lessonId:lid,bootstrap:source,assets:assets.href,lessonURL:url(lid+'/'),rpc:(args)=>rpc('classroom_lab_progress',{...args,p_owner:owner}),isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
+   async function submit(body,signal){
+    const response=await fetch(new URL('lab-service.json',assets),{cache:'no-cache',signal});
+    if(!response.ok)throw Error('بررسی نهایی هنوز در دسترس نیست؛ با مدرس در میان بگذار.');
+    const config=await response.json();let endpoint;
+    try{endpoint=portalLabEndpoint(config.checkURL,app.config.supabaseUrl);}
+    catch{throw Error('بررسی نهایی هنوز فعال نشده است. می‌توانی کدت را محلی آزمایش و ذخیره کنی؛ XP پس از فعال‌شدن بررسی ثبت می‌شود.');}
+    const {data,error}=await app.client.auth.getSession();
+    if(error||gen!==app.generation||data.session?.user?.id!==owner)throw Error('حساب ورود تغییر کرده است؛ صفحه را بازخوانی کن.');
+    const result=await fetch(endpoint.href,{method:'POST',headers:{'Content-Type':'application/json','apikey':app.config.publishableKey,'Authorization':'Bearer '+data.session.access_token},body:JSON.stringify(body),credentials:'omit',signal});
+    const value=await result.json();
+    if(!result.ok){const text={CLASS_ACCESS_REQUIRED:'عضویت کلاس فعال نیست؛ وضعیت دسترسی را بررسی کن.',TASK_LOCKED:'ابتدا تسک قبلی را انجام بده.',LAB_RATE_LIMIT:'چند لحظه صبر کن و دوباره تلاش کن؛ تعداد بررسی‌های اخیر به حد مجاز رسیده است.',LAB_BUDGET_EXHAUSTED:'سهمیهٔ بررسی فعلاً تمام شده است؛ با مدرس در میان بگذار. کدت ذخیره می‌شود و اجرای محلی در دسترس است.',LAB_PAUSED:'بررسی نهایی موقتاً توسط مدرس متوقف شده است؛ کدت را محلی آزمایش و ذخیره کن.',REQUEST_CONFLICT:'این درخواست با کد دیگری ثبت شده است؛ صفحه را بازخوانی کن.',SIGN_IN_REQUIRED:'دوباره وارد حساب خودت شو.'}[value.error];throw Error(text||'سرویس بررسی پاسخ نداد؛ کدت حفظ شده است. دوباره تلاش کن.');}
+    return value;
+   }
+   await window.ClassNotesCodingLab.mount(host,{userId:owner,assets:assets.href,lessonURL:url(lid+'/'),snapshot,
+    saveDraft:(state,revision)=>rpc('classroom_lab_mission_draft',{p_state:state,p_revision:revision,p_owner:owner}),
+    refresh:()=>rpc('classroom_lab_mission'),getAttempt:request=>rpc('classroom_lab_attempt',{p_request:request}),submit,
+    isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
   }catch(err){if(gen!==app.generation)return;host.innerHTML='<div class="gate-card"><h1>لابراتور دریافت نشد.</h1><p>'+E(friendly(err))+'</p><button type="button" class="button-outline" data-lab-retry>تلاش دوباره</button></div>';host.querySelector('button').onclick=loadCodingLab;}
  }
  function course(){
@@ -206,6 +226,22 @@ if(typeof document!=="undefined"){
    const l=lesson(r.lesson_id);
    return `<article class="dashboard-result" data-result-lesson="${E(r.lesson_id)}"><div class="result-heading"><div><p class="eyebrow" dir="auto">${E(l.course.display_title||l.course.title)} · نسخهٔ ${num(r.version)}</p><h3>${E(l.title)}</h3></div>${r.last_at?'<p class="small-note">آخرین ثبت: '+E(date(r.last_at))+'</p>':''}</div>${summaryHTML(r,r.maximum)}<div class="portal-actions"><a class="button-forest" href="${E(url('quiz/'+l.id+'/?attempt='+encodeURIComponent(r.last_id)))}">مشاهدهٔ آخرین نتیجه ←</a><a class="button-outline" href="${E(url(l.id+'/'))}">مرور یادداشت</a><a class="quiet-link" href="${E(url('quiz/'+l.id+'/'))}">تمرین و آزمون</a></div></article>`;
   }).join('')||'<div class="panel-card"><p>هنوز نتیجهٔ آزمونی ثبت نشده است. پس از مطالعهٔ هر یادداشت، از صفحهٔ کلاس به تمرین و آزمون آن برو.</p></div>'}</div>`;  if(new URL(location.href).hash==='#results'){resultsRoot.focus();resultsRoot.scrollIntoView({block:'start'});}
+  if(member('machine-learning'))void labGrowthCard(root,app.generation);
+ }
+
+ async function labGrowthCard(root,gen){
+  const section=document.createElement('section');section.className='xp-dashboard';section.setAttribute('aria-labelledby','lab-growth-title');root.append(section);
+  section.innerHTML='<h2 id="lab-growth-title">مسیر رشد لابراتور</h2><p role="status">در حال دریافت پیشرفت ثبت‌شده…</p>';
+  try{const state=await rpc('classroom_lab_mission');if(gen!==app.generation||!section.isConnected)return;
+   const xp=Number(state.xp||0),done=new Set(state.completed||[]),level=xp>=300?'مأموریت اول کامل شد':xp>=100?'در مسیر جست‌وجو':'آغاز کاوش داده';
+   section.innerHTML=`<div class="xp-dashboard-head"><div><h2 id="lab-growth-title">مسیر رشد لابراتور</h2><p>${E(level)}</p></div><strong class="xp-dashboard-total" dir="ltr">${fa(xp)} <small>XP</small></strong></div><progress max="300" value="${xp}" aria-label="XP مأموریت گلخانه"></progress><p>کارآگاه گلخانه · ${fa(done.size)} از ۶ تسک · سقف این مأموریت ۳۰۰ XP</p><div class="xp-dashboard-path">${state.tasks.map(t=>`<span data-earned="${done.has(t.id)}">${done.has(t.id)?'✓ ':''}${fa(t.xp)} XP</span>`).join('')}</div>${state.badge?'<span class="xp-badge">✓ نشان «نخستین جست‌وجوی همسایه»</span>':''}<div class="portal-actions"><a class="button-forest" href="${E(url('lab/machine-learning/vector-distance/'))}">${done.size?'ادامهٔ مأموریت':'شروع مأموریت'} ←</a></div><p class="xp-caption">این XP از بررسی مستقل ثبت شده است. پیش‌نویس کد و تیک محلی، امتیاز ایجاد نمی‌کنند.</p>`;
+  }catch{if(gen===app.generation)section.innerHTML='<h2 id="lab-growth-title">مسیر رشد لابراتور</h2><p>پیشرفت دریافت نشد؛ اتصال را بررسی کن و صفحه را بازخوانی کن.</p>';}
+ }
+ async function labGrowthReport(root,courseId,gen){
+  const section=document.createElement('section');section.className='panel-card';root.append(section);section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>در حال دریافت…</p>';
+  try{const rows=await rpc('classroom_lab_teacher_report',{p_course:courseId});if(gen!==app.generation||!section.isConnected)return;
+   section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p class="small-note">مأموریت گلخانه · XP ثبت‌شده با بررسی مستقل. تعداد تلاش به‌تنهایی معیار ضعف نیست.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو</th><th>XP</th><th>تسک کامل</th><th>تلاش بررسی</th><th>آخرین فعالیت</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${E(r.name||'')}<br><bdi>${E(r.email||'')}</bdi></td><td>${fa(r.xp)} / ۳۰۰</td><td>${fa(r.completed)} / ۶</td><td>${fa(r.attempts)}</td><td>${r.last_at?E(date(r.last_at)):'—'}</td></tr>`).join('')+'</tbody></table></div>';
+  }catch{if(gen===app.generation&&section.isConnected)section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>گزارش لابراتور دریافت نشد؛ کمی بعد گزارش را به‌روزرسانی کن.</p>';}
  }
 
  async function privateBlob(path){const{data,error}=await app.client.storage.from('class-materials').download(path);if(error)throw error;const mime=path.endsWith('.js')?'text/javascript':path.endsWith('.svg')?'image/svg+xml':path.endsWith('.pdf')?'application/pdf':path.endsWith('.ipynb')?'application/x-ipynb+json':data.type;const blob=mime?new Blob([data],{type:mime}):data;const u=URL.createObjectURL(blob);objectURLs.add(u);return u;}
@@ -390,6 +426,7 @@ if(typeof document!=="undefined"){
   async function report(){const gen=app.generation,selectedCourse=select.value;status(notice,'در حال دریافت گزارش…');try{const data=await rpc('classroom_report',{p_course:selectedCourse});if(gen!==app.generation||selectedCourse!==select.value)return;status(notice,'');out.innerHTML=`<div class="stats-row"><div class="stat-tile"><strong>${fa(data.members.filter(m=>m.status==='pending').length)}</strong><span>درخواست در انتظار</span></div><div class="stat-tile"><strong>${fa(data.members.filter(m=>m.role==='student'&&m.status==='active').length)}</strong><span>دانشجوی فعال</span></div><div class="stat-tile"><strong>${fa(data.total_attempts)}</strong><span>تلاش ثبت‌شده</span></div></div><section class="panel-card"><h2>عضویت‌های کلاس</h2><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو / ایمیل</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>${data.members.map(m=>`<tr><td>${E(m.name)}<br><bdi>${E(m.email)}</bdi></td><td>${m.role==='teacher'?'مدرس':m.status==='active'?'فعال':m.status==='pending'?'در انتظار تأیید':'غیرفعال'}</td><td>${m.role==='student'?`<button type="button" data-member="${E(m.user_id)}" data-status="${m.status==='active'?'suspended':'active'}">${m.status==='active'?'غیرفعال‌کردن':'تأیید دسترسی'}</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></section><section class="panel-card"><h2>تلاش‌های ثبت‌شده</h2><p class="small-note">${fa(data.total_attempts)} تلاش در مجموع؛ حداکثر ۲۰۰ تلاش آخر نمایش داده می‌شود. تلاش اول و تلاش‌های بعدی جدا مشخص‌اند.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو</th><th>یادداشت / نسخه</th><th>تلاش</th><th>نمره</th><th>زمان</th><th>پاسخ‌ها</th></tr></thead><tbody>${data.attempts.map(a=>`<tr><td><bdi>${E(a.email)}</bdi></td><td>${E(lesson(a.lesson_id)?.title||a.lesson_id)} · ${fa(a.version)}</td><td>${num(a.attempt_no)}</td><td>${score(a.score,a.maximum)}</td><td>${E(date(a.created_at))}</td><td><button type="button" data-attempt="${E(a.id)}">بررسی</button></td></tr>`).join('')||'<tr><td colspan="6">هنوز آزمونی ثبت نشده است.</td></tr>'}</tbody></table></div></section><section class="panel-card"><h2>کدام مفهوم‌ها به مرور نیاز دارند؟</h2><p class="small-note">این آمار از اولین ثبت نهاییِ هر دانشجو در هر نسخه است؛ تمرین و تعداد نمونه‌ها را در تفسیر آن در نظر بگیر. نرخ خطا می‌تواند نشانهٔ ابهام خودِ سؤال هم باشد.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>سؤال / مهارت</th><th>تعداد پاسخ</th><th>پاسخ کاملِ درست</th><th>گزینه‌های انتخاب‌شده</th></tr></thead><tbody>${data.questions.map(q=>`<tr><td><bdi>${E(q.question_id)}</bdi> · ${E(q.skill)} · نسخهٔ ${fa(q.version)}${q.stem?'<br>'+portalInline(q.stem):''}</td><td>${fa(q.responses)}</td><td>${fa(q.correct)} (${fa(Math.round(q.correct/q.responses*100))}٪)</td><td>${q.choices.length?E(Object.entries(q.choices.reduce((r,v)=>(r[v]=(r[v]||0)+1,r),{})).map(([k,v])=>(q.options?.find(o=>o[0]===k)?.[1]||k)+': '+fa(v)).join(' · ')):'—'}</td></tr>`).join('')||'<tr><td colspan="4">هنوز داده‌ای برای تحلیل وجود ندارد.</td></tr>'}</tbody></table></div></section>`;
     $$('[data-member]',out).forEach(b=>b.onclick=async()=>{if(!confirm(b.dataset.status==='active'?'دسترسی این دانشجو به محتوای کلاس فعال شود؟':'دسترسی این دانشجو غیرفعال شود؟'))return;b.disabled=true;try{await rpc('classroom_membership',{p_course:select.value,p_user:b.dataset.member,p_status:b.dataset.status});await report();}catch(err){status(notice,friendly(err),true);b.disabled=false;}});
     $$('[data-attempt]',out).forEach(b=>b.onclick=async()=>{b.disabled=true;try{const a=await rpc('classroom_attempt',{p_id:b.dataset.attempt});if(gen!==app.generation)return;const info=lesson(a.lesson_id);$('[data-teacher-review]',root).innerHTML=resultHTML(a,info,a.prompts||[]);const result=$('.quiz-result',root);result.focus();result.scrollIntoView({behavior:'smooth'});}catch(err){status(notice,friendly(err),true);}finally{b.disabled=false;}});
+    if(selectedCourse==='machine-learning')void labGrowthReport(out,selectedCourse,gen);
    }catch(err){status(notice,friendly(err),true);}}
   select.onchange=report;$('[data-report-refresh]',root).onclick=report;await report();
  }
