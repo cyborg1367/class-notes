@@ -5,7 +5,7 @@ async function mount(root,options){
  current?.dispose();
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
- const [{stages,dataset,bootstrap,normalize,available,highlight,missionId},{mountLayout}]=await Promise.all([import(new URL('coding-lab-model.mjs?v=3.2.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.2.0',assets))]);
+ const [{stages,dataset,bootstrap,normalize,available,highlight,missionId},{mountLayout}]=await Promise.all([import(new URL('coding-lab-model.mjs?v=3.3.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.3.0',assets))]);
  if(!isCurrent())return;
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
@@ -14,11 +14,15 @@ async function mount(root,options){
  let worker=null,phase='idle',checking=false,hasRun=false,disposed=false,epoch=0,request=0,activeRequest=0,timer,autosave,pollTimer,controller,outputSize=0;
  let pending=cached?.pending||null;
  state.active=Math.min(state.active,available(trusted));
- root.innerHTML=`<header class="lab-top mission-top"><div><h1>کارآگاه گلخانه</h1></div><div class="mission-xp" lang="en" dir="ltr" aria-label="Lab progress"><div class="mission-xp-orbit" data-header-progress role="progressbar" aria-label="Lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" cx="120" cy="120" r="108" pathLength="100"/></svg><div class="mission-xp-core" aria-hidden="true"><strong class="mission-xp-value" data-xp>0</strong></div></div><div class="mission-xp-copy"><span class="mission-xp-limit">of <span data-xp-maximum>300</span> XP</span><p class="mission-xp-count" data-count></p><span class="mission-xp-percent" data-xp-percent></span></div></div>  <nav class="mission-navigation" aria-label="مراحل گلخانه"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav></header>
+ root.innerHTML=`<header class="lab-top mission-top">
+ <a class="lab-wordmark" href="${E(new URL('../index.html',assets).href)}"><strong>دفتر کلاس</strong><small lang="en" dir="ltr">CLASS NOTES</small></a>
+ <div class="mission-xp" lang="en" dir="ltr" aria-label="Lab progress"><div class="mission-xp-orbit" data-header-progress role="progressbar" aria-label="Lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" cx="120" cy="120" r="108" pathLength="100"/></svg><div class="mission-xp-core" aria-hidden="true"><strong class="mission-xp-value" data-xp>0</strong></div></div><div class="mission-xp-copy"><span class="mission-xp-limit">of <span data-xp-maximum>300</span> XP</span><p class="mission-xp-count" data-count></p><span class="mission-xp-percent" data-xp-percent></span></div></div>
+ <nav class="lab-site-links" aria-label="پیمایش لابراتور"><a href="${E(lessonURL)}">یادگیری</a><a href="${E(new URL('quiz/machine-learning/vector-distance/',new URL('../',assets)).href)}">تمرین‌ها</a><a href="${E(new URL('machine-learning/',new URL('../',assets)).href)}">مسیرها</a></nav>
+ <div class="lab-mission-heading"><h1>کارآگاه گلخانه</h1>  <nav class="mission-navigation" aria-label="مراحل گلخانه"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav></div></header>
  <div class="lab-workspace">
  <aside class="lab-instructions" aria-label="پنل مأموریت">
 
-  <div class="lab-tabs" role="tablist" aria-label="راهنمای لابراتور" aria-orientation="horizontal">
+  <div class="lab-tabs" role="tablist" dir="ltr" aria-label="راهنمای لابراتور" aria-orientation="horizontal">
    <button id="lab-tab-mission" data-lab-tab="mission" role="tab" aria-controls="lab-panel-mission" aria-selected="true" type="button">مأموریت</button>
    <button id="lab-tab-data" data-lab-tab="data" role="tab" aria-controls="lab-panel-data" aria-selected="false" tabindex="-1" type="button">داده‌ها</button>
    <button id="lab-tab-guide" data-lab-tab="guide" role="tab" aria-controls="lab-panel-guide" aria-selected="false" tabindex="-1" type="button">راهنما</button>
@@ -29,9 +33,9 @@ async function mount(root,options){
    <p class="lab-task-number" data-task-number></p><h2 id="lab-task-title" tabindex="-1"></h2>
    <p class="mission-context" data-concept></p>
    <p class="mission-action" data-action></p>
-   <dl class="mission-io"><div><dt>ورودی</dt><dd data-input></dd></div><div><dt>خروجی</dt><dd data-result></dd></div></dl>
+   <dl class="mission-io"><div><dt data-input-title></dt><dd data-input></dd></div><div><dt data-result-title></dt><dd data-result></dd></div></dl>
    <details class="mission-contract"><summary>یک مثال کوچک</summary><div class="mission-task-text" data-task></div><pre data-example dir="ltr" tabindex="0"></pre></details>
-   <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4"/></svg>Hint</button><span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
+   <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg>Hint</button><span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
    <div data-reflection hidden><label for="lab-explanation">پیش‌بینی و نتیجهٔ آزمایش تو</label><textarea id="lab-explanation" maxlength="3000" rows="3" placeholder="پیش از اجرا چه حدسی داشتی؟ پس از اجرا چه چیزی فهمیدی؟"></textarea></div>
    <div class="lab-feedback" data-feedback role="status" aria-live="polite" hidden></div>
    <button type="button" class="button-forest lab-next" data-next disabled>مرحلهٔ بعد ←</button>
@@ -48,7 +52,7 @@ async function mount(root,options){
   </section>
   <section class="mission-guide" id="lab-panel-guide" role="tabpanel" aria-labelledby="lab-tab-guide" tabindex="0" hidden>
    <p class="lab-panel-kicker">وقتی به کمک نیاز داری</p><h2>قدم بعدی را پیدا کن</h2>
-   <div class="mission-hints"><button type="button" data-hint class="lab-hint-button" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4"/></svg><span data-hint-label>Hint</span></button><span class="mission-hint-count" data-hint-count lang="en" dir="ltr"></span><div data-hints></div></div>
+   <div class="mission-hints"><button type="button" data-hint class="lab-hint-button" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg><span data-hint-label>Hint</span></button><span class="mission-hint-count" data-hint-count lang="en" dir="ltr"></span><div data-hints></div></div>
    <details class="mission-story"><summary>مسئلهٔ گلخانه چیست؟</summary><p>فرض کن به پژوهشگر یک گلخانه کمک می‌کنی. او در ۱۰ نوبت، رطوبت، روشنایی و گرما را ثبت کرده است. حالا می‌خواهد بداند وضعیت امروز به کدام نوبت‌های قبلی شبیه‌تر است.</p><p>قرار است با Python ابزاری بسازی که وضعیت امروز را با سابقه‌ها مقایسه کند و نزدیک‌ترین‌ها را پیدا کند. فاصلهٔ کمتر یعنی شباهت بیشتر.</p><p>در شش مرحله، از شناخت جدول به ساخت ابزار جست‌وجو می‌رسی.</p></details>
    <details class="mission-contract"><summary>چطور با این محیط کار کنم؟</summary><ol class="mission-guide-steps"><li>در تابع خواسته‌شده، <code>pass</code> را با راه‌حل خودت جایگزین کن.</li><li>تابع باید جواب را با <code>return</code> برگرداند. خط <code>print(...)</code> زیر آن، جواب را در خروجی نشان می‌دهد.</li><li>«اجرای کد» را بزن و خروجی یا خطا را ببین. می‌توانی چند بار کدت را تغییر بدهی و امتحان کنی.</li><li>وقتی آماده بودی، «بررسی پاسخ» را بزن تا مرحله ارزیابی شود و XP بگیری.</li></ol></details>
    <a class="quiet-link" href="${E(lessonURL)}">مرور جزوه ←</a>
@@ -56,14 +60,14 @@ async function mount(root,options){
   </div>
  </aside>
  <section class="lab-editor-panel" aria-label="ویرایشگر و خروجی">
-  <div class="lab-editor-toolbar"><span class="lab-file" lang="en" dir="ltr"><span class="lab-file-dot" aria-hidden="true"></span>greenhouse.py</span><div class="lab-actions"><button class="lab-run-button" data-run type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6Z"/></svg>اجرای کد</button><button class="lab-run-button" data-stop type="button" hidden disabled>توقف</button><button class="button-forest" data-check type="button">بررسی پاسخ</button></div>
-   <button class="lab-tool-button lab-focus-button" data-focus type="button" aria-pressed="false" title="فضای بیشتر برای کدنویسی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg><span data-focus-label>تمرکز</span></button>
-   <details class="lab-tools" data-tools><summary aria-label="ابزارها و وضعیت ذخیره" title="ابزارها و وضعیت ذخیره"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="lab-save-alert" data-save-alert hidden aria-label="ذخیره نیاز به بررسی دارد">!</span></summary><div class="lab-tools-menu"><p data-save role="status" aria-live="polite"></p><button data-download type="button">دانلود کد</button><button data-reset type="button">بازنشانی این مرحله</button><button data-cloud-load type="button">دریافت نسخهٔ حساب</button><button data-refresh type="button">همگام‌سازی پیشرفت</button><button data-activate type="button">راه‌اندازی Python</button></div></details>
+  <div class="lab-editor-toolbar"><span class="lab-file" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2h6l4 4v12H5ZM11 2v5h4M8 10h4m-4 3h4"/></svg>greenhouse.py<span class="lab-file-dot" aria-hidden="true"></span></span>
+
+   <details class="lab-tools" data-tools><summary aria-label="اجرای کد، بررسی پاسخ و ابزارها" title="اجرای کد، بررسی پاسخ و ابزارها"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="lab-save-alert" data-save-alert hidden aria-label="ذخیره نیاز به بررسی دارد">!</span></summary><div class="lab-tools-menu"><div class="lab-actions"><button class="lab-run-button" data-run type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6Z"/></svg>اجرای کد</button><button class="lab-run-button" data-stop type="button" hidden disabled>توقف</button><button class="button-forest" data-check type="button">بررسی پاسخ</button></div><p data-save role="status" aria-live="polite"></p><button data-download type="button">دانلود کد</button><button data-reset type="button">بازنشانی این مرحله</button><button data-cloud-load type="button">دریافت نسخهٔ حساب</button><button data-refresh type="button">همگام‌سازی پیشرفت</button><button data-activate type="button">راه‌اندازی Python</button><a href="${E(new URL('account/',new URL('../',assets)).href)}">حساب کاربری</a><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">داشبورد</a><a data-lab-teacher-link hidden href="${E(new URL('instructor/',new URL('../',assets)).href)}">پنل مدرس</a></div></details>   <button class="lab-tool-button lab-focus-button" data-focus type="button" aria-pressed="false" title="فضای بیشتر برای کدنویسی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg><span data-focus-label>تمرکز</span></button>
   </div>
   <div class="lab-split-area" data-split>
    <div class="lab-code-wrap" id="lab-editor-region"><pre class="lab-lines" aria-hidden="true"></pre><div class="lab-code"><pre data-highlight aria-hidden="true"></pre><textarea id="lab-code" aria-label="کد Python" dir="ltr" lang="en" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" maxlength="20000"></textarea></div></div>
-   <div class="lab-resizer" data-resizer role="separator" tabindex="0" aria-label="تغییر اندازهٔ ویرایشگر و خروجی" aria-orientation="horizontal" aria-controls="lab-editor-region lab-console-body" aria-valuemin="20" aria-valuemax="85" aria-valuenow="72" title="برای تغییر اندازه بکش؛ یا از کلیدهای بالا و پایین استفاده کن"><span aria-hidden="true"></span></div>
-   <section class="lab-console" aria-label="کنسول Python"><div class="lab-console-head"><span class="lab-console-title" lang="fa" dir="rtl">خروجی</span><div><button data-clear type="button" aria-label="پاک‌کردن خروجی" title="پاک‌کردن خروجی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5h12M8 3h4M6 5l1 12h6l1-12M9 8v6m2-6v6"/></svg></button><button data-console-toggle type="button" aria-expanded="true" aria-controls="lab-console-body" aria-label="جمع کردن خروجی" title="جمع کردن خروجی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></button></div></div>
+   <div class="lab-resizer" data-resizer role="separator" tabindex="0" aria-label="تغییر اندازهٔ ویرایشگر و خروجی" aria-orientation="horizontal" aria-controls="lab-editor-region lab-console-body" aria-valuemin="20" aria-valuemax="85" aria-valuenow="67" title="برای تغییر اندازه بکش؛ یا از کلیدهای بالا و پایین استفاده کن"><span aria-hidden="true"></span></div>
+   <section class="lab-console" aria-label="کنسول Python"><div class="lab-console-head"><span class="lab-console-title" lang="fa" dir="rtl">خروجی</span><div><details class="lab-console-tools"><summary aria-label="ابزارهای خروجی" title="ابزارهای خروجی"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="4" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="10" cy="16" r="1"/></svg></summary><div class="lab-console-menu"><button data-clear type="button">پاک‌کردن خروجی</button><button data-console-toggle type="button" aria-expanded="true" aria-controls="lab-console-body">جمع کردن خروجی</button></div></details><button data-output-focus class="lab-output-focus" type="button" aria-pressed="false" aria-label="بزرگ‌کردن خروجی" title="بزرگ‌کردن خروجی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg></button></div></div>
     <div class="lab-console-body" data-console-body id="lab-console-body"><pre class="lab-output" data-output dir="ltr" tabindex="0" aria-label="خروجی Python"></pre><details class="lab-repl"><summary title="دستور Python"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 6 4 4-4 4m6 0h6"/></svg><span class="lab-sr-only">دستور Python</span></summary><form class="lab-console-form"><label for="lab-command">&gt;&gt;&gt;</label><input id="lab-command" aria-label="دستور تک‌خطی Python" placeholder="X.shape" dir="ltr" lang="en" autocomplete="off" spellcheck="false" maxlength="2000" disabled><button type="submit" disabled>اجرا</button></form></details></div>
    </section>
   </div>
@@ -81,12 +85,13 @@ async function mount(root,options){
  root.classList.add('lab-open-notebook');document.body.classList.add('lab-notebook-ready');
  const alive=()=>!disposed&&isCurrent();
  const layout=mountLayout(root);
- const toolsMenu=$('[data-tools]');
- function dismissTools(e){if(!toolsMenu.contains(e.target)||e.target.closest('.lab-tools-menu button'))toolsMenu.open=false}
- function closeTools(e){if(e.key==='Escape'&&toolsMenu.open){toolsMenu.open=false;toolsMenu.querySelector('summary').focus()}}
+ const toolsMenu=$('[data-tools]'),consoleTools=$('.lab-console-tools');
+ $('[data-lab-teacher-link]').hidden=document.querySelector('[data-teacher-link]')?.hidden!==false;
+ function dismissTools(e){for(const menu of [toolsMenu,consoleTools])if(!menu.contains(e.target)||e.target.closest('.lab-tools-menu button,.lab-console-menu button'))menu.open=false}
+ function closeTools(e){if(e.key==='Escape')for(const menu of [toolsMenu,consoleTools])if(menu.open){menu.open=false;menu.querySelector('summary').focus()}}
  root.addEventListener('click',dismissTools);root.addEventListener('keydown',closeTools);
  let runWhenReady=false;
- function saveStatus(message,attention=false){save.textContent=message;$('[data-save-alert]').hidden=!attention;$('[data-tools] summary').title=attention?'ابزارها؛ ذخیره نیاز به بررسی دارد':'ابزارها و وضعیت ذخیره'}
+ function saveStatus(message,attention=false){save.textContent=message;$('[data-save-alert]').hidden=!attention;$('[data-tools] summary').title=attention?'ابزارها؛ ذخیره نیاز به بررسی دارد':'اجرای کد، بررسی پاسخ و ابزارها'}
  const celebration=$('[data-celebration]'),celebrated=new Set(trusted.completed||[]);
  let celebrationStep=null;
  function closeCelebration(advance=false){
@@ -94,7 +99,7 @@ async function mount(root,options){
   if(celebration.open)celebration.close();
   celebration.classList.remove('is-celebrating');
   if(!alive()||step===null)return;
-  if(!advance){$('[data-check]').focus();return}
+  if(!advance){editor.focus();return}
   if(step<stages.length-1&&step+1<=available(trusted)){state.active=step+1;select(true);change()}
   else if(trusted.badge){const title=$('[data-finish] h3');title.setAttribute('tabindex','-1');title.focus()}
  }
@@ -146,7 +151,7 @@ async function mount(root,options){
   const s=stages[state.active];if(!state.codes[state.active])state.codes[state.active]=(state.active?state.codes[state.active-1]:'')+s.starter;
   editor.value=state.codes[state.active];explanation.value=state.explanation;hasRun=false;
   $('[data-task-number]').textContent=`مرحلهٔ ${(state.active+1).toLocaleString('fa-IR')} از ۶`;
-  $('#lab-task-title').textContent=s.title;$('[data-concept]').textContent=s.brief;$('[data-action]').innerHTML=s.action;$('[data-task]').innerHTML=s.task;$('[data-example]').textContent=s.example;$('[data-input]').innerHTML=s.input;$('[data-result]').innerHTML=s.result;$('[data-task-reward]').textContent=`+${s.xp} XP`;$('[data-reflection]').hidden=state.active!==5;$('[data-second-query]').hidden=state.active!==5;layout.showMission();$('.lab-instruction-scroll').scrollTop=0;
+  $('#lab-task-title').textContent=s.title;$('[data-concept]').textContent=s.brief;$('[data-action]').innerHTML=s.action;$('[data-task]').innerHTML=s.task;$('[data-example]').textContent=s.example;$('[data-input-title]').textContent=s.inputTitle;$('[data-result-title]').textContent=s.resultTitle;$('[data-input]').innerHTML=s.input;$('[data-result]').innerHTML=s.result;$('[data-task-reward]').textContent=`+${s.xp} XP`;$('[data-reflection]').hidden=state.active!==5;$('[data-second-query]').hidden=state.active!==5;layout.showMission();$('.lab-instruction-scroll').scrollTop=0;
   feedback('');
   output.textContent='';outputSize=0;hints();paint();controls();if(focus)$('#lab-task-title').focus()
  }
@@ -161,7 +166,7 @@ async function mount(root,options){
  function fail(message){terminate();controls(message,true)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.2.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.3.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');

@@ -8,6 +8,8 @@ export const dataset={
 export const bootstrap=`import numpy as np\nnames = ${JSON.stringify(dataset.names)}\nX = np.array(${JSON.stringify(dataset.X)}, dtype=float)\nquery = np.array(${JSON.stringify(dataset.query)}, dtype=float)\nquery_new = np.array(${JSON.stringify(dataset.query_new)}, dtype=float)\n`;
 export const stages=[
  {id:'inspect',title:"ساختار داده را بشناس",xp:20,function:'inspect_data',
+ inputTitle:"ورودی: جدول سابقه‌های گلخانه",
+ resultTitle:"خروجی: گزارشی از تعداد سطرها و ستون‌ها",
  brief:"قرار است سابقه‌های شبیه به وضعیت امروز گلخانه را پیدا کنیم. از شناخت جدول شروع کن: چند سابقه داریم و هر سابقه چند ویژگی دارد؟",
  action:"تابع <code dir=\"ltr\">inspect_data(X)</code> را کامل کن.",
  input:"<code>X</code>؛ یک جدول دوبعدی، با یک سابقه در هر سطر.",
@@ -18,6 +20,8 @@ export const stages=[
  hints:['به این فکر کن که نمونه و ویژگی در کدام جهت جدول قرار دارند.','خروجی باید اندازهٔ دو محور ورودی را گزارش کند؛ عدد ثابت ننویس.','ویژگی shape در آرایهٔ NumPy اندازهٔ محورهای آن را نگه می‌دارد.'],
  starter:'# Mission 1: Describe any rectangular dataset.\ndef inspect_data(X):\n    pass\n\nprint(inspect_data(X))\n'},
  {id:'pair',title:"دو وضعیت را مقایسه کن",xp:30,function:'pair_distance',
+ inputTitle:"ورودی: دو وضعیت هم‌اندازه",
+ resultTitle:"خروجی: یک عدد برای فاصلهٔ دو وضعیت",
  brief:"برای سنجیدن شباهت دو وضعیت، فاصلهٔ اقلیدسی آن‌ها را حساب کن. فاصلهٔ کمتر یعنی شباهت بیشتر؛ دو وضعیت یکسان فاصلهٔ صفر دارند.",
  action:"تابع <code dir=\"ltr\">pair_distance(a, b)</code> را کامل کن.",
  input:"دو بردار هم‌اندازهٔ <code>a</code> و <code>b</code>.",
@@ -28,6 +32,8 @@ export const stages=[
  hints:['از تعریف هندسی فاصلهٔ اقلیدسی شروع کن.','اختلاف مؤلفه‌ها باید بدون خنثی‌کردن علامت یکدیگر جمع شوند.','مربع اختلاف‌ها را جمع کن و ریشهٔ دوم بگیر؛ جزوه مثال مستقلی دارد.'],
  starter:'\n# Mission 2: Compare two states.\ndef pair_distance(a, b):\n    pass\n\nprint(pair_distance(X[0], query))\n'},
  {id:'distances',title:"امروز را با همهٔ سابقه‌ها بسنج",xp:50,function:'distances_to',
+ inputTitle:"ورودی: سابقه‌ها و وضعیت امروز",
+ resultTitle:"خروجی: یک فاصله برای هر سابقه",
  brief:"وضعیت امروز را با تمام سابقه‌ها مقایسه کن. به ازای هر سطر جدول، یک فاصله لازم داریم؛ ترتیب فاصله‌ها باید همان ترتیب سطرها باشد.",
  action:"تابع <code dir=\"ltr\">distances_to(X, query)</code> را کامل کن.",
  input:"سابقه‌های <code>X</code> و وضعیت امروز، <code>query</code>.",
@@ -38,6 +44,8 @@ export const stages=[
  hints:['پس از مقایسه، برای هر سطر به چند عدد خروجی نیاز داری؟','برای یک راه‌حل برداری، بردار پرس‌وجو با تمام سطرها مقایسه می‌شود.','جمع روی محور ویژگی‌ها انجام می‌شود؛ نتیجه باید فقط محور نمونه‌ها را داشته باشد.'],
  starter:'\n# Mission 3: Score every reference state.\ndef distances_to(X, query):\n    pass\n\nprint(distances_to(X, query))\n'},
  {id:'neighbors',title:"نزدیک‌ترین سابقه‌ها را پیدا کن",xp:60,function:'neighbors',
+ inputTitle:"ورودی: سابقه‌ها، وضعیت امروز و تعداد همسایه‌ها",
+ resultTitle:"خروجی: اندیس نزدیک‌ترین سابقه‌ها",
  brief:"از بین سابقه‌ها، k مورد نزدیک‌تر به وضعیت امروز را انتخاب کن. جایگاه سطرها را برگردان؛ این جایگاه‌ها «اندیس» هستند و از صفر شروع می‌شوند.",
  action:"تابع <code dir=\"ltr\">neighbors(X, query, k)</code> را کامل کن.",
  input:"<code>X</code>، <code>query</code> و تعداد همسایه‌ها، <code>k</code>.",
@@ -48,6 +56,8 @@ export const stages=[
  hints:['آیا این تسک مقدار فاصله را می‌خواهد یا جایگاه نمونه‌ها را؟','اول ترتیب نزدیکی را مشخص کن، سپس k مورد را نگه دار.','خروجی argsort اندیس‌های ترتیب‌داده‌شده است؛ با sort مقایسه‌اش کن.'],
  starter:'\n# Mission 4: Return k nearest row indices.\ndef neighbors(X, query, k):\n    pass\n\nprint(neighbors(X, query, 3))\n'},
  {id:'search',title:"گزارش جست‌وجو را بساز",xp:80,function:'search',
+ inputTitle:"ورودی: سابقه‌ها، وضعیت امروز و تعداد همسایه‌ها",
+ resultTitle:"خروجی: indices و distances در یک دیکشنری",
  brief:"کدام سابقه‌ها به وضعیت امروز نزدیک‌ترند؟ فاصلهٔ هر سابقه را هم در گزارش برگردان.",
  action:"تابع <code dir=\"ltr\">search(X, query, k)</code> را کامل کن.",
  input:"سابقه‌های <code>X</code>، وضعیت <code>query</code> و تعداد همسایه‌ها، <code>k</code>.",
@@ -58,6 +68,8 @@ export const stages=[
  hints:['خروجی باید رابطهٔ نمونه و فاصله‌اش را حفظ کند.','می‌توانی از تابع‌های قبلی خودت استفاده کنی یا راه‌حل مستقل بنویسی.','فاصله‌های انتخاب‌شده را با همان اندیس‌های انتخاب‌شده بردار، سپس دیکشنری خروجی را بساز.'],
  starter:'\n# Mission 5: Package a reusable search result.\ndef search(X, query, k):\n    pass\n\nprint(search(X, query, 3))\n'},
  {id:'compare',title:"تغییر وضعیت را آزمایش کن",xp:60,function:'compare_queries',
+ inputTitle:"ورودی: سابقه‌ها و دو وضعیت متفاوت",
+ resultTitle:"خروجی: همسایه‌های هر وضعیت و changed",
  brief:"با تغییر وضعیت، آیا اعضای گروه همسایه‌ها عوض می‌شوند؟ changed فقط با تغییر اعضا True می‌شود؛ جابه‌جایی ترتیب همان اعضا، تغییر گروه نیست.",
  action:"تابع <code dir=\"ltr\">compare_queries(X, before, after, k)</code> را کامل کن.",
  input:"سابقه‌های <code>X</code>، دو وضعیت <code>before</code> و <code>after</code> و تعداد <code>k</code>.",
@@ -93,7 +105,7 @@ export function highlight(code){
    token(end,'string');continue;
   }
   const word=/^[A-Za-z_]\w*/.exec(rest);
-  if(word){const value=word[0];token(i+value.length,keywords.has(value)?'keyword':builtins.has(value)&&code[i-1]!=='.'?'builtin':null);continue}
+  if(word){const value=word[0];token(i+value.length,keywords.has(value)?(value==='return'?'return':'keyword'):builtins.has(value)&&code[i-1]!=='.'?'builtin':null);continue}
   const number=/^(?:0[xX][\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?[\d_]+)?)[jJ]?/.exec(rest);
   if(number){token(i+number[0].length,'number');continue}
   token(i+1,null);
