@@ -5,7 +5,7 @@ async function mount(root,options){
  current?.dispose();
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
- const [{stages,dataset,bootstrap,normalize,available,highlight,missionId},{mountLayout}]=await Promise.all([import(new URL('coding-lab-model.mjs?v=3.1.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.1.0',assets))]);
+ const [{stages,dataset,bootstrap,normalize,available,highlight,missionId},{mountLayout}]=await Promise.all([import(new URL('coding-lab-model.mjs?v=3.2.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.2.0',assets))]);
  if(!isCurrent())return;
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
@@ -14,10 +14,10 @@ async function mount(root,options){
  let worker=null,phase='idle',checking=false,hasRun=false,disposed=false,epoch=0,request=0,activeRequest=0,timer,autosave,pollTimer,controller,outputSize=0;
  let pending=cached?.pending||null;
  state.active=Math.min(state.active,available(trusted));
- root.innerHTML=`<header class="lab-top mission-top"><div><p class="lab-kicker" lang="en" dir="ltr">THE CODING LAB / 01</p><h1>کارآگاه گلخانه</h1></div><div class="mission-xp" lang="en" dir="ltr" aria-label="Lab progress"><div class="mission-xp-orbit" data-header-progress role="progressbar" aria-label="Lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" cx="120" cy="120" r="108" pathLength="100"/></svg><div class="mission-xp-core" aria-hidden="true"><strong class="mission-xp-value" data-xp>0</strong><span class="mission-xp-limit">of <span data-xp-maximum>300</span> XP</span></div></div><div class="mission-xp-copy"><span class="mission-xp-eyebrow">LAB PROGRESS</span><p class="mission-xp-count" data-count></p><span class="mission-xp-percent" data-xp-percent></span></div></div></header>
+ root.innerHTML=`<header class="lab-top mission-top"><div><h1>کارآگاه گلخانه</h1></div><div class="mission-xp" lang="en" dir="ltr" aria-label="Lab progress"><div class="mission-xp-orbit" data-header-progress role="progressbar" aria-label="Lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" cx="120" cy="120" r="108" pathLength="100"/></svg><div class="mission-xp-core" aria-hidden="true"><strong class="mission-xp-value" data-xp>0</strong></div></div><div class="mission-xp-copy"><span class="mission-xp-limit">of <span data-xp-maximum>300</span> XP</span><p class="mission-xp-count" data-count></p><span class="mission-xp-percent" data-xp-percent></span></div></div>  <nav class="mission-navigation" aria-label="مراحل گلخانه"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav></header>
  <div class="lab-workspace">
  <aside class="lab-instructions" aria-label="پنل مأموریت">
-  <nav class="mission-navigation" aria-label="مراحل گلخانه"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav>
+
   <div class="lab-tabs" role="tablist" aria-label="راهنمای لابراتور" aria-orientation="horizontal">
    <button id="lab-tab-mission" data-lab-tab="mission" role="tab" aria-controls="lab-panel-mission" aria-selected="true" type="button">مأموریت</button>
    <button id="lab-tab-data" data-lab-tab="data" role="tab" aria-controls="lab-panel-data" aria-selected="false" tabindex="-1" type="button">داده‌ها</button>
@@ -25,12 +25,12 @@ async function mount(root,options){
   </div>
   <div class="lab-instruction-scroll">
   <section class="lab-task" id="lab-panel-mission" role="tabpanel" aria-labelledby="lab-tab-mission" tabindex="0">
-   <details class="mission-story"><summary>مسئلهٔ گلخانه چیست؟</summary><p>فرض کن به پژوهشگر یک گلخانه کمک می‌کنی. او در ۱۰ نوبت، رطوبت، روشنایی و گرما را ثبت کرده است. حالا می‌خواهد بداند وضعیت امروز به کدام نوبت‌های قبلی شبیه‌تر است.</p><p>قرار است با Python ابزاری بسازی که وضعیت امروز را با سابقه‌ها مقایسه کند و نزدیک‌ترین‌ها را پیدا کند. فاصلهٔ کمتر یعنی شباهت بیشتر.</p><p>در شش مرحله، از شناخت جدول به ساخت ابزار جست‌وجو می‌رسی.</p></details>
+
    <p class="lab-task-number" data-task-number></p><h2 id="lab-task-title" tabindex="-1"></h2>
    <p class="mission-context" data-concept></p>
-   <h3 class="mission-section-title">کاری که باید انجام بدهی</h3><div class="mission-task-text" data-task></div>
-   <dl class="mission-io"><div><dt>ورودی</dt><dd data-input></dd></div><div><dt>خروجی مورد انتظار</dt><dd data-result></dd></div></dl>
-   <details class="mission-contract"><summary>یک مثال کوچک</summary><pre data-example dir="ltr" tabindex="0"></pre></details>
+   <p class="mission-action" data-action></p>
+   <dl class="mission-io"><div><dt>ورودی</dt><dd data-input></dd></div><div><dt>خروجی</dt><dd data-result></dd></div></dl>
+   <details class="mission-contract"><summary>یک مثال کوچک</summary><div class="mission-task-text" data-task></div><pre data-example dir="ltr" tabindex="0"></pre></details>
    <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4"/></svg>Hint</button><span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
    <div data-reflection hidden><label for="lab-explanation">پیش‌بینی و نتیجهٔ آزمایش تو</label><textarea id="lab-explanation" maxlength="3000" rows="3" placeholder="پیش از اجرا چه حدسی داشتی؟ پس از اجرا چه چیزی فهمیدی؟"></textarea></div>
    <div class="lab-feedback" data-feedback role="status" aria-live="polite" hidden></div>
@@ -49,6 +49,7 @@ async function mount(root,options){
   <section class="mission-guide" id="lab-panel-guide" role="tabpanel" aria-labelledby="lab-tab-guide" tabindex="0" hidden>
    <p class="lab-panel-kicker">وقتی به کمک نیاز داری</p><h2>قدم بعدی را پیدا کن</h2>
    <div class="mission-hints"><button type="button" data-hint class="lab-hint-button" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4"/></svg><span data-hint-label>Hint</span></button><span class="mission-hint-count" data-hint-count lang="en" dir="ltr"></span><div data-hints></div></div>
+   <details class="mission-story"><summary>مسئلهٔ گلخانه چیست؟</summary><p>فرض کن به پژوهشگر یک گلخانه کمک می‌کنی. او در ۱۰ نوبت، رطوبت، روشنایی و گرما را ثبت کرده است. حالا می‌خواهد بداند وضعیت امروز به کدام نوبت‌های قبلی شبیه‌تر است.</p><p>قرار است با Python ابزاری بسازی که وضعیت امروز را با سابقه‌ها مقایسه کند و نزدیک‌ترین‌ها را پیدا کند. فاصلهٔ کمتر یعنی شباهت بیشتر.</p><p>در شش مرحله، از شناخت جدول به ساخت ابزار جست‌وجو می‌رسی.</p></details>
    <details class="mission-contract"><summary>چطور با این محیط کار کنم؟</summary><ol class="mission-guide-steps"><li>در تابع خواسته‌شده، <code>pass</code> را با راه‌حل خودت جایگزین کن.</li><li>تابع باید جواب را با <code>return</code> برگرداند. خط <code>print(...)</code> زیر آن، جواب را در خروجی نشان می‌دهد.</li><li>«اجرای کد» را بزن و خروجی یا خطا را ببین. می‌توانی چند بار کدت را تغییر بدهی و امتحان کنی.</li><li>وقتی آماده بودی، «بررسی پاسخ» را بزن تا مرحله ارزیابی شود و XP بگیری.</li></ol></details>
    <a class="quiet-link" href="${E(lessonURL)}">مرور جزوه ←</a>
   </section>
@@ -62,8 +63,8 @@ async function mount(root,options){
   <div class="lab-split-area" data-split>
    <div class="lab-code-wrap" id="lab-editor-region"><pre class="lab-lines" aria-hidden="true"></pre><div class="lab-code"><pre data-highlight aria-hidden="true"></pre><textarea id="lab-code" aria-label="کد Python" dir="ltr" lang="en" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" maxlength="20000"></textarea></div></div>
    <div class="lab-resizer" data-resizer role="separator" tabindex="0" aria-label="تغییر اندازهٔ ویرایشگر و خروجی" aria-orientation="horizontal" aria-controls="lab-editor-region lab-console-body" aria-valuemin="20" aria-valuemax="85" aria-valuenow="72" title="برای تغییر اندازه بکش؛ یا از کلیدهای بالا و پایین استفاده کن"><span aria-hidden="true"></span></div>
-   <section class="lab-console" aria-label="کنسول Python"><div class="lab-console-head"><span class="lab-console-title" lang="en" dir="ltr">OUTPUT <span>Python / NumPy</span></span><div><button data-clear type="button" aria-label="پاک‌کردن خروجی" title="پاک‌کردن خروجی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5h12M8 3h4M6 5l1 12h6l1-12M9 8v6m2-6v6"/></svg></button><button data-console-toggle type="button" aria-expanded="true" aria-controls="lab-console-body" aria-label="جمع کردن خروجی" title="جمع کردن خروجی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></button></div></div>
-    <div class="lab-console-body" data-console-body id="lab-console-body"><pre class="lab-output" data-output dir="ltr" tabindex="0" aria-label="خروجی Python"></pre><details class="lab-repl"><summary>دستور Python</summary><form class="lab-console-form"><label for="lab-command">&gt;&gt;&gt;</label><input id="lab-command" aria-label="دستور تک‌خطی Python" placeholder="X.shape" dir="ltr" lang="en" autocomplete="off" spellcheck="false" maxlength="2000" disabled><button type="submit" disabled>اجرا</button></form></details></div>
+   <section class="lab-console" aria-label="کنسول Python"><div class="lab-console-head"><span class="lab-console-title" lang="fa" dir="rtl">خروجی</span><div><button data-clear type="button" aria-label="پاک‌کردن خروجی" title="پاک‌کردن خروجی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5h12M8 3h4M6 5l1 12h6l1-12M9 8v6m2-6v6"/></svg></button><button data-console-toggle type="button" aria-expanded="true" aria-controls="lab-console-body" aria-label="جمع کردن خروجی" title="جمع کردن خروجی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></button></div></div>
+    <div class="lab-console-body" data-console-body id="lab-console-body"><pre class="lab-output" data-output dir="ltr" tabindex="0" aria-label="خروجی Python"></pre><details class="lab-repl"><summary title="دستور Python"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 6 4 4-4 4m6 0h6"/></svg><span class="lab-sr-only">دستور Python</span></summary><form class="lab-console-form"><label for="lab-command">&gt;&gt;&gt;</label><input id="lab-command" aria-label="دستور تک‌خطی Python" placeholder="X.shape" dir="ltr" lang="en" autocomplete="off" spellcheck="false" maxlength="2000" disabled><button type="submit" disabled>اجرا</button></form></details></div>
    </section>
   </div>
   <p class="lab-runtime" data-runtime role="status" aria-live="polite" hidden></p><div class="mission-award" data-award role="status" aria-live="polite" hidden></div>
@@ -77,6 +78,7 @@ async function mount(root,options){
  <p class="xp-celebration-message" id="xp-celebration-message">Nicely done!</p><p class="xp-celebration-total" id="xp-celebration-detail" data-celebration-progress role="progressbar" aria-label="Total lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><span data-celebration-total>20</span><span class="xp-celebration-divider"> / </span><span data-celebration-maximum>300</span> XP</p>
  <button class="xp-celebration-continue" data-celebration-continue type="button" autofocus>Continue<svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></dialog>`);
  const $=s=>root.querySelector(s),editor=$('#lab-code'),output=$('[data-output]'),save=$('[data-save]'),explanation=$('#lab-explanation'),command=$('#lab-command');
+ root.classList.add('lab-open-notebook');document.body.classList.add('lab-notebook-ready');
  const alive=()=>!disposed&&isCurrent();
  const layout=mountLayout(root);
  const toolsMenu=$('[data-tools]');
@@ -131,11 +133,11 @@ async function mount(root,options){
  function progress(){
   const completed=new Set(trusted.completed||[]),limit=available(trusted),busy=checking||['loading','running'].includes(phase);
   const maximum=Number(trusted.maximum)||300,xp=Math.min(maximum,Math.max(0,Number(trusted.xp)||0)),header=$('.mission-xp'),meter=$('[data-header-progress]');
-  $('[data-xp]').textContent=String(xp);$('[data-xp-maximum]').textContent=String(maximum);$('[data-count]').textContent=`${completed.size} of ${stages.length} missions completed`;$('[data-xp-percent]').textContent=`${Math.round(xp/maximum*100)}% complete`;
+  $('[data-xp]').textContent=String(xp);$('[data-xp-maximum]').textContent=String(maximum);$('[data-count]').textContent=`${completed.size} of ${stages.length} completed`;$('[data-xp-percent]').textContent=`${Math.round(xp/maximum*100)}% complete`;
   header.style.setProperty('--xp-to',String(100-xp/maximum*100));header.classList.toggle('is-complete',xp===maximum);
   meter.setAttribute('aria-valuemax',String(maximum));meter.setAttribute('aria-valuenow',String(xp));meter.setAttribute('aria-valuetext',`${xp} of ${maximum} XP; ${completed.size} of ${stages.length} missions completed`);
   $('.mission-path').innerHTML=stages.map((s,i)=>`<li><button data-stage="${i}" type="button" title="${E(s.title)} · ${s.xp} XP" aria-label="مرحلهٔ ${i+1}: ${E(s.title)}${completed.has(s.id)?'؛ تکمیل شده':''}" ${i>limit||busy?'disabled':''} ${i===state.active?'aria-current="step"':''} data-done="${completed.has(s.id)}"><span class="mission-step-number" aria-hidden="true">${completed.has(s.id)?'✓':i+1}</span></button></li>`).join('');
-  $('[data-next]').hidden=state.active===5;$('[data-next]').disabled=!completed.has(stages[state.active].id)||busy;$('[data-finish]').hidden=!trusted.badge;
+  $('[data-next]').hidden=state.active===5||!completed.has(stages[state.active].id);$('[data-next]').disabled=!completed.has(stages[state.active].id)||busy;$('[data-finish]').hidden=!trusted.badge;
  }
  function sync(){const pre=$('[data-highlight]');pre.scrollTop=editor.scrollTop;pre.scrollLeft=editor.scrollLeft;$('.lab-lines').scrollTop=editor.scrollTop}
  function paint(){ $('[data-highlight]').innerHTML=highlight(editor.value)+'\n';$('.lab-lines').textContent=editor.value.split('\n').map((_,i)=>i+1).join('\n');sync() }
@@ -144,7 +146,7 @@ async function mount(root,options){
   const s=stages[state.active];if(!state.codes[state.active])state.codes[state.active]=(state.active?state.codes[state.active-1]:'')+s.starter;
   editor.value=state.codes[state.active];explanation.value=state.explanation;hasRun=false;
   $('[data-task-number]').textContent=`مرحلهٔ ${(state.active+1).toLocaleString('fa-IR')} از ۶`;
-  $('#lab-task-title').textContent=s.title;$('[data-concept]').textContent=s.concept;$('[data-task]').innerHTML=s.task;$('[data-example]').textContent=s.example;$('[data-input]').innerHTML=s.input;$('[data-result]').innerHTML=s.result;$('[data-task-reward]').textContent=`+${s.xp} XP`;$('[data-reflection]').hidden=state.active!==5;$('[data-second-query]').hidden=state.active!==5;layout.showMission();$('.lab-instruction-scroll').scrollTop=0;
+  $('#lab-task-title').textContent=s.title;$('[data-concept]').textContent=s.brief;$('[data-action]').innerHTML=s.action;$('[data-task]').innerHTML=s.task;$('[data-example]').textContent=s.example;$('[data-input]').innerHTML=s.input;$('[data-result]').innerHTML=s.result;$('[data-task-reward]').textContent=`+${s.xp} XP`;$('[data-reflection]').hidden=state.active!==5;$('[data-second-query]').hidden=state.active!==5;layout.showMission();$('.lab-instruction-scroll').scrollTop=0;
   feedback('');
   output.textContent='';outputSize=0;hints();paint();controls();if(focus)$('#lab-task-title').focus()
  }
@@ -159,7 +161,7 @@ async function mount(root,options){
  function fail(message){terminate();controls(message,true)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.1.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.2.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');
@@ -212,7 +214,7 @@ async function mount(root,options){
   finally{cloudLoading=false;if(alive())controls()}
  };
  function pagehide(){closeCelebration();persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
- function dispose(){if(disposed)return;disposed=true;layout.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
+ function dispose(){if(disposed)return;disposed=true;document.body.classList.remove('lab-notebook-ready');root.classList.remove('lab-open-notebook');layout.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
  window.addEventListener('pagehide',pagehide);select();persist();saveStatus(conflict?'نسخهٔ محلی با حساب تفاوت دارد؛ پیش از دریافت نسخهٔ حساب، کدت را دانلود کن.':dirty?'کد این مرورگر بازیابی شد.':'ذخیرهٔ خودکار فعال است.',conflict);return current
 }
 window.ClassNotesCodingLab={mount,dispose:()=>current?.dispose()};
