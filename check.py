@@ -30,8 +30,15 @@ for p in DIST.rglob('*.css'):
 assert not list(DIST.rglob('*.pdf')),'Private PDFs cannot be in the public build'
 assert not list(DIST.rglob('*.ipynb')),'Private notebooks cannot be in the public build'
 for p in DIST.rglob('*'):
- if p.is_file() and p.suffix in ['.html','.js','.mjs','.json']:
+ if p.is_file() and p.suffix in ['.html','.js','.mjs','.json','.py']:
   s=p.read_text()
   assert 'vd-05' not in s and 'kn-05' not in s,'Quiz bank leaked'
   assert 'q_new = np.array' not in s,'Lesson source leaked'
+lab=DIST/'lab/machine-learning/vector-distance/index.html'
+assert lab.exists(),'Missing first-lesson lab route'
+assert 'data-page="lab"' in lab.read_text(),'Lab must use the existing authentication router'
+assert 'data-gate' in lab.read_text(),'Lab route must start gated'
+assert not list(DIST.rglob('__pycache__')),'Do not ship Python bytecode caches'
+for asset in ['coding-lab.js','coding-lab.css','coding-lab-model.mjs','coding-lab-worker.mjs','lab-checks.py']:
+ assert (DIST/'assets'/asset).exists(),('Missing lab dependency',asset)
 print(f'Checked {len(pages)} RTL routes, local links/assets, and public/private separation.')

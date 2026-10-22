@@ -9,5 +9,5 @@ if c['supabaseUrl'] or c['publishableKey']:
  assert u.scheme=='https' and u.hostname and not (u.username or u.password or u.query or u.fragment) and u.path in ('','/'), 'Use the HTTPS project URL.'
  assert re.fullmatch(r'sb_publishable_[A-Za-z0-9_-]+',c['publishableKey']), 'Only a publishable key may be deployed.'
 if (r/'dist').exists():shutil.rmtree(r/'dist')
-shutil.copytree(r/'web',r/'dist')
+shutil.copytree(r/'web',r/'dist',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
 print('Built public classroom application; private material is fetched after authorization.')

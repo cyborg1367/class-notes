@@ -88,9 +88,9 @@ if(typeof document!=="undefined"){
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
  async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;app.state=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesMotion?.clearLesson();}
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;app.state=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
-  if(!initializing&&old!==next){if(old){if(['lesson','quiz','dashboard','instructor','course'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
+  if(!initializing&&old!==next){if(old){if(['lesson','lab','quiz','dashboard','instructor','course'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
  }
  async function loadScript(src){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.head.append(s);});}
  async function boot(){
@@ -135,6 +135,7 @@ if(typeof document!=="undefined"){
   if(page==='course')course();
   if(page==='instructor')await teacher();
   if(page==='lesson')await loadLesson();
+  if(page==='lab')await loadCodingLab();
   if(page==='quiz')await loadQuiz();
  }
  function studyState(course){
@@ -155,7 +156,25 @@ if(typeof document!=="undefined"){
   return `<nav class="shell route-trail" aria-label="مسیر صفحه"><ol><li><a href="${E(url('index.html'))}">صفحهٔ اصلی</a></li><li><a href="${E(url('index.html#classes'))}">کلاس‌ها</a></li><li><a dir="auto" href="${E(url(info.course.id+'/'))}">${E(info.course.display_title||info.course.title)}</a></li><li><span aria-current="page">یادداشت <bdi dir="ltr">${E(info.number)}</bdi> · ${E(info.title)}</span></li></ol></nav>`;
  }
  function lessonAccess(info){
-  return `<nav class="shell lesson-shortcuts" aria-label="دسترسی‌های یادداشت"><a class="quiet-link" href="${E(url(info.course.id+'/'))}">فهرست یادداشت‌های کلاس ←</a><a class="button-outline" href="${E(url('quiz/'+info.id+'/'))}">تمرین و آزمون این یادداشت</a></nav>`;
+  return `<nav class="shell lesson-shortcuts" aria-label="دسترسی‌های یادداشت"><a class="quiet-link" href="${E(url(info.course.id+'/'))}">فهرست یادداشت‌های کلاس ←</a>${info.id==='machine-learning/vector-distance'?'<a class="button-forest" href="'+E(url('lab/'+info.id+'/'))+'">ورود به لابراتور کدنویسی ←</a>':''}<a class="button-outline" href="${E(url('quiz/'+info.id+'/'))}">تمرین و آزمون این یادداشت</a></nav>`;
+ }
+ async function loadCodingLab(){
+  const info=lesson(lid),root=$('#main'),gen=app.generation;
+  window.ClassNotesCodingLab?.dispose();
+  root.innerHTML=lessonTrail(info)+'<section class="shell portal-main"><div data-lab-host></div></section>';
+  const host=$('[data-lab-host]');
+  if(!app.user||app.serviceError||!member(info.course.id)){renderGate(host,info.course.id);return;}
+  status(host,'در حال دریافت داده‌های لابراتور…');
+  try{
+   const payload=await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
+   const source=new DOMParser().parseFromString(payload.body,'text/html').querySelector('#vectors .code-block pre')?.textContent;
+   if(!source||!source.includes('query ='))throw Error('LAB_DATA_UNAVAILABLE');
+   const moduleURL=new URL('coding-lab.js',assets);moduleURL.search=new URL(entry.src).search;
+   if(!window.ClassNotesCodingLab)await loadScript(moduleURL.href);
+   if(gen!==app.generation)return;
+   const owner=app.user.id;
+   await window.ClassNotesCodingLab.mount(host,{userId:owner,lessonId:lid,bootstrap:source,assets:assets.href,lessonURL:url(lid+'/'),rpc:(args)=>rpc('classroom_lab_progress',{...args,p_owner:owner}),isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
+  }catch(err){if(gen!==app.generation)return;host.innerHTML='<div class="gate-card"><h1>لابراتور دریافت نشد.</h1><p>'+E(friendly(err))+'</p><button type="button" class="button-outline" data-lab-retry>تلاش دوباره</button></div>';host.querySelector('button').onclick=loadCodingLab;}
  }
  function course(){
   const c=catalog.find(c=>c.id===lid);if(!c)return;
