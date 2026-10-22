@@ -5,7 +5,7 @@ async function mount(root,options){
  current?.dispose();
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
- const [{stages,dataset,bootstrap,normalize,available,highlight,missionId},{mountLayout}]=await Promise.all([import(new URL('coding-lab-model.mjs?v=3.3.1',assets)),import(new URL('coding-lab-layout.mjs?v=3.3.1',assets))]);
+ const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout}]=await Promise.all([import(new URL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs?v=3.4.0':'coding-lab-model.mjs?v=3.4.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.4.0',assets))]);
  if(!isCurrent())return;
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
@@ -17,8 +17,8 @@ async function mount(root,options){
  root.innerHTML=`<header class="lab-top mission-top">
  <a class="lab-wordmark" href="${E(new URL('../index.html',assets).href)}"><strong>دفتر کلاس</strong><small lang="en" dir="ltr">CLASS NOTES</small></a>
  <div class="mission-xp" lang="en" dir="ltr" aria-label="Lab progress"><div class="mission-xp-orbit" data-header-progress role="progressbar" aria-label="Lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" cx="120" cy="120" r="108" pathLength="100"/></svg><div class="mission-xp-core" aria-hidden="true"><strong class="mission-xp-value" data-xp>0</strong></div></div><div class="mission-xp-copy"><span class="mission-xp-limit">of <span data-xp-maximum>300</span> XP</span><p class="mission-xp-count" data-count></p><span class="mission-xp-percent" data-xp-percent></span></div></div>
- <nav class="lab-site-links" aria-label="پیمایش لابراتور"><a href="${E(lessonURL)}">یادگیری</a><a href="${E(new URL('quiz/machine-learning/vector-distance/',new URL('../',assets)).href)}">تمرین‌ها</a><a href="${E(new URL('machine-learning/',new URL('../',assets)).href)}">مسیرها</a></nav>
- <div class="lab-mission-heading"><h1>کارآگاه گلخانه</h1>  <nav class="mission-navigation" aria-label="مراحل گلخانه"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav></div></header>
+ <nav class="lab-site-links" aria-label="پیمایش لابراتور"><a href="${E(lessonURL)}">یادگیری</a><a href="${E(new URL(`quiz/${meta.lessonId}/`,new URL('../',assets)).href)}">تمرین‌ها</a><a href="${E(new URL('machine-learning/',new URL('../',assets)).href)}">مسیرها</a></nav>
+ <div class="lab-mission-heading"><h1>${E(meta.title)}</h1>  <nav class="mission-navigation" aria-label="مراحل مأموریت"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav></div></header>
  <div class="lab-workspace">
  <aside class="lab-instructions" aria-label="پنل مأموریت">
 
@@ -39,28 +39,27 @@ async function mount(root,options){
    <div data-reflection hidden><label for="lab-explanation">پیش‌بینی و نتیجهٔ آزمایش تو</label><textarea id="lab-explanation" maxlength="3000" rows="3" placeholder="پیش از اجرا چه حدسی داشتی؟ پس از اجرا چه چیزی فهمیدی؟"></textarea></div>
    <div class="lab-feedback" data-feedback role="status" aria-live="polite" hidden></div>
    <button type="button" class="button-forest lab-next" data-next disabled>مرحلهٔ بعد ←</button>
-   <div class="lab-finish" data-finish hidden><span class="mission-seal" aria-hidden="true">✓</span><h3>ابزار جست‌وجوی تو آماده است.</h3><p>هر شش مرحله را انجام دادی.</p><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">دیدن مسیر رشد در داشبورد ←</a></div>
+   <div class="lab-finish" data-finish hidden><span class="mission-seal" aria-hidden="true">✓</span><h3>${E(meta.finish)}</h3><p>هر شش مرحله را انجام دادی.</p><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">دیدن مسیر رشد در داشبورد ←</a></div>
   </section>
   <section class="mission-dataset" id="lab-panel-data" role="tabpanel" aria-labelledby="lab-tab-data" tabindex="0" hidden>
-   <p class="lab-panel-kicker">داده‌های آمادهٔ این تمرین</p><h2>هر سطر، یک نوبت ثبت</h2>
-   <p>جدول <code>X</code> شامل ۱۰ سابقه است. سه ستون آن همیشه به ترتیب <strong>رطوبت، روشنایی، گرما</strong> هستند. مثلاً <code dir="ltr">X[0] = [2, 8, 3]</code> یعنی نوبت اول: رطوبت ۲، روشنایی ۸ و گرما ۳.</p>
-   <p>عددها امتیازهای ساختگی از ۰ تا ۱۰ هستند؛ واحد فیزیکی ندارند. عدد بزرگ‌تر یعنی مقدار بیشتر آن ویژگی. هر سه ویژگی از قبل روی مقیاس مشترک‌اند.</p>
-   <div class="mission-query"><span>وضعیت امروز · <code>query</code></span><strong dir="ltr">[4.5, 6.5, 4.0]</strong><p>آن را با هر سطر جدول مقایسه خواهیم کرد.</p></div>
-   <div class="mission-query" data-second-query hidden><span>وضعیت دوم · <code>query_new</code></span><strong dir="ltr">[7, 3, 7]</strong><p>در مرحلهٔ ششم بررسی می‌کنی با تغییر وضعیت، همسایه‌ها چه تغییری می‌کنند.</p></div>
-   <div class="mission-table" tabindex="0" aria-label="جدول سابقه‌های گلخانه"><table><caption>سابقه‌های گلخانه · اندیس‌ها از صفر شروع می‌شوند</caption><thead><tr><th>اندیس</th><th>شناسه</th>${dataset.columns.map(c=>`<th>${c.label}<small lang="en">${c.name}</small></th>`).join('')}</tr></thead><tbody>${dataset.X.map((row,i)=>`<tr><th dir="ltr">${i}</th><td dir="ltr">${dataset.names[i]}</td>${row.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-   <details class="mission-contract"><summary>آرایه‌های آماده در Python</summary><p><code>np</code>، <code>X</code>، <code>names</code>، <code>query</code> و <code>query_new</code> هنگام اجرای کد آماده‌اند. لازم نیست آن‌ها را دوباره وارد کنی.</p><pre dir="ltr" tabindex="0">${E(bootstrap)}</pre></details>
+   <p class="lab-panel-kicker">داده‌های آمادهٔ این تمرین</p><h2>${E(meta.dataTitle)}</h2>
+   ${meta.dataIntro}
+   <div class="mission-query"><span>${E(meta.queryLabel)} · <code>query</code></span><strong dir="ltr">${E(JSON.stringify(dataset.query))}</strong><p>${E(meta.queryHelp)}</p></div>
+   <div class="mission-query" data-second-query hidden><span>وضعیت دوم · <code>query_new</code></span><strong dir="ltr">${E(JSON.stringify(dataset.query_new))}</strong><p>${E(meta.secondHelp||'')}</p></div>
+   <div class="mission-table" tabindex="0" aria-label="${E(meta.tableTitle)}"><table><caption>${E(meta.tableTitle)} · اندیس‌ها از صفر شروع می‌شوند</caption><thead><tr><th>اندیس</th><th>شناسه</th>${dataset.columns.map(c=>`<th>${c.label}<small lang="en">${c.name}</small></th>`).join('')}${dataset.y?'<th>برچسب <small lang="en">y</small></th>':''}</tr></thead><tbody>${dataset.X.map((row,i)=>`<tr><th dir="ltr">${i}</th><td dir="ltr">${dataset.names[i]}</td>${row.map(v=>`<td>${v}</td>`).join('')}${dataset.y?`<td>${dataset.y[i]}</td>`:''}</tr>`).join('')}</tbody></table></div>
+   <details class="mission-contract"><summary>آرایه‌های آماده در Python</summary><p>${meta.variables}</p><pre dir="ltr" tabindex="0">${E(bootstrap)}</pre></details>
   </section>
   <section class="mission-guide" id="lab-panel-guide" role="tabpanel" aria-labelledby="lab-tab-guide" tabindex="0" hidden>
    <p class="lab-panel-kicker">وقتی به کمک نیاز داری</p><h2>قدم بعدی را پیدا کن</h2>
    <div class="mission-hints"><button type="button" data-hint class="lab-hint-button" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg><span data-hint-label>Hint</span></button><span class="mission-hint-count" data-hint-count lang="en" dir="ltr"></span><div data-hints></div></div>
-   <details class="mission-story"><summary>مسئلهٔ گلخانه چیست؟</summary><p>فرض کن به پژوهشگر یک گلخانه کمک می‌کنی. او در ۱۰ نوبت، رطوبت، روشنایی و گرما را ثبت کرده است. حالا می‌خواهد بداند وضعیت امروز به کدام نوبت‌های قبلی شبیه‌تر است.</p><p>قرار است با Python ابزاری بسازی که وضعیت امروز را با سابقه‌ها مقایسه کند و نزدیک‌ترین‌ها را پیدا کند. فاصلهٔ کمتر یعنی شباهت بیشتر.</p><p>در شش مرحله، از شناخت جدول به ساخت ابزار جست‌وجو می‌رسی.</p></details>
+   <details class="mission-story"><summary>${E(meta.storyTitle)}</summary>${meta.story}</details>
    <details class="mission-contract"><summary>چطور با این محیط کار کنم؟</summary><ol class="mission-guide-steps"><li>در تابع خواسته‌شده، <code>pass</code> را با راه‌حل خودت جایگزین کن.</li><li>تابع باید جواب را با <code>return</code> برگرداند. خط <code>print(...)</code> زیر آن، جواب را در خروجی نشان می‌دهد.</li><li>«اجرای کد» را بزن و خروجی یا خطا را ببین. می‌توانی چند بار کدت را تغییر بدهی و امتحان کنی.</li><li>وقتی آماده بودی، «بررسی پاسخ» را بزن تا مرحله ارزیابی شود و XP بگیری.</li></ol></details>
    <a class="quiet-link" href="${E(lessonURL)}">مرور جزوه ←</a>
   </section>
   </div>
  </aside>
  <section class="lab-editor-panel" aria-label="ویرایشگر و خروجی">
-  <div class="lab-editor-toolbar"><span class="lab-file" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2h6l4 4v12H5ZM11 2v5h4M8 10h4m-4 3h4"/></svg>greenhouse.py<span class="lab-file-dot" aria-hidden="true"></span></span>
+  <div class="lab-editor-toolbar"><span class="lab-file" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2h6l4 4v12H5ZM11 2v5h4M8 10h4m-4 3h4"/></svg>${E(meta.filename)}<span class="lab-file-dot" aria-hidden="true"></span></span>
 
    <div class="lab-actions"><button class="lab-run-button" data-run type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6Z"/></svg>اجرای کد</button><button class="lab-run-button" data-stop type="button" hidden disabled>توقف</button><button class="button-forest" data-check type="button">بررسی پاسخ</button></div>
    <details class="lab-tools" data-tools><summary aria-label="ابزارها و وضعیت ذخیره" title="ابزارها و وضعیت ذخیره"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="lab-save-alert" data-save-alert hidden aria-label="ذخیره نیاز به بررسی دارد">!</span></summary><div class="lab-tools-menu"><p data-save role="status" aria-live="polite"></p><button data-download type="button">دانلود کد</button><button data-reset type="button">بازنشانی این مرحله</button><button data-cloud-load type="button">دریافت نسخهٔ حساب</button><button data-refresh type="button">همگام‌سازی پیشرفت</button><button data-activate type="button">راه‌اندازی Python</button><a href="${E(new URL('account/',new URL('../',assets)).href)}">حساب کاربری</a><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">داشبورد</a><a data-lab-teacher-link hidden href="${E(new URL('instructor/',new URL('../',assets)).href)}">پنل مدرس</a></div></details>   <button class="lab-tool-button lab-focus-button" data-focus type="button" aria-pressed="false" title="فضای بیشتر برای کدنویسی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg><span data-focus-label>تمرکز</span></button>
@@ -152,7 +151,7 @@ async function mount(root,options){
   const s=stages[state.active];if(!state.codes[state.active])state.codes[state.active]=(state.active?state.codes[state.active-1]:'')+s.starter;
   editor.value=state.codes[state.active];explanation.value=state.explanation;hasRun=false;
   $('[data-task-number]').textContent=`مرحلهٔ ${(state.active+1).toLocaleString('fa-IR')} از ۶`;
-  $('#lab-task-title').textContent=s.title;$('[data-concept]').textContent=s.brief;$('[data-action]').innerHTML=s.action;$('[data-task]').innerHTML=s.task;$('[data-example]').textContent=s.example;$('[data-input-title]').textContent=s.inputTitle;$('[data-result-title]').textContent=s.resultTitle;$('[data-input]').innerHTML=s.input;$('[data-result]').innerHTML=s.result;$('[data-task-reward]').textContent=`+${s.xp} XP`;$('[data-reflection]').hidden=state.active!==5;$('[data-second-query]').hidden=state.active!==5;layout.showMission();$('.lab-instruction-scroll').scrollTop=0;
+  $('#lab-task-title').textContent=s.title;$('[data-concept]').textContent=s.brief;$('[data-action]').innerHTML=s.action;$('[data-task]').innerHTML=s.task;$('[data-example]').textContent=s.example;$('[data-input-title]').textContent=s.inputTitle;$('[data-result-title]').textContent=s.resultTitle;$('[data-input]').innerHTML=s.input;$('[data-result]').innerHTML=s.result;$('[data-task-reward]').textContent=`+${s.xp} XP`;$('[data-reflection]').hidden=state.active!==5;$('[data-second-query]').hidden=!dataset.query_new||state.active!==5;layout.showMission();$('.lab-instruction-scroll').scrollTop=0;
   feedback('');
   output.textContent='';outputSize=0;hints();paint();controls();if(focus)$('#lab-task-title').focus()
  }
@@ -167,7 +166,7 @@ async function mount(root,options){
  function fail(message){terminate();controls(message,true)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.3.1',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.4.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');
@@ -191,7 +190,7 @@ async function mount(root,options){
  $('.mission-path').onclick=e=>{const b=e.target.closest('[data-stage]');if(!b||b.disabled)return;state.active=Number(b.dataset.stage);select(true);change()};
  $('[data-next]').onclick=()=>{if(state.active<available(trusted)&&state.active<5){state.active++;select(true);change()}};
  $('[data-reset]').onclick=()=>{if(!confirm('کد این تسک با قالب آغازین جایگزین شود؟ XP قبلی حفظ می‌شود.'))return;state.codes[state.active]=(state.active?state.codes[state.active-1]:'')+stages[state.active].starter;select();change()};
- $('[data-download]').onclick=()=>{const text=bootstrap+'\n'+editor.value+'\n# Reflection\n'+state.explanation.split('\n').map(l=>'# '+l).join('\n'),href=URL.createObjectURL(new Blob([text],{type:'text/x-python;charset=utf-8'})),a=document.createElement('a');a.href=href;a.download=`greenhouse-${stages[state.active].id}.py`;a.click();setTimeout(()=>URL.revokeObjectURL(href),1000)};
+ $('[data-download]').onclick=()=>{const text=bootstrap+'\n'+editor.value+'\n# Reflection\n'+state.explanation.split('\n').map(l=>'# '+l).join('\n'),href=URL.createObjectURL(new Blob([text],{type:'text/x-python;charset=utf-8'})),a=document.createElement('a');a.href=href;a.download=`${missionId}-${stages[state.active].id}.py`;a.click();setTimeout(()=>URL.revokeObjectURL(href),1000)};
  function pollDelay(ms,signal){return new Promise((resolve,reject)=>{const cancel=()=>{clearTimeout(pollTimer);reject(new Error('Aborted'))};signal.addEventListener('abort',cancel,{once:true});pollTimer=setTimeout(()=>{signal.removeEventListener('abort',cancel);resolve()},ms)})}
  $('[data-check]').onclick=async()=>{
   if(!alive()||checking||['loading','running'].includes(phase))return;

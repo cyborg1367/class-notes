@@ -112,3 +112,5 @@ export function highlight(code){
  }
  return parts.join('');
 }
+
+export const meta={lessonId:'machine-learning/vector-distance',title:'کارآگاه گلخانه',filename:'greenhouse.py',finish:'ابزار جست‌وجوی تو آماده است.',dataTitle:'هر سطر، یک نوبت ثبت',tableTitle:'سابقه‌های گلخانه',queryLabel:'وضعیت امروز',queryHelp:'آن را با هر سطر جدول مقایسه خواهیم کرد.',secondHelp:'در مرحلهٔ ششم بررسی می‌کنی با تغییر وضعیت، همسایه‌ها چه تغییری می‌کنند.',dataIntro:'<p>جدول <code>X</code> شامل ۱۰ سابقه است. سه ستون آن به ترتیب <strong>رطوبت، روشنایی، گرما</strong> هستند. مثلاً <code dir="ltr">X[0] = [2, 8, 3]</code> یعنی رطوبت ۲، روشنایی ۸ و گرما ۳.</p><p>عددها امتیازهای ساختگی از ۰ تا ۱۰ هستند و واحد فیزیکی ندارند. هر سه ویژگی از قبل روی مقیاس مشترک‌اند.</p>',variables:'<code>np</code>، <code>X</code>، <code>names</code>، <code>query</code> و <code>query_new</code> هنگام اجرای کد آماده‌اند.',storyTitle:'مسئلهٔ گلخانه چیست؟',story:'<p>به پژوهشگر یک گلخانه کمک می‌کنی تا وضعیت امروز را با ده سابقهٔ حسگرها مقایسه کند. فاصلهٔ کمتر یعنی شباهت بیشتر.</p><p>در شش مرحله، از شناخت جدول به ساخت ابزار جست‌وجو می‌رسی.</p>'};

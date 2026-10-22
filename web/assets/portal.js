@@ -162,7 +162,7 @@ if(typeof document!=="undefined"){
   return `<nav class="shell route-trail" aria-label="مسیر صفحه"><ol><li><a href="${E(url('index.html'))}">صفحهٔ اصلی</a></li><li><a href="${E(url('index.html#classes'))}">کلاس‌ها</a></li><li><a dir="auto" href="${E(url(info.course.id+'/'))}">${E(info.course.display_title||info.course.title)}</a></li><li><span aria-current="page">یادداشت <bdi dir="ltr">${E(info.number)}</bdi> · ${E(info.title)}</span></li></ol></nav>`;
  }
  function lessonAccess(info){
-  return `<nav class="shell lesson-shortcuts" aria-label="دسترسی‌های یادداشت"><a class="quiet-link" href="${E(url(info.course.id+'/'))}">فهرست یادداشت‌های کلاس ←</a>${info.id==='machine-learning/vector-distance'?'<a class="button-forest" href="'+E(url('lab/'+info.id+'/'))+'">ورود به لابراتور کدنویسی ←</a>':''}<a class="button-outline" href="${E(url('quiz/'+info.id+'/'))}">تمرین و آزمون این یادداشت</a></nav>`;
+  return `<nav class="shell lesson-shortcuts" aria-label="دسترسی‌های یادداشت"><a class="quiet-link" href="${E(url(info.course.id+'/'))}">فهرست یادداشت‌های کلاس ←</a>${['machine-learning/vector-distance','machine-learning/prediction-problem'].includes(info.id)?'<a class="button-forest" href="'+E(url('lab/'+info.id+'/'))+'">ورود به لابراتور کدنویسی ←</a>':''}<a class="button-outline" href="${E(url('quiz/'+info.id+'/'))}">تمرین و آزمون این یادداشت</a></nav>`;
  }
  async function loadCodingLab(){
   const info=lesson(lid),root=$('#main'),gen=app.generation;
@@ -172,7 +172,8 @@ if(typeof document!=="undefined"){
   if(!app.user||app.serviceError||!member(info.course.id)){renderGate(host,info.course.id);return;}
   status(host,'در حال دریافت داده‌های لابراتور…');
   try{
-   const snapshot=await rpc('classroom_lab_mission');if(gen!==app.generation)return;
+   const mission=lid==='machine-learning/prediction-problem'?'quality-knn-v1':'greenhouse-v1';
+   const snapshot=await rpc('classroom_lab_state',{p_mission:mission});if(gen!==app.generation)return;
    const moduleURL=new URL('coding-lab.js',assets);moduleURL.search=new URL(entry.src).search;
    if(!window.ClassNotesCodingLab)await loadScript(moduleURL.href);
    if(gen!==app.generation)return;
@@ -190,9 +191,9 @@ if(typeof document!=="undefined"){
     if(!result.ok){const text={CLASS_ACCESS_REQUIRED:'عضویت کلاس فعال نیست؛ وضعیت دسترسی را بررسی کن.',TASK_LOCKED:'ابتدا تسک قبلی را انجام بده.',LAB_RATE_LIMIT:'چند لحظه صبر کن و دوباره تلاش کن؛ تعداد بررسی‌های اخیر به حد مجاز رسیده است.',LAB_BUDGET_EXHAUSTED:'سهمیهٔ بررسی فعلاً تمام شده است؛ با مدرس در میان بگذار. کدت ذخیره می‌شود و اجرای محلی در دسترس است.',LAB_PAUSED:'بررسی نهایی موقتاً توسط مدرس متوقف شده است؛ کدت را محلی آزمایش و ذخیره کن.',REQUEST_CONFLICT:'این درخواست با کد دیگری ثبت شده است؛ صفحه را بازخوانی کن.',SIGN_IN_REQUIRED:'دوباره وارد حساب خودت شو.'}[value.error];throw Error(text||'سرویس بررسی پاسخ نداد؛ کدت حفظ شده است. دوباره تلاش کن.');}
     return value;
    }
-   await window.ClassNotesCodingLab.mount(host,{userId:owner,assets:assets.href,lessonURL:url(lid+'/'),snapshot,
-    saveDraft:(state,revision)=>rpc('classroom_lab_mission_draft',{p_state:state,p_revision:revision,p_owner:owner}),
-    refresh:()=>rpc('classroom_lab_mission'),getAttempt:request=>rpc('classroom_lab_attempt',{p_request:request}),submit,
+   await window.ClassNotesCodingLab.mount(host,{userId:owner,lessonId:lid,assets:assets.href,lessonURL:url(lid+'/'),snapshot,
+    saveDraft:(state,revision)=>rpc('classroom_lab_save',{p_state:state,p_revision:revision,p_owner:owner,p_mission:mission}),
+    refresh:()=>rpc('classroom_lab_state',{p_mission:mission}),getAttempt:request=>rpc('classroom_lab_receipt',{p_request:request,p_mission:mission}),submit,
     isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
   }catch(err){if(gen!==app.generation)return;host.innerHTML='<div class="gate-card"><h1>لابراتور دریافت نشد.</h1><p>'+E(friendly(err))+'</p><button type="button" class="button-outline" data-lab-retry>تلاش دوباره</button></div>';host.querySelector('button').onclick=loadCodingLab;}
  }
@@ -232,15 +233,23 @@ if(typeof document!=="undefined"){
  async function labGrowthCard(root,gen){
   const section=document.createElement('section');section.className='xp-dashboard';section.setAttribute('aria-labelledby','lab-growth-title');root.append(section);
   section.innerHTML='<h2 id="lab-growth-title">مسیر رشد لابراتور</h2><p role="status">در حال دریافت پیشرفت ثبت‌شده…</p>';
-  try{const state=await rpc('classroom_lab_mission');if(gen!==app.generation||!section.isConnected)return;
-   const xp=Number(state.xp||0),done=new Set(state.completed||[]),level=xp>=300?'مأموریت اول کامل شد':xp>=100?'در مسیر جست‌وجو':'آغاز کاوش داده';
-   section.innerHTML=`<div class="xp-dashboard-head"><div><h2 id="lab-growth-title">مسیر رشد لابراتور</h2><p>${E(level)}</p></div><strong class="xp-dashboard-total" dir="ltr">${fa(xp)} <small>XP</small></strong></div><progress max="300" value="${xp}" aria-label="XP مأموریت گلخانه"></progress><p>کارآگاه گلخانه · ${fa(done.size)} از ۶ تسک · سقف این مأموریت ۳۰۰ XP</p><div class="xp-dashboard-path">${state.tasks.map(t=>`<span data-earned="${done.has(t.id)}">${done.has(t.id)?'✓ ':''}${fa(t.xp)} XP</span>`).join('')}</div>${state.badge?'<span class="xp-badge">✓ نشان «نخستین جست‌وجوی همسایه»</span>':''}<div class="portal-actions"><a class="button-forest" href="${E(url('lab/machine-learning/vector-distance/'))}">${done.size?'ادامهٔ مأموریت':'شروع مأموریت'} ←</a></div><p class="xp-caption">این XP از بررسی مستقل ثبت شده است. پیش‌نویس کد و تیک محلی، امتیاز ایجاد نمی‌کنند.</p>`;
-  }catch{if(gen===app.generation)section.innerHTML='<h2 id="lab-growth-title">مسیر رشد لابراتور</h2><p>پیشرفت دریافت نشد؛ اتصال را بررسی کن و صفحه را بازخوانی کن.</p>';}
+  const labs=[{mission:'greenhouse-v1',title:'کارآگاه گلخانه',lesson:'vector-distance'},{mission:'quality-knn-v1',title:'بازرس کیفیت',lesson:'prediction-problem'}];
+  const results=await Promise.allSettled(labs.map(l=>rpc('classroom_lab_state',{p_mission:l.mission})));
+  if(gen!==app.generation||!section.isConnected)return;
+  const total=results.reduce((sum,r)=>sum+(r.status==='fulfilled'?Number(r.value.xp)||0:0),0);
+  section.innerHTML=`<div class="xp-dashboard-head"><h2 id="lab-growth-title">مسیر رشد لابراتور</h2><strong class="xp-dashboard-total" dir="ltr">${results.some(r=>r.status==='rejected')?'—':total} <small>/ 600 XP</small></strong></div>`;
+  labs.forEach((lab,i)=>{
+   const row=document.createElement('article');row.className='xp-dashboard-lab';section.append(row);
+   const result=results[i];
+   if(result.status==='rejected'){row.innerHTML=`<h3>${E(lab.title)}</h3><p>پیشرفت این لابراتور دریافت نشد؛ صفحه را دوباره بارگذاری کن.</p>`;return;}
+   const state=result.value,xp=Number(state.xp)||0,done=new Set(state.completed||[]);
+   row.innerHTML=`<div class="xp-dashboard-head"><h3>${E(lab.title)}</h3><strong dir="ltr">${xp} / ${Number(state.maximum)||300} XP</strong></div><progress max="300" value="${xp}" aria-label="${E(lab.title)} XP"></progress><p lang="en" dir="ltr">${done.size} of ${state.tasks.length} missions completed</p><div class="xp-dashboard-path">${state.tasks.map(t=>`<span data-earned="${done.has(t.id)}" dir="ltr">${done.has(t.id)?'✓ ':''}${t.xp} XP</span>`).join('')}</div>${state.badge?'<span class="xp-badge">✓ مأموریت کامل شد</span>':''}<div class="portal-actions"><a class="button-forest" href="${E(url('lab/machine-learning/'+lab.lesson+'/'))}">${done.size?'ادامهٔ مأموریت':'شروع مأموریت'} ←</a></div>`;
+  });
  }
  async function labGrowthReport(root,courseId,gen){
   const section=document.createElement('section');section.className='panel-card';root.append(section);section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>در حال دریافت…</p>';
   try{const rows=await rpc('classroom_lab_teacher_report',{p_course:courseId});if(gen!==app.generation||!section.isConnected)return;
-   section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p class="small-note">مأموریت گلخانه · XP ثبت‌شده با بررسی مستقل. تعداد تلاش به‌تنهایی معیار ضعف نیست.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو</th><th>XP</th><th>تسک کامل</th><th>تلاش بررسی</th><th>آخرین فعالیت</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${E(r.name||'')}<br><bdi>${E(r.email||'')}</bdi></td><td>${fa(r.xp)} / ۳۰۰</td><td>${fa(r.completed)} / ۶</td><td>${fa(r.attempts)}</td><td>${r.last_at?E(date(r.last_at)):'—'}</td></tr>`).join('')+'</tbody></table></div>';
+   section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p class="small-note">هر دو لابراتور · XP ثبت‌شده با بررسی مستقل. تعداد تلاش به‌تنهایی معیار ضعف نیست.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو</th><th>XP</th><th>تسک کامل</th><th>تلاش بررسی</th><th>آخرین فعالیت</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${E(r.name||'')}<br><bdi>${E(r.email||'')}</bdi></td><td>${fa(r.xp)} / ${fa(r.maximum||600)}</td><td>${fa(r.completed)} / ${fa(r.task_count||12)}</td><td>${fa(r.attempts)}</td><td>${r.last_at?E(date(r.last_at)):'—'}</td></tr>`).join('')+'</tbody></table></div>';
   }catch{if(gen===app.generation&&section.isConnected)section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>گزارش لابراتور دریافت نشد؛ کمی بعد گزارش را به‌روزرسانی کن.</p>';}
  }
 

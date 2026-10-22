@@ -287,6 +287,8 @@ body.lab-notebook-ready .portal-main{padding:0;}
 .lab-open-notebook .lab-tool-button svg,.lab-open-notebook .lab-tools>summary svg{width:24px;height:24px;}
 .lab-open-notebook .lab-tools>summary svg{transform:rotate(90deg);}
 .lab-open-notebook .lab-tools-menu{width:250px;}
+.lab-open-notebook .lab-tools-menu .lab-actions{display:block;direction:rtl;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:8px;}
+.lab-open-notebook .lab-tools-menu .lab-actions button{width:100%;min-height:40px;display:flex;align-items:center;justify-content:flex-start;gap:8px;text-align:right;padding:8px 10px;font-size:14px;border:0;}
 .lab-open-notebook .lab-tools-menu a{display:block;padding:8px;min-height:22px;color:var(--ink);text-decoration:none;font-size:12px;}
 .lab-open-notebook .lab-tools-menu a:hover{background:var(--paper);}
 .lab-open-notebook .lab-split-area{--editor-share:67fr;--console-share:33fr;min-height:360px;}
@@ -419,7 +421,7 @@ body.lab-notebook-ready .portal-main{padding:0;}
  .lab-open-notebook .syn-keyword,.lab-open-notebook .syn-return,.lab-open-notebook .syn-string,.lab-open-notebook .syn-number,.lab-open-notebook .syn-comment,.lab-open-notebook .syn-builtin{color:CanvasText;}
 }
 
-/* Compact paper workspace: one scroll owner per pane and visible primary actions. */
+/* Shared compact typography and a single scroll owner for each pane. */
 .lab-wordmark strong{font-size:24px;}
 .lab-open-notebook .lab-top h1{font-size:21px;}
 .lab-site-links a{font-size:14px;}
@@ -454,7 +456,6 @@ body.lab-notebook-ready .portal-main{padding:0;}
 .lab-open-notebook .lab-code pre,.lab-open-notebook .lab-code textarea,.lab-open-notebook .lab-lines{font-size:12px;line-height:22px;}
 .lab-open-notebook .lab-code pre,.lab-open-notebook .lab-code textarea{padding:16px;}
 .lab-open-notebook .lab-lines{padding:16px 9px;}
-/* The highlighting layer follows textarea scrollTop/scrollLeft without another scrollbar. */
 .lab-open-notebook .lab-code pre{overflow:hidden;scrollbar-width:none;}
 .lab-open-notebook .lab-code pre::-webkit-scrollbar{display:none;width:0;height:0;}
 .lab-open-notebook .lab-console-body{min-width:0;min-height:0;overflow:hidden;}
@@ -473,6 +474,8 @@ body.lab-notebook-ready .portal-main{padding:0;}
 .lab-open-notebook ::-webkit-scrollbar-corner{background:transparent;}
 .lab-open-notebook .lab-output{scrollbar-color:#a6ae8c88 transparent;}
 .lab-open-notebook .lab-output::-webkit-scrollbar-thumb{background:#a6ae8c88;}
+.xp-dashboard-lab{padding-block:22px;border-top:1px solid var(--line);}
+.xp-dashboard-lab h3{margin:0;font-size:18px;}
 @media(min-width:861px) and (max-width:1250px),(max-width:600px){
  .lab-open-notebook .lab-editor-toolbar{flex-wrap:wrap;gap:8px;}
  .lab-open-notebook .lab-editor-toolbar>.lab-actions{order:4;flex-basis:100%;justify-content:flex-end;}
