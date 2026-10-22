@@ -39,7 +39,7 @@ assert lab.exists(),'Missing first-lesson lab route'
 assert 'data-page="lab"' in lab.read_text(),'Lab must use the existing authentication router'
 assert 'data-gate' in lab.read_text(),'Lab route must start gated'
 assert not list(DIST.rglob('__pycache__')),'Do not ship Python bytecode caches'
-for asset in ['coding-lab.js','coding-lab.css','coding-lab-model.mjs','coding-lab-worker.mjs','lab-service.json']:
+for asset in ['coding-lab.js','coding-lab.css','coding-lab-model.mjs','coding-lab-layout.mjs','coding-lab-worker.mjs','lab-service.json']:
  assert (DIST/'assets'/asset).exists(),('Missing lab dependency',asset)
 print(f'Checked {len(pages)} RTL routes, local links/assets, and public/private separation.')
 
