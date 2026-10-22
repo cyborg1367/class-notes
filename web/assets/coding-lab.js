@@ -5,7 +5,7 @@ async function mount(root,options){
  current?.dispose();
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
- const {stages,dataset,bootstrap,normalize,available,highlight,missionId}=await import(new URL('coding-lab-model.mjs?v=3.0.1',assets));
+ const {stages,dataset,bootstrap,normalize,available,highlight,missionId}=await import(new URL('coding-lab-model.mjs?v=3.0.3',assets));
  if(!isCurrent())return;
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
@@ -20,9 +20,47 @@ async function mount(root,options){
  <ol class="mission-path" aria-label="مسیر مأموریت"></ol><section class="lab-task" aria-labelledby="lab-task-title"><p class="lab-task-number" data-task-number></p><h2 id="lab-task-title" tabindex="-1"></h2><p data-concept></p><p data-task></p><details class="mission-contract"><summary>قرارداد خروجی / یک مثال مستقل</summary><pre data-example dir="ltr" tabindex="0"></pre></details><div class="mission-hints"><button type="button" data-hint class="quiet-button">یک سرنخ بده</button><p class="lab-note">راهنما XP را کم نمی‌کند.</p><div data-hints></div></div><div data-reflection hidden><label for="lab-explanation">یادداشت آزمایش تو</label><textarea id="lab-explanation" maxlength="3000" rows="4" placeholder="چه چیزی را پیش‌بینی کردی؟ نتیجه چطور بود؟"></textarea><p class="lab-note">این توضیح برای مرور تو ذخیره می‌شود. XP این تسک بر پایهٔ محاسبات است؛ معنای متن ارزیابی خودکار ندارد.</p></div><div class="lab-feedback" data-feedback role="status" aria-live="polite"></div><button type="button" class="button-forest lab-next" data-next disabled>مأموریت بعدی ←</button><div class="lab-finish" data-finish hidden><span class="mission-seal" aria-hidden="true">✓</span><h3>نخستین جست‌وجوی همسایه</h3><p>نشان پایان مأموریت را گرفتی؛ هر شش ابزار روی داده‌های تازه هم بررسی شدند.</p><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">دیدن مسیر رشد در داشبورد ←</a><details><summary>چالش آزاد پس از پایان مأموریت</summary><p>یک کپی از داده بساز و مقیاس یکی از ویژگی‌ها را در آن و پرس‌وجوها تغییر بده. پیش از اجرا حدس بزن چه اثری بر همسایه‌ها می‌گذارد؛ سپس نتیجه را در یادداشت آزمایش توضیح بده. این کاوش آزاد XP اضافه ندارد.</p></details></div></section><p class="lab-note">ورودیِ تابع در بررسی نهایی می‌تواند اندازه و مقدار تازه داشته باشد. کد ثابت برای همین جدول، همهٔ بررسی‌ها را پاس نمی‌کند.</p><a class="quiet-link" href="${E(lessonURL)}">مرور جزوهٔ اول ←</a></aside>
  <section class="lab-editor-panel" aria-label="ویرایشگر و کنسول"><div class="lab-panel-head"><span class="lab-file" lang="en">greenhouse.py</span><strong>Python + NumPy</strong></div><div class="lab-code-wrap"><pre class="lab-lines" aria-hidden="true"></pre><div class="lab-code"><pre data-highlight aria-hidden="true"></pre><textarea id="lab-code" aria-label="کد Python" aria-describedby="lab-code-help" dir="ltr" lang="en" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" maxlength="20000"></textarea></div></div><div class="lab-actions"><button class="button-outline" data-activate type="button">فعال‌سازی Python</button><button class="button-outline" data-run type="button" disabled>اجرای آزمایشی</button><button class="button-forest" data-check type="button">بررسی و دریافت XP</button><button class="quiet-button" data-stop type="button" disabled>توقف اجرا</button><button class="quiet-button" data-reset type="button">بازنشانی تسک</button><button class="quiet-button" data-download type="button">دانلود کد ↓</button></div><p class="lab-runtime" data-runtime role="status" aria-live="polite">اجرای آزمایشی در همین مرورگر است. بررسی نهایی و XP مستقل از آن انجام می‌شوند.</p><p class="lab-runtime" id="lab-code-help">تورفتگی: Tab · اجرا: Ctrl / ⌘ + Enter · خروج از ویرایشگر: Escape سپس Tab</p><div class="lab-console"><div class="lab-console-head"><span>کنسول Python / خروجی و خطا</span><button data-clear type="button">پاک‌کردن خروجی</button></div><pre class="lab-output" data-output dir="ltr" tabindex="0" aria-label="خروجی Python"># Activate Python to explore the dataset.</pre><form class="lab-console-form"><label for="lab-command">&gt;&gt;&gt;</label><input id="lab-command" aria-label="دستور تک‌خطی Python" placeholder="X.shape" dir="ltr" lang="en" autocomplete="off" spellcheck="false" maxlength="2000" disabled><button type="submit" disabled>اجرا</button></form></div><div class="mission-award" data-award role="status" aria-live="polite" hidden></div></section></div>
  <footer class="lab-bottom"><p data-save role="status" aria-live="polite"></p><button data-refresh type="button">به‌روزرسانی پیشرفت</button><button data-cloud-load type="button">دریافت کد ذخیره‌شدهٔ حساب</button><p>XP هر تسک یک‌بار ثبت می‌شود. اجرای مجدد و استفاده از راهنما امتیاز قبلی را کم نمی‌کنند.</p></footer>`;
+ root.insertAdjacentHTML('beforeend',`<dialog class="xp-celebration" data-celebration lang="en" dir="ltr" aria-labelledby="xp-celebration-title" aria-describedby="xp-celebration-message xp-celebration-detail">
+ <button class="xp-celebration-close" data-celebration-close type="button" aria-label="Close celebration"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+ <div class="xp-orbit"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" data-celebration-ring cx="120" cy="120" r="108" pathLength="100"/></svg><span class="xp-ring-tip" aria-hidden="true"><i></i></span>
+ <div class="xp-celebration-core"><span class="xp-celebration-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="21" height="21"><path d="m5.5 12 4 4L18.5 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h2 id="xp-celebration-title"><span data-celebration-earned>+20</span> <span class="xp-celebration-unit">XP</span></h2><span class="xp-celebration-label">XP earned</span></div>
+ <span class="xp-spark xp-spark-one" aria-hidden="true"></span><span class="xp-spark xp-spark-two" aria-hidden="true"></span><span class="xp-spark xp-spark-three" aria-hidden="true"></span><span class="xp-spark xp-spark-four" aria-hidden="true"></span></div>
+ <p class="xp-celebration-message" id="xp-celebration-message">Nicely done!</p><p class="xp-celebration-total" id="xp-celebration-detail" data-celebration-progress role="progressbar" aria-label="Total lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><span data-celebration-total>20</span><span class="xp-celebration-divider"> / </span><span data-celebration-maximum>300</span> XP</p>
+ <button class="xp-celebration-continue" data-celebration-continue type="button" autofocus>Continue<svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></dialog>`);
  root.querySelector('.lab-workspace').before(root.querySelector('.mission-path'));
  const $=s=>root.querySelector(s),editor=$('#lab-code'),output=$('[data-output]'),save=$('[data-save]'),explanation=$('#lab-explanation'),command=$('#lab-command');
  const alive=()=>!disposed&&isCurrent();
+ const celebration=$('[data-celebration]'),celebrated=new Set(trusted.completed||[]);
+ let celebrationStep=null;
+ function closeCelebration(advance=false){
+  const step=celebrationStep;celebrationStep=null;
+  if(celebration.open)celebration.close();
+  celebration.classList.remove('is-celebrating');
+  if(!alive()||step===null)return;
+  if(!advance){$('[data-check]').focus();return}
+  if(step<stages.length-1&&step+1<=available(trusted)){state.active=step+1;select(true);change()}
+  else if(trusted.badge){const title=$('[data-finish] h3');title.setAttribute('tabindex','-1');title.focus()}
+ }
+ function showCelebration(task,added,before){
+  const maximum=Number(trusted.maximum)||300,to=Math.min(maximum,Math.max(0,Number(trusted.xp)||0)),from=Math.min(to,Math.max(0,before));
+  if(celebrated.has(task)||added<=0||to<=from)return;
+  celebrated.add(task);
+  const award=$('[data-award]');award.hidden=false;award.textContent=`+${added} XP · XP earned`;award.setAttribute('lang','en');award.setAttribute('dir','ltr');
+  $('[data-celebration-earned]').textContent=`+${added}`;$('[data-celebration-total]').textContent=String(to);$('[data-celebration-maximum]').textContent=String(maximum);
+  $('[data-celebration-progress]').setAttribute('aria-valuemax',String(maximum));$('[data-celebration-progress]').setAttribute('aria-valuenow',String(to));$('[data-celebration-progress]').setAttribute('aria-valuetext',`${to} of ${maximum} XP`);
+  $('#xp-celebration-message').textContent=to===maximum?'Lab completed!':'Nicely done!';
+  celebration.style.setProperty('--xp-from',String(100-from/maximum*100));celebration.style.setProperty('--xp-to',String(100-to/maximum*100));
+  celebration.style.setProperty('--xp-turn-from',`${from/maximum*360}deg`);celebration.style.setProperty('--xp-turn-to',`${to/maximum*360}deg`);
+  celebration.classList.toggle('is-complete',to===maximum);celebrationStep=stages.findIndex(s=>s.id===task);
+  if(typeof celebration.showModal!=='function')return; // Inline reward remains available in older browsers.
+  celebration.classList.remove('is-celebrating');celebration.showModal();void celebration.offsetWidth;celebration.classList.add('is-celebrating');
+  $('[data-celebration-continue]').focus();
+ }
+ $('[data-celebration-continue]').onclick=()=>closeCelebration(true);
+ $('[data-celebration-close]').onclick=()=>closeCelebration();
+ celebration.onclick=e=>{if(e.target===celebration)closeCelebration()};
+ celebration.addEventListener('cancel',e=>{e.preventDefault();closeCelebration()});
+ celebration.addEventListener('close',()=>{celebrationStep=null;celebration.classList.remove('is-celebrating')});
  current={dispose};
  function feedback(text,error=false){$('[data-feedback]').textContent=text;$('[data-feedback]').dataset.error=String(error)}
  function persist(){try{localStorage.setItem(key,JSON.stringify({state,dirty,revision,pending}));return true}catch{save.textContent='ذخیرهٔ مرورگر ممکن نیست؛ پیش از خروج، کدت را دانلود کن.';return false}}
@@ -63,7 +101,7 @@ async function mount(root,options){
  function fail(message){terminate();controls(message)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.0.1',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.0.3',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');
@@ -91,7 +129,7 @@ async function mount(root,options){
  $('[data-check]').onclick=async()=>{
   if(!alive()||checking||['loading','running'].includes(phase))return;
   if(!editor.value.trim()){feedback('ابتدا تابع موردنیاز را بنویس.',true);return}
-  const task=stages[state.active].id,code=editor.value;
+  const task=stages[state.active].id,code=editor.value,xpBefore=Number(trusted.xp||0);
   if(!pending||pending.task!==task||pending.code!==code)pending={task,code,request_id:crypto.randomUUID()};
   persist();$('[data-award]').hidden=true;checking=true;controller=new AbortController();controls('در حال بررسی مستقل روی ورودی‌های تازه… ممکن است نخستین بررسی کمی بیشتر طول بکشد.');feedback('پاسخ برای بررسی ارسال شد؛ XP پس از تأیید ثبت می‌شود.');
   try{
@@ -101,7 +139,7 @@ async function mount(root,options){
    if(result?.status==='running'){feedback('بررسی هنوز کامل نشده است. کمی بعد همین پاسخ را دوباره بررسی کن؛ امتیاز تکراری ثبت نمی‌شود.');return}
    if(!result?.snapshot||!['passed','failed','error'].includes(result.status))throw Error('INVALID_SERVER_RESPONSE');
    applyTrusted(result.snapshot);pending=null;persist();feedback(result.message||'بررسی پایان یافت.',result.status!=='passed');
-   if(result.status==='passed'&&Number(result.xp_added)>0){const award=$('[data-award]');award.hidden=false;award.textContent=`+${Number(result.xp_added).toLocaleString('fa-IR')} XP · یک قدم جلوتر!`;award.classList.remove('is-earned');void award.offsetWidth;award.classList.add('is-earned')}
+   if(result.status==='passed'&&Number(result.xp_added)>0)showCelebration(task,Number(result.xp_added),xpBefore);
   }catch(error){if(alive())feedback(String(error?.message||'بررسی کامل نشد؛ کد حفظ شده است. دوباره تلاش کن.'),true)}
   finally{checking=false;if(alive())controls('اجرای آزمایشی برای کشف مسئله است؛ XP ثبت‌شده را بالای صفحه می‌بینی.')}
  };
@@ -114,8 +152,8 @@ async function mount(root,options){
   catch{if(alive())save.textContent='نسخهٔ حساب دریافت نشد؛ کد محلی حفظ شده است.'}
   finally{cloudLoading=false;if(alive())controls()}
  };
- function pagehide(){persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
- function dispose(){if(disposed)return;disposed=true;clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
+ function pagehide(){closeCelebration();persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
+ function dispose(){if(disposed)return;disposed=true;closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
  window.addEventListener('pagehide',pagehide);select();persist();save.textContent=conflict?'نسخهٔ محلی با حساب تفاوت دارد؛ کدت را دانلود و سپس نسخهٔ حساب را دریافت کن.':dirty?'تغییرهای ذخیره‌نشدهٔ این مرورگر بازیابی شدند.':'کد و یادداشت آزمایش خودکار در حساب ذخیره می‌شوند.';return current
 }
 window.ClassNotesCodingLab={mount,dispose:()=>current?.dispose()};
