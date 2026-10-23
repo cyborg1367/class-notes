@@ -5,7 +5,7 @@ async function mount(root,options){
  current?.dispose();
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
- const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout},{mountExperience}]=await Promise.all([import(new URL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs?v=3.5.1':'coding-lab-model.mjs?v=3.5.1',assets)),import(new URL('coding-lab-layout.mjs?v=3.5.1',assets)),import(new URL('coding-lab-experience.mjs?v=3.5.1',assets))]);
+ const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout},{mountExperience}]=await Promise.all([import(new URL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs?v=3.6.0':'coding-lab-model.mjs?v=3.6.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.6.0',assets)),import(new URL('coding-lab-experience.mjs?v=3.6.0',assets))]);
  if(!isCurrent())return;
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
@@ -44,9 +44,9 @@ async function mount(root,options){
   <section class="mission-dataset" id="lab-panel-data" role="tabpanel" aria-labelledby="lab-tab-data" tabindex="0" hidden>
    <p class="lab-panel-kicker">داده‌های آمادهٔ این تمرین</p><h2>${E(meta.dataTitle)}</h2>
    ${meta.dataIntro}
-   <div class="mission-query"><span>${E(meta.queryLabel)} · <code>query</code></span><strong dir="ltr">${E(JSON.stringify(dataset.query))}</strong><p>${E(meta.queryHelp)}</p></div>
+   <div class="mission-query"><span>${E(meta.queryLabel)} · <code>query</code></span>${dataset.queryText?`<blockquote class="lab-message-text">${E(dataset.queryText)}</blockquote>`:''}<strong dir="ltr">${E(JSON.stringify(dataset.query))}</strong><p>${E(meta.queryHelp)}</p></div>
    <div class="mission-query" data-second-query hidden><span>وضعیت دوم · <code>query_new</code></span><strong dir="ltr">${E(JSON.stringify(dataset.query_new))}</strong><p>${E(meta.secondHelp||'')}</p></div>
-   <div class="mission-table" tabindex="0" aria-label="${E(meta.tableTitle)}"><table><caption>${E(meta.tableTitle)} · اندیس‌ها از صفر شروع می‌شوند</caption><thead><tr><th>اندیس</th><th>شناسه</th>${dataset.columns.map(c=>`<th>${c.label}<small lang="en">${c.name}</small></th>`).join('')}${dataset.y?'<th>برچسب <small lang="en">y</small></th>':''}</tr></thead><tbody>${dataset.X.map((row,i)=>`<tr><th dir="ltr">${i}</th><td dir="ltr">${dataset.names[i]}</td>${row.map(v=>`<td>${v}</td>`).join('')}${dataset.y?`<td>${dataset.y[i]}</td>`:''}</tr>`).join('')}</tbody></table></div>
+   <div class="mission-table" tabindex="0" aria-label="${E(meta.tableTitle)}"><table><caption>${E(meta.tableTitle)} · اندیس‌ها از صفر شروع می‌شوند</caption><thead><tr><th>اندیس</th><th>شناسه</th>${dataset.columns.map(c=>`<th>${c.label}<small lang="en">${c.name}</small></th>`).join('')}${dataset.texts?'<th>متن پیامک</th>':''}${dataset.y?'<th>برچسب <small lang="en">y</small></th>':''}</tr></thead><tbody>${dataset.X.map((row,i)=>`<tr><th dir="ltr">${i}</th><td dir="ltr">${dataset.names[i]}</td>${row.map(v=>`<td>${v}</td>`).join('')}${dataset.texts?`<td class="lab-message-cell">${E(dataset.texts[i])}</td>`:''}${dataset.y?`<td>${dataset.y[i]}${dataset.texts?` · ${dataset.y[i]?'تبلیغاتی':'عادی'}`:''}</td>`:''}</tr>`).join('')}</tbody></table></div>
    <details class="mission-contract"><summary>آرایه‌های آماده در Python</summary><p>${meta.variables}</p><pre dir="ltr" tabindex="0">${E(bootstrap)}</pre></details>
   </section>
   <section class="mission-guide" id="lab-panel-guide" role="tabpanel" aria-labelledby="lab-tab-guide" tabindex="0" hidden>
@@ -168,7 +168,7 @@ async function mount(root,options){
  function fail(message){terminate();controls(message,true)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.5.1',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.6.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');
@@ -192,7 +192,7 @@ async function mount(root,options){
  $('.mission-path').onclick=e=>{const b=e.target.closest('[data-stage]');if(!b||b.disabled)return;state.active=Number(b.dataset.stage);select(true);change()};
  $('[data-next]').onclick=()=>{if(state.active<available(trusted)&&state.active<5){state.active++;select(true);change()}};
  $('[data-reset]').onclick=()=>{if(!confirm('کد این تسک با قالب آغازین جایگزین شود؟ XP قبلی حفظ می‌شود.'))return;state.codes[state.active]=(state.active?state.codes[state.active-1]:'')+stages[state.active].starter;select();change()};
- $('[data-download]').onclick=()=>{const text=bootstrap+'\n'+editor.value+'\n# Reflection\n'+state.explanation.split('\n').map(l=>'# '+l).join('\n'),href=URL.createObjectURL(new Blob([text],{type:'text/x-python;charset=utf-8'})),a=document.createElement('a');a.href=href;a.download=`${missionId}-${stages[state.active].id}.py`;a.click();setTimeout(()=>URL.revokeObjectURL(href),1000)};
+ $('[data-download]').onclick=()=>{const text=bootstrap+'\n'+editor.value+'\n# Reflection\n'+state.explanation.split('\n').map(l=>'# '+l).join('\n'),href=URL.createObjectURL(new Blob([text],{type:'text/x-python;charset=utf-8'})),a=document.createElement('a');a.href=href;a.download=`${meta.downloadPrefix||missionId}-${stages[state.active].id}.py`;a.click();setTimeout(()=>URL.revokeObjectURL(href),1000)};
  function pollDelay(ms,signal){return new Promise((resolve,reject)=>{const cancel=()=>{clearTimeout(pollTimer);reject(new Error('Aborted'))};signal.addEventListener('abort',cancel,{once:true});pollTimer=setTimeout(()=>{signal.removeEventListener('abort',cancel);resolve()},ms)})}
  $('[data-check]').onclick=async()=>{
   if(!alive()||checking||['loading','running'].includes(phase))return;

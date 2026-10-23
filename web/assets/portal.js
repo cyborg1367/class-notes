@@ -233,7 +233,7 @@ if(typeof document!=="undefined"){
  async function labGrowthCard(root,gen){
   const section=document.createElement('section');section.className='xp-dashboard';section.setAttribute('aria-labelledby','lab-growth-title');root.append(section);
   section.innerHTML='<h2 id="lab-growth-title">مسیر رشد لابراتور</h2><p role="status">در حال دریافت پیشرفت ثبت‌شده…</p>';
-  const labs=[{mission:'greenhouse-v1',title:'کارآگاه گلخانه',lesson:'vector-distance'},{mission:'quality-knn-v1',title:'بازرس کیفیت',lesson:'prediction-problem'}];
+  const labs=[{mission:'greenhouse-v1',title:'کارآگاه گلخانه',lesson:'vector-distance'},{mission:'quality-knn-v1',title:'کارآگاه پیامک',lesson:'prediction-problem'}];
   const results=await Promise.allSettled(labs.map(l=>rpc('classroom_lab_state',{p_mission:l.mission})));
   if(gen!==app.generation||!section.isConnected)return;
   const total=results.reduce((sum,r)=>sum+(r.status==='fulfilled'?Number(r.value.xp)||0:0),0);
