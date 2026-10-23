@@ -1,7 +1,7 @@
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit,unquote
-import re
+import re,hashlib
 ROOT=Path(__file__).resolve().parent
 DIST=ROOT/'dist'
 class Page(HTMLParser):
@@ -53,3 +53,21 @@ for p in DIST.rglob('*'):
 
 second=DIST/'lab/machine-learning/prediction-problem/index.html'
 assert second.exists() and 'data-page="lab"' in second.read_text() and 'data-gate' in second.read_text(),'Missing gated second-lesson lab'
+
+def asset_stamp(directory):
+ # Same content stamp build.py wrote into dist; kept identical on purpose.
+ h=hashlib.sha256()
+ for p in sorted(directory.rglob('*')):
+  if p.is_file() and '__pycache__' not in p.parts and p.suffix!='.pyc':
+   h.update(p.relative_to(directory).as_posix().encode());h.update(hashlib.sha256(p.read_bytes()).digest())
+ return h.hexdigest()[:12]
+stamp=asset_stamp(ROOT/'web'/'assets')
+published=set()
+for p in DIST.rglob('*'):
+ if p.suffix in ['.html','.css','.js','.mjs']:published|=set(re.findall(r'\?v=([A-Za-z0-9._-]+)',p.read_text()))
+assert published=={stamp},f'Asset versions must all be the current build stamp {stamp}; found {sorted(published)}'
+for p in DIST.rglob('*.html'):
+ for ref in re.findall(r'(?:href|src)="([^"]*)"',p.read_text()):
+  if 'assets/' in ref and ref.split('?')[0].endswith(('.css','.js','.mjs')):
+   assert ref.endswith('?v='+stamp),('Unversioned stylesheet or script',p,ref)
+print(f'Checked asset versions against the build stamp {stamp}.')

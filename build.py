@@ -1,5 +1,5 @@
 from pathlib import Path
-import shutil, json, re
+import shutil, json, re, hashlib
 from urllib.parse import urlsplit
 
 r = Path(__file__).resolve().parent
@@ -20,4 +20,25 @@ if lab_config['checkURL']:
         c['supabaseUrl']).netloc and u.path == '/functions/v1/classroom-lab/check' and not (
                 u.username or u.password or u.query or u.fragment), 'Use this Supabase project\'s HTTPS classroom-lab/check endpoint.'
 shutil.copytree(r / 'web', r / 'dist', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-print('Built public classroom application; private material is fetched after authorization.')
+
+
+def asset_stamp(directory):
+    # Content stamp of the shipped assets; check.py must compute it the same way.
+    h = hashlib.sha256()
+    for p in sorted(directory.rglob('*')):
+        if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc':
+            h.update(p.relative_to(directory).as_posix().encode())
+            h.update(hashlib.sha256(p.read_bytes()).digest())
+    return h.hexdigest()[:12]
+
+
+version = asset_stamp(r / 'web' / 'assets')
+for p in (r / 'dist').rglob('*'):
+    if p.suffix not in ('.html', '.css', '.js', '.mjs'):
+        continue
+    text = p.read_text()
+    if p.suffix == '.html':
+        text = re.sub(r'((?:href|src)="[^"]*assets/[^"]*\.(?:css|js|mjs))"',
+                      r'\1?v=' + version + '"', text)
+    p.write_text(re.sub(r'\?v=[A-Za-z0-9._-]*', '?v=' + version, text))
+print(f'Built public classroom application with asset version {version}; private material is fetched after authorization.')

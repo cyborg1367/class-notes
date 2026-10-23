@@ -112,7 +112,7 @@ if(typeof document!=="undefined"){
   try{
    const response=await fetch(new URL('auth-config.json',assets),{cache:'no-cache',credentials:'same-origin'});if(!response.ok)throw Error('CONFIG_UNAVAILABLE');
    const config=await response.json();if(!portalConfig(config)){status($('[data-auth-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');status($('[data-page-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');return;}
-   await loadScript(new URL('vendor/supabase/supabase.js',assets).href);
+   const supabaseURL=new URL('vendor/supabase/supabase.js',assets);supabaseURL.search=new URL(entry.src).search;await loadScript(supabaseURL.href);
    app.config=config;
    app.client=window.supabase.createClient(config.supabaseUrl,config.publishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,storageKey:`class-notes-auth:${base.pathname}`}});
    app.client.auth.onAuthStateChange((_event,session)=>onUser(session?.user||null));
@@ -271,7 +271,7 @@ if(typeof document!=="undefined"){
    for(const image of $$('[data-private-path]',root)){const path=image.dataset.privatePath;privateBlob(path).then(u=>{if(gen===app.generation&&image.isConnected)image.src=u;}).catch(()=>{image.alt+=' — تصویر دریافت نشد؛ صفحه را دوباره باز کن.';});}
    $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();if(a.dataset.downloading==='true')return;const children=Array.from(a.childNodes);a.dataset.downloading='true';a.setAttribute('aria-disabled','true');a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(a.dataset.privateDownload.endsWith('.ipynb')?'دریافت نوت‌بوک کامل نشد. اتصال را بررسی و دوباره تلاش کن؛ اگر ادامه داشت، با مدرس در میان بگذار.':friendly(err));}finally{a.replaceChildren(...children);delete a.dataset.downloading;a.removeAttribute('aria-disabled');}}));
    for(const path of payload.scripts){const u=await privateBlob(path);if(gen!==app.generation)return;await loadScript(u);}
-   await loadScript(new URL('space3d.js',assets).href);
+   const space3dURL=new URL('space3d.js',assets);space3dURL.search=new URL(entry.src).search;await loadScript(space3dURL.href);
    if(['machine-learning/vector-distance','machine-learning/prediction-problem'].includes(lid)){
     try{
      const lab=new URL('python-lab.js',assets),worker=new URL('python-worker.mjs',assets);
