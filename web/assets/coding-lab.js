@@ -5,7 +5,7 @@ async function mount(root,options){
  current?.dispose();
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
- const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout},{mountExperience}]=await Promise.all([import(new URL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs?v=3.5.0':'coding-lab-model.mjs?v=3.5.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.5.0',assets)),import(new URL('coding-lab-experience.mjs?v=3.5.0',assets))]);
+ const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout},{mountExperience}]=await Promise.all([import(new URL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs?v=3.5.1':'coding-lab-model.mjs?v=3.5.1',assets)),import(new URL('coding-lab-layout.mjs?v=3.5.1',assets)),import(new URL('coding-lab-experience.mjs?v=3.5.1',assets))]);
  if(!isCurrent())return;
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
@@ -168,7 +168,7 @@ async function mount(root,options){
  function fail(message){terminate();controls(message,true)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.5.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.5.1',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');
