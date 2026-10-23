@@ -5,7 +5,7 @@ async function mount(root,options){
  current?.dispose();
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
- const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout}]=await Promise.all([import(new URL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs?v=3.4.0':'coding-lab-model.mjs?v=3.4.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.4.0',assets))]);
+ const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout},{mountExperience}]=await Promise.all([import(new URL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs?v=3.5.0':'coding-lab-model.mjs?v=3.5.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.5.0',assets)),import(new URL('coding-lab-experience.mjs?v=3.5.0',assets))]);
  if(!isCurrent())return;
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
@@ -18,7 +18,7 @@ async function mount(root,options){
  <a class="lab-wordmark" href="${E(new URL('../index.html',assets).href)}"><strong>دفتر کلاس</strong><small lang="en" dir="ltr">CLASS NOTES</small></a>
  <div class="mission-xp" lang="en" dir="ltr" aria-label="Lab progress"><div class="mission-xp-orbit" data-header-progress role="progressbar" aria-label="Lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" cx="120" cy="120" r="108" pathLength="100"/></svg><div class="mission-xp-core" aria-hidden="true"><strong class="mission-xp-value" data-xp>0</strong></div></div><div class="mission-xp-copy"><span class="mission-xp-limit">of <span data-xp-maximum>300</span> XP</span><p class="mission-xp-count" data-count></p><span class="mission-xp-percent" data-xp-percent></span></div></div>
  <nav class="lab-site-links" aria-label="پیمایش لابراتور"><a href="${E(lessonURL)}">یادگیری</a><a href="${E(new URL(`quiz/${meta.lessonId}/`,new URL('../',assets)).href)}">تمرین‌ها</a><a href="${E(new URL('machine-learning/',new URL('../',assets)).href)}">مسیرها</a></nav>
- <div class="lab-mission-heading"><h1>${E(meta.title)}</h1>  <nav class="mission-navigation" aria-label="مراحل مأموریت"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav></div></header>
+ <div class="lab-mission-heading"><div class="lab-heading-copy"><h1>${E(meta.title)}</h1><button class="lab-story-review" data-story-review type="button">مرور داستان</button></div>  <nav class="mission-navigation" aria-label="مراحل مأموریت"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav></div></header>
  <div class="lab-workspace">
  <aside class="lab-instructions" aria-label="پنل مأموریت">
 
@@ -62,6 +62,7 @@ async function mount(root,options){
   <div class="lab-editor-toolbar"><span class="lab-file" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2h6l4 4v12H5ZM11 2v5h4M8 10h4m-4 3h4"/></svg>${E(meta.filename)}<span class="lab-file-dot" aria-hidden="true"></span></span>
 
    <div class="lab-actions"><button class="lab-run-button" data-run type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6Z"/></svg>اجرای کد</button><button class="lab-run-button" data-stop type="button" hidden disabled>توقف</button><button class="button-forest" data-check type="button">بررسی پاسخ</button></div>
+   <button class="lab-last-feedback" data-last-feedback type="button" hidden>آخرین بازخورد</button>
    <details class="lab-tools" data-tools><summary aria-label="ابزارها و وضعیت ذخیره" title="ابزارها و وضعیت ذخیره"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="lab-save-alert" data-save-alert hidden aria-label="ذخیره نیاز به بررسی دارد">!</span></summary><div class="lab-tools-menu"><p data-save role="status" aria-live="polite"></p><button data-download type="button">دانلود کد</button><button data-reset type="button">بازنشانی این مرحله</button><button data-cloud-load type="button">دریافت نسخهٔ حساب</button><button data-refresh type="button">همگام‌سازی پیشرفت</button><button data-activate type="button">راه‌اندازی Python</button><a href="${E(new URL('account/',new URL('../',assets)).href)}">حساب کاربری</a><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">داشبورد</a><a data-lab-teacher-link hidden href="${E(new URL('instructor/',new URL('../',assets)).href)}">پنل مدرس</a></div></details>   <button class="lab-tool-button lab-focus-button" data-focus type="button" aria-pressed="false" title="فضای بیشتر برای کدنویسی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg><span data-focus-label>تمرکز</span></button>
   </div>
   <div class="lab-split-area" data-split>
@@ -85,6 +86,7 @@ async function mount(root,options){
  root.classList.add('lab-open-notebook');document.body.classList.add('lab-notebook-ready');
  const alive=()=>!disposed&&isCurrent();
  const layout=mountLayout(root);
+ const experience=mountExperience(root,{userId,missionId,meta,dataset,stages,hasProgress:!!(trusted.draft||trusted.attempts||trusted.completed?.length||cached?.dirty)});
  const toolsMenu=$('[data-tools]'),consoleTools=$('.lab-console-tools');
  $('[data-lab-teacher-link]').hidden=document.querySelector('[data-teacher-link]')?.hidden!==false;
  function dismissTools(e){for(const menu of [toolsMenu,consoleTools])if(!menu.contains(e.target)||e.target.closest('.lab-tools-menu button,.lab-console-menu button'))menu.open=false}
@@ -159,14 +161,14 @@ async function mount(root,options){
   const busy=checking||['loading','running'].includes(phase);
   editor.readOnly=explanation.disabled=busy;$('[data-check]').disabled=busy;$('[data-run]').disabled=busy;$('[data-activate]').hidden=!!worker;$('[data-activate]').disabled=busy;$('[data-stop]').disabled=!['loading','running'].includes(phase);$('[data-stop]').hidden=$('[data-stop]').disabled;$('[data-run]').hidden=!$('[data-stop]').disabled;$('[data-reset]').disabled=busy;$('[data-cloud-load]').disabled=busy||saving||cloudLoading;
   command.disabled=$('.lab-console-form button').disabled=busy||phase!=='ready'||!hasRun;
-  const runtime=$('[data-runtime]');runtime.textContent=message||'';runtime.hidden=!message||(!busy&&!error);root.setAttribute('aria-busy',String(busy));progress()
+  const runtime=$('[data-runtime]');runtime.textContent=message||'';runtime.hidden=!message||(!busy&&!error);root.setAttribute('aria-busy',String(busy));experience.setBusy(busy);progress()
  }
  function append(text){const slice=String(text).slice(0,16000-outputSize);outputSize+=slice.length;output.textContent+=slice;output.scrollTop=output.scrollHeight}
  function terminate(){runWhenReady=false;clearTimeout(timer);epoch++;worker?.terminate();worker=null;hasRun=false;phase='idle'}
  function fail(message){terminate();controls(message,true)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.4.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.5.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');
@@ -194,19 +196,22 @@ async function mount(root,options){
  function pollDelay(ms,signal){return new Promise((resolve,reject)=>{const cancel=()=>{clearTimeout(pollTimer);reject(new Error('Aborted'))};signal.addEventListener('abort',cancel,{once:true});pollTimer=setTimeout(()=>{signal.removeEventListener('abort',cancel);resolve()},ms)})}
  $('[data-check]').onclick=async()=>{
   if(!alive()||checking||['loading','running'].includes(phase))return;
-  if(!editor.value.trim()){feedback('ابتدا تابع موردنیاز را بنویس.',true);return}
-  const task=stages[state.active].id,code=editor.value,xpBefore=Number(trusted.xp||0);
+  if(!editor.value.trim()){experience.showFeedback({code:'EMPTY_CODE'},'failed',stages[state.active]);return}
+  const checkedStage=stages[state.active],returnPoint=experience.capture();
+  const task=checkedStage.id,code=editor.value,xpBefore=Number(trusted.xp||0);
   if(!pending||pending.task!==task||pending.code!==code)pending={task,code,request_id:crypto.randomUUID()};
   persist();$('[data-award]').hidden=true;checking=true;controller=new AbortController();controls('در حال بررسی پاسخ…');feedback('');
   try{
    let result=await submit({mission:missionId,...pending},controller.signal);
    for(let i=0;result?.status==='running'&&i<40;i++){await pollDelay(1500,controller.signal);const found=await getAttempt(pending.request_id);if(found)result=found}
    if(!alive())return;
-   if(result?.status==='running'){feedback('بررسی هنوز کامل نشده است. کمی بعد همین پاسخ را دوباره بررسی کن؛ امتیاز تکراری ثبت نمی‌شود.');return}
+   if(result?.status==='running'){experience.showFeedback({code:'CHECK_PENDING'},'error',checkedStage,returnPoint);return}
    if(!result?.snapshot||!['passed','failed','error'].includes(result.status))throw Error('INVALID_SERVER_RESPONSE');
-   applyTrusted(result.snapshot);pending=null;persist();feedback(result.message||'بررسی پایان یافت.',result.status!=='passed');
-   if(result.status==='passed'&&Number(result.xp_added)>0)showCelebration(task,Number(result.xp_added),xpBefore);
-  }catch(error){if(alive())feedback(String(error?.message||'بررسی کامل نشد؛ کد حفظ شده است. دوباره تلاش کن.'),true)}
+   applyTrusted(result.snapshot);pending=null;persist();
+   if(result.status!=='passed')experience.showFeedback(result.feedback,result.status,checkedStage,returnPoint);
+   else if(!Number(result.xp_added))experience.showFeedback({code:'ALREADY_PASSED'},'passed',checkedStage,returnPoint);
+   if(result.status==='passed'&&Number(result.xp_added)>0){experience.rememberFeedback({code:'PASSED'},'passed',checkedStage);showCelebration(task,Number(result.xp_added),xpBefore);}
+  }catch(error){if(alive()&&error?.name!=='AbortError')experience.showFeedback({code:error?.code||'CHECK_UNAVAILABLE'},'error',checkedStage,returnPoint)}
   finally{checking=false;if(alive())controls()}
  };
  $('[data-refresh]').onclick=async()=>{try{const remote=await refresh();if(alive()){applyTrusted(remote);feedback('پیشرفت ثبت‌شدهٔ حساب دریافت شد.')}}catch{if(alive())feedback('دریافت پیشرفت کامل نشد؛ اتصال را بررسی کن.',true)}};
@@ -218,9 +223,9 @@ async function mount(root,options){
   catch{if(alive())saveStatus('نسخهٔ حساب دریافت نشد؛ کد محلی حفظ شده است.',true)}
   finally{cloudLoading=false;if(alive())controls()}
  };
- function pagehide(){closeCelebration();persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
- function dispose(){if(disposed)return;disposed=true;document.body.classList.remove('lab-notebook-ready');root.classList.remove('lab-open-notebook');layout.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
- window.addEventListener('pagehide',pagehide);select();persist();saveStatus(conflict?'نسخهٔ محلی با حساب تفاوت دارد؛ پیش از دریافت نسخهٔ حساب، کدت را دانلود کن.':dirty?'کد این مرورگر بازیابی شد.':'ذخیرهٔ خودکار فعال است.',conflict);return current
+ function pagehide(){experience.close(false);closeCelebration();persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
+ function dispose(){if(disposed)return;disposed=true;document.body.classList.remove('lab-notebook-ready');root.classList.remove('lab-open-notebook');layout.dispose();experience.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
+ window.addEventListener('pagehide',pagehide);select();persist();saveStatus(conflict?'نسخهٔ محلی با حساب تفاوت دارد؛ پیش از دریافت نسخهٔ حساب، کدت را دانلود کن.':dirty?'کد این مرورگر بازیابی شد.':'ذخیرهٔ خودکار فعال است.',conflict);experience.start();return current
 }
 window.ClassNotesCodingLab={mount,dispose:()=>current?.dispose()};
 })();

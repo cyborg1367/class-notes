@@ -488,3 +488,58 @@ body.lab-notebook-ready .portal-main{padding:0;}
  .lab-open-notebook .lab-code pre,.lab-open-notebook .lab-code textarea{padding-inline:12px;}
  .lab-open-notebook .lab-lines{padding-inline:6px;}
 }
+
+/* Story first, quiet feedback, the same stock and ink as the coding workspace. */
+.lab-open-notebook .lab-mission-heading{position:relative;column-gap:20px;}
+.lab-heading-copy{flex-shrink:0;}
+.lab-heading-copy .lab-story-review{font-size:11px;border:0;padding:0 2px;margin-top:2px;min-height:22px;}
+.lab-story-review,.lab-last-feedback{font:12px/1.8 var(--font-body);color:var(--teal-deep);background:transparent;border:1px solid #aaa993;border-radius:2px;padding:5px 9px;cursor:pointer;white-space:nowrap;}
+.lab-story-review:hover,.lab-last-feedback:hover{background:#f4d83522;}
+.lab-open-notebook .lab-mission-heading .mission-navigation{min-width:0;}
+.lab-open-notebook.is-lab-intro .mission-navigation{visibility:hidden;}
+.lab-open-notebook .lab-intro[hidden],.lab-open-notebook .lab-workspace[hidden]{display:none!important;}
+.lab-intro{box-sizing:border-box;max-width:1160px;margin:0 auto;padding:46px 42px 38px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px 50px;color:var(--ink);direction:rtl;}
+.lab-intro-copy,.lab-intro-sample,.lab-intro-path{min-width:0;}
+.lab-intro-kicker{font-size:12px;line-height:1.9;color:var(--muted);margin:0 0 10px;}
+.lab-intro h2{font-size:30px;line-height:1.7;margin:0 0 20px;font-weight:600;}
+.lab-intro h3{font-size:18px;line-height:1.8;font-weight:600;margin:0 0 12px;}
+.lab-intro p:not(.lab-intro-kicker){font-size:16px;line-height:2;margin:0 0 15px;}
+.lab-intro code,.lab-feedback-dialog code{font:12px/1.9 ui-monospace,Consolas,monospace;direction:ltr;unicode-bidi:isolate;background:#f7f3e5;padding:2px 5px;border:1px solid #c7c1ad;border-radius:2px;}
+.lab-intro-dataset{margin-top:24px;}
+.lab-intro-sample{align-self:start;margin-top:40px;padding:24px;border:1px solid #bcb49f;background:#ded5be url('lab-paper-grain.svg');}
+.lab-intro-table{overflow:auto;scrollbar-width:thin;}
+.lab-intro table{border-collapse:collapse;width:100%;font-size:14px;}
+.lab-intro th,.lab-intro td{padding:11px 8px;border-bottom:1px solid #bcb49f;text-align:center;white-space:nowrap;}
+.lab-intro th{font-weight:500;}
+.lab-intro-query{margin-top:22px;}
+.lab-intro-query>span{font-size:12px;color:var(--muted);}
+.lab-intro-query strong{display:block;text-align:right;font:18px/1.9 ui-monospace,Consolas,monospace;margin:8px 0;color:var(--teal-deep);}
+.lab-intro-path{grid-column:1 / -1;border-top:1px solid #bcb49f;padding-top:24px;}
+.lab-intro-path ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 30px;margin:18px 0 0;padding-inline-start:23px;font-size:14px;line-height:1.9;}
+.lab-intro-path li{padding-inline-start:3px;}
+.lab-intro-footer{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid #bcb49f;padding-top:22px;}
+.lab-intro-footer>span{font:12px/1.8 ui-monospace,Consolas,monospace;color:var(--muted);}
+.lab-feedback-dialog{box-sizing:border-box;width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto;margin:auto;padding:30px;border:1px solid var(--ink);border-radius:3px;background:#eee6d3 url('lab-paper-grain.svg');color:var(--ink);box-shadow:5px 6px 0 #292f2426;text-align:right;scrollbar-width:thin;scrollbar-color:#8f927c88 transparent;}
+.lab-feedback-dialog::backdrop{background:#252b235c;}
+.lab-feedback-dialog h2{font-size:23px;line-height:1.7;font-weight:600;margin:13px 0 12px;}
+.lab-feedback-dialog p{font-size:16px;line-height:2;margin:0 0 16px;}
+.lab-feedback-dialog .lab-feedback-step{font-size:12px;color:var(--muted);padding-left:26px;}
+.lab-feedback-close{position:absolute;left:17px;top:12px;width:32px;height:32px;border:0;background:transparent;color:var(--ink);font:25px/1 system-ui;cursor:pointer;}
+.lab-feedback-close:hover{background:#292f240b;}
+.lab-feedback-symbol{display:grid;place-items:center;width:34px;height:34px;border:1px solid #9a7439;color:#805a21;background:#b88b3e0c;border-radius:50%;font:20px/1 ui-monospace,monospace;}
+.lab-feedback-dialog[data-kind="service"] .lab-feedback-symbol{border-color:#8b8e80;color:#626b5d;background:transparent;}
+.lab-feedback-dialog[data-kind="success"] .lab-feedback-symbol{border-color:var(--teal);color:var(--teal);}
+.lab-feedback-hint,.lab-feedback-example{border-top:1px solid #c3bba5;padding-top:12px;margin-top:14px;}
+.lab-feedback-dialog summary{font-size:14px;line-height:1.8;cursor:pointer;color:var(--teal-deep);}
+.lab-feedback-hint summary{width:max-content;}
+.lab-feedback-dialog details p{margin:12px 0;font-size:16px;}
+.lab-feedback-dialog pre{font:12px/22px ui-monospace,Consolas,monospace;background:#f8f5e9;border:1px solid #cbc4b0;padding:14px;overflow:auto;max-height:220px;scrollbar-width:thin;text-align:left;}
+.lab-feedback-dialog [data-feedback-return]{margin-top:24px;min-height:42px;font-size:14px;padding:8px 18px;}
+.lab-feedback-dialog :focus-visible,.lab-intro :focus-visible,.lab-story-review:focus-visible,.lab-last-feedback:focus-visible{outline:2px solid var(--teal);outline-offset:4px;}
+.lab-feedback-dialog #lab-feedback-title:focus,.lab-intro #lab-intro-title:focus{outline:none;}
+@media(max-width:1250px){.lab-open-notebook .lab-editor-toolbar{flex-wrap:wrap;}.lab-open-notebook .lab-editor-toolbar>.lab-actions{order:4;flex-basis:100%;justify-content:flex-end;}}
+@media(max-width:700px){.lab-intro{grid-template-columns:minmax(0,1fr);padding:28px 22px;gap:24px;}.lab-intro h2{font-size:25px;}.lab-intro-sample{margin-top:0;padding:18px;}.lab-intro-path ol{grid-template-columns:minmax(0,1fr);gap:8px;}.lab-intro-footer{align-items:flex-start;flex-direction:column;}.lab-feedback-dialog{padding:26px 22px;}.lab-feedback-dialog h2{font-size:21px;}}
+@media(forced-colors:active){.lab-feedback-dialog,.lab-intro-sample{background:Canvas;color:CanvasText;border-color:CanvasText;}.lab-feedback-symbol{color:CanvasText;border-color:CanvasText;}}
+
+.lab-feedback-dialog[open]{position:fixed;inset:0;height:max-content;z-index:99;}
+.lab-open-notebook.has-feedback-fallback::after{content:'';position:fixed;inset:0;background:#252b235c;z-index:98;}

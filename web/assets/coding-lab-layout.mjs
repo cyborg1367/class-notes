@@ -50,7 +50,7 @@ export function mountLayout(root,{storage}={}){
  };
  function setFocus(value){workspace.classList.toggle('is-focused',value);aside.hidden=value;focus.setAttribute('aria-pressed',String(value));$('[data-focus-label]').textContent=value?'نمایش مأموریت':'تمرکز';focus.title=value?'نمایش پنل مأموریت':'فضای بیشتر برای کدنویسی';render()}
  focus.onclick=()=>setFocus(!workspace.classList.contains('is-focused'));
- function escape(e){if(e.key==='Escape'&&!$('[data-celebration]')?.open){if(consoleFocused){consoleFocused=false;render()}else if(workspace.classList.contains('is-focused'))setFocus(false)}}
+ function escape(e){if(e.key==='Escape'&&!$('[data-celebration]')?.open&&!$('.lab-feedback-dialog')?.open){if(consoleFocused){consoleFocused=false;render()}else if(workspace.classList.contains('is-focused'))setFocus(false)}}
  root.addEventListener('keydown',escape);
  const tabs=[...root.querySelectorAll('[data-lab-tab]')];
  function selectTab(name,moveFocus=false){
