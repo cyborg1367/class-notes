@@ -5,13 +5,14 @@ async function mount(root,options){
  current?.dispose();
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
- const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout},{mountExperience}]=await Promise.all([import(new URL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs?v=3.6.0':'coding-lab-model.mjs?v=3.6.0',assets)),import(new URL('coding-lab-layout.mjs?v=3.6.0',assets)),import(new URL('coding-lab-experience.mjs?v=3.6.0',assets))]);
+ const assetURL=path=>{const u=new URL(path,assets);u.search=options.assetVersion||'?v=build';return u;};
+ const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout},{mountExperience}]=await Promise.all([import(assetURL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs':'coding-lab-model.mjs')),import(assetURL('coding-lab-layout.mjs')),import(assetURL('coding-lab-experience.mjs'))]);
  if(!isCurrent())return;
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
  let trusted=options.snapshot,revision=Number(trusted.revision||0),state=normalize(cached?.dirty?cached.state:trusted.draft);
  let dirty=!!cached?.dirty,conflict=dirty&&cached.revision!==revision,changed=0,saving=false,cloudLoading=false;
- let worker=null,phase='idle',checking=false,hasRun=false,disposed=false,epoch=0,request=0,activeRequest=0,timer,autosave,pollTimer,controller,outputSize=0;
+ let worker=null,phase='idle',checking=false,hasRun=false,disposed=false,epoch=0,request=0,activeRequest=0,timer,autosave,pollTimer,controller,outputSize=0,localSaveTimer=null,paintFrame=null;
  let pending=cached?.pending||null;
  state.active=Math.min(state.active,available(trusted));
  root.innerHTML=`<header class="lab-top mission-top">
@@ -128,7 +129,7 @@ async function mount(root,options){
  current={dispose};
  function feedback(text,error=false){const box=$('[data-feedback]');box.textContent=text;box.hidden=!text;box.dataset.error=String(error)}
  function persist(){try{localStorage.setItem(key,JSON.stringify({state,dirty,revision,pending}));return true}catch{saveStatus('ذخیرهٔ مرورگر ممکن نیست؛ کدت را دانلود کن.',true);return false}}
- function change(){dirty=true;changed++;persist();clearTimeout(autosave);if(conflict)saveStatus('کد محلی با نسخهٔ حساب تفاوت دارد. ابتدا کدت را دانلود کن؛ سپس نسخهٔ حساب را دریافت کن.',true);else{saveStatus('در حال ذخیره…');autosave=setTimeout(flush,1000)}}
+ function change(){dirty=true;changed++;clearTimeout(localSaveTimer);localSaveTimer=setTimeout(()=>{localSaveTimer=null;if(alive())persist()},150);clearTimeout(autosave);if(conflict)saveStatus('کد محلی با نسخهٔ حساب تفاوت دارد. ابتدا کدت را دانلود کن؛ سپس نسخهٔ حساب را دریافت کن.',true);else{saveStatus('در حال ذخیره…');autosave=setTimeout(flush,1000)}}
  async function flush(){
   if(!alive()||saving||cloudLoading||!dirty||conflict)return;
   saving=true;const serial=changed;
@@ -157,18 +158,18 @@ async function mount(root,options){
   feedback('');
   output.textContent='';outputSize=0;hints();paint();controls();if(focus)$('#lab-task-title').focus()
  }
- function controls(message,error=false){
+ function controls(message,error=false,refreshProgress=true){
   const busy=checking||['loading','running'].includes(phase);
   editor.readOnly=explanation.disabled=busy;$('[data-check]').disabled=busy;$('[data-run]').disabled=busy;$('[data-activate]').hidden=!!worker;$('[data-activate]').disabled=busy;$('[data-stop]').disabled=!['loading','running'].includes(phase);$('[data-stop]').hidden=$('[data-stop]').disabled;$('[data-run]').hidden=!$('[data-stop]').disabled;$('[data-reset]').disabled=busy;$('[data-cloud-load]').disabled=busy||saving||cloudLoading;
   command.disabled=$('.lab-console-form button').disabled=busy||phase!=='ready'||!hasRun;
-  const runtime=$('[data-runtime]');runtime.textContent=message||'';runtime.hidden=!message||(!busy&&!error);root.setAttribute('aria-busy',String(busy));experience.setBusy(busy);progress()
+  const runtime=$('[data-runtime]');runtime.textContent=message||'';runtime.hidden=!message||(!busy&&!error);root.setAttribute('aria-busy',String(busy));experience.setBusy(busy);if(refreshProgress)progress()
  }
  function append(text){const slice=String(text).slice(0,16000-outputSize);outputSize+=slice.length;output.textContent+=slice;output.scrollTop=output.scrollHeight}
  function terminate(){runWhenReady=false;clearTimeout(timer);epoch++;worker?.terminate();worker=null;hasRun=false;phase='idle'}
  function fail(message){terminate();controls(message,true)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(new URL('coding-lab-worker.mjs?v=3.6.0',assets),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(assetURL('coding-lab-worker.mjs'),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');
@@ -184,7 +185,7 @@ async function mount(root,options){
  $('[data-run]').onclick=()=>{if(!alive()||checking||['loading','running'].includes(phase))return;layout.openConsole();if(phase==='idle'){runWhenReady=true;$('[data-activate]').onclick()}else run('run')};$('[data-stop]').onclick=()=>{terminate();append('\n[Stopped]\n');controls()};
  $('.lab-console-form').onsubmit=e=>{e.preventDefault();if(hasRun){const code=command.value;command.value='';run('console',code)}};
  $('[data-clear]').onclick=()=>{output.textContent='';outputSize=0};editor.addEventListener('scroll',sync);
- editor.oninput=()=>{state.codes[state.active]=editor.value;hasRun=false;change();paint();controls()};
+ editor.oninput=()=>{state.codes[state.active]=editor.value;hasRun=false;change();if(typeof requestAnimationFrame==='function'){if(paintFrame===null)paintFrame=requestAnimationFrame(()=>{paintFrame=null;if(alive())paint()})}else paint();controls(undefined,false,false)};
  let escapeTab=false;editor.onkeydown=e=>{if(e.key==='Escape'){escapeTab=true;return}if(e.key==='Tab'&&!escapeTab&&!editor.readOnly){e.preventDefault();if(editor.value.length-(editor.selectionEnd-editor.selectionStart)+4<=20000){editor.setRangeText('    ',editor.selectionStart,editor.selectionEnd,'end');editor.dispatchEvent(new Event('input'))}}else if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$('[data-run]').click()}escapeTab=false};
  explanation.oninput=()=>{state.explanation=explanation.value;change()};
  $('[data-show-hints]').onclick=()=>{layout.selectTab('guide',true);if(state.hints[state.active]===0)$('[data-hint]').onclick()};
@@ -223,8 +224,8 @@ async function mount(root,options){
   catch{if(alive())saveStatus('نسخهٔ حساب دریافت نشد؛ کد محلی حفظ شده است.',true)}
   finally{cloudLoading=false;if(alive())controls()}
  };
- function pagehide(){experience.close(false);closeCelebration();persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
- function dispose(){if(disposed)return;disposed=true;document.body.classList.remove('lab-notebook-ready');root.classList.remove('lab-open-notebook');layout.dispose();experience.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
+ function pagehide(){experience.close(false);closeCelebration();clearTimeout(localSaveTimer);persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
+ function dispose(){if(disposed)return;clearTimeout(localSaveTimer);if(paintFrame!==null&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(paintFrame);persist();disposed=true;document.body.classList.remove('lab-notebook-ready');root.classList.remove('lab-open-notebook');layout.dispose();experience.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
  window.addEventListener('pagehide',pagehide);select();persist();saveStatus(conflict?'نسخهٔ محلی با حساب تفاوت دارد؛ پیش از دریافت نسخهٔ حساب، کدت را دانلود کن.':dirty?'کد این مرورگر بازیابی شد.':'ذخیرهٔ خودکار فعال است.',conflict);experience.start();return current
 }
 window.ClassNotesCodingLab={mount,dispose:()=>current?.dispose()};

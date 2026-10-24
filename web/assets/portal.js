@@ -29,6 +29,19 @@ function portalLabEndpoint(value,projectURL){
  if(endpoint.protocol!=='https:'||endpoint.origin!==project.origin||endpoint.pathname!=='/functions/v1/classroom-lab/check'||endpoint.username||endpoint.password||endpoint.search||endpoint.hash)throw Error('INVALID_LAB_ENDPOINT');
  return endpoint;
 }
+// Share public script downloads within this document; failed requests remain retryable.
+function portalCreateScriptLoader(doc){
+ const pending=new Map();
+ return function loadScript(src){
+  const key=String(src);if(pending.has(key))return pending.get(key);
+  const script=doc.createElement('script');script.src=key;
+  let resolve,reject;const task=new Promise((yes,no)=>{resolve=yes;reject=no});pending.set(key,task);
+  script.onload=()=>resolve();
+  script.onerror=()=>{if(pending.get(key)===task)pending.delete(key);script.remove();reject(new Error('SCRIPT_UNAVAILABLE'));};
+  try{doc.head.append(script)}catch(error){pending.delete(key);script.remove();reject(error)}
+  return task;
+ };
+}
 function portalFigure(f){
  const e=portalEscape;const description=f.type==='distance2d'?`محورها هم‌مقیاس‌اند؛ U در (${f.u.join(', ')}) و V در (${f.v.join(', ')}) است.`:`محورها هم‌مقیاس‌اند؛ q در (${f.query.join(', ')}) است. `+f.points.map(p=>`${p.id}: (${p.x.join(', ')}), کلاس ${p.y}`).join('؛ ')+'. دایره کلاس صفر و مربع کلاس یک است.';let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 360" role="img" aria-label="'+e(description)+'">';
  const min=f.type==='knn2d'?3.8:0,max=f.type==='knn2d'?7.4:7,unit=270/(max-min),xy=p=>[65+(p[0]-min)*unit,305-(p[1]-min)*unit];
@@ -65,7 +78,7 @@ function portalMountLessonHero(root,kind){
  figure.innerHTML=plot+'<div class="binary-hero-legend"><span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="#21665d" stroke="#24241f"/></svg>کلاس <bdi>0</bdi></span><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12" fill="#a35236" stroke="#24241f"/></svg>کلاس <bdi>1</bdi></span><span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 8 8-8 8-8-8z" fill="#f4d835" stroke="#24241f"/></svg>پرس‌وجوی <bdi>q</bdi></span></div><p class="binary-hero-axes"><bdi>M1</bdi>: امتیاز تنفسی · <bdi>M2</bdi>: امتیاز خستگی</p><figcaption>پرونده‌ها و امتیازها کاملاً ساختگی‌اند؛ کلاسِ <bdi>q</bdi> هنوز مشخص نیست.</figcaption>';
  grid.classList.remove('hero-grid--single');grid.append(figure);
 }
-if(typeof module!=="undefined"&&module.exports)module.exports={portalEscape,portalInline,portalReturn,portalConfig,portalLabEndpoint,portalFigure,portalBlankValue,portalBlankError,portalBlankHelp,portalQuizCode,portalBinaryHero,portalMountLessonHero};
+if(typeof module!=="undefined"&&module.exports)module.exports={portalEscape,portalInline,portalReturn,portalConfig,portalLabEndpoint,portalCreateScriptLoader,portalFigure,portalBlankValue,portalBlankError,portalBlankHelp,portalQuizCode,portalBinaryHero,portalMountLessonHero};
 
 if(typeof document!=="undefined"){
  const $=(s,p=document)=>p.querySelector(s),$$=(s,p=document)=>Array.from(p.querySelectorAll(s)),E=portalEscape;
@@ -73,7 +86,7 @@ if(typeof document!=="undefined"){
  const catalog=JSON.parse($('#catalog-data').textContent),fa=n=>Number(n).toLocaleString('fa-IR'),url=p=>new URL(p,base).href;
  const num=n=>Number(n).toLocaleString('en-US',{useGrouping:false}),score=(n,m)=>'<bdi dir="ltr">'+num(n)+' / '+num(m)+'</bdi>',blankLabel=i=>String.fromCharCode(65+i);
  const app={client:null,user:null,state:null,generation:0,serviceError:null};window.Classroom=app;
- const objectURLs=new Set();let lastUser=null,initializing=true;
+ const objectURLs=new Set(),privateDownloads=new Map();let lastUser=null,initializing=true;
  function status(el,text,error=false){if(el){el.textContent=text;el.dataset.error=String(error);}}
  function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
  async function rpc(name,args={}){const{data,error}=await app.client.rpc(name,args);if(error)throw error;return data;}
@@ -83,7 +96,7 @@ if(typeof document!=="undefined"){
  function date(value){return new Date(value).toLocaleString('fa-IR',{dateStyle:'medium',timeStyle:'short'});}
  function storageGet(key){try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
  function storageSet(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
- function clearObjects(){for(const u of objectURLs)URL.revokeObjectURL(u);objectURLs.clear();}
+ function clearObjects(){for(const u of objectURLs)URL.revokeObjectURL(u);objectURLs.clear();privateDownloads.clear();}
  function authUI(){
   $$('[data-account-link]').forEach(a=>{if(page==='dashboard'&&app.user)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');a.textContent=app.user?'داشبورد ←':'ورود به حساب ←';a.href=app.user?url('dashboard/'):url('account/');});
   if($('[data-account-guest]'))$('[data-account-guest]').hidden=!!app.user;
@@ -97,7 +110,8 @@ if(typeof document!=="undefined"){
   authUI();
   if(!initializing&&old!==next){if(old){if(['lesson','lab','quiz','dashboard','instructor','course'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
  }
- async function loadScript(src){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.head.append(s);});}
+ const loadScript=portalCreateScriptLoader(document);
+ const assetURL=path=>{const u=new URL(path,assets);u.search=new URL(entry.src).search;return u;};
  async function boot(){
   const nav=$('.nav-menu');nav?.addEventListener('click',()=>{const expanded=nav.getAttribute('aria-expanded')!=='true';nav.setAttribute('aria-expanded',String(expanded));$('#portal-nav').classList.toggle('is-open',expanded);});
   $$('#portal-nav a').forEach(a=>a.addEventListener('click',()=>{$('#portal-nav').classList.remove('is-open');nav?.setAttribute('aria-expanded','false');}));
@@ -112,7 +126,7 @@ if(typeof document!=="undefined"){
   try{
    const response=await fetch(new URL('auth-config.json',assets),{cache:'no-cache',credentials:'same-origin'});if(!response.ok)throw Error('CONFIG_UNAVAILABLE');
    const config=await response.json();if(!portalConfig(config)){status($('[data-auth-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');status($('[data-page-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');return;}
-   await loadScript(new URL('vendor/supabase/supabase.js',assets).href);
+   await loadScript(assetURL('vendor/supabase/supabase.js').href);
    app.config=config;
    app.client=window.supabase.createClient(config.supabaseUrl,config.publishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,storageKey:`class-notes-auth:${base.pathname}`}});
    app.client.auth.onAuthStateChange((_event,session)=>onUser(session?.user||null));
@@ -191,7 +205,7 @@ if(typeof document!=="undefined"){
     if(!result.ok){const text={CLASS_ACCESS_REQUIRED:'عضویت کلاس فعال نیست؛ وضعیت دسترسی را بررسی کن.',TASK_LOCKED:'ابتدا تسک قبلی را انجام بده.',LAB_RATE_LIMIT:'چند لحظه صبر کن و دوباره تلاش کن؛ تعداد بررسی‌های اخیر به حد مجاز رسیده است.',LAB_BUDGET_EXHAUSTED:'سهمیهٔ بررسی فعلاً تمام شده است؛ با مدرس در میان بگذار. کدت ذخیره می‌شود و اجرای محلی در دسترس است.',LAB_PAUSED:'بررسی نهایی موقتاً توسط مدرس متوقف شده است؛ کدت را محلی آزمایش و ذخیره کن.',REQUEST_CONFLICT:'این درخواست با کد دیگری ثبت شده است؛ صفحه را بازخوانی کن.',SIGN_IN_REQUIRED:'دوباره وارد حساب خودت شو.'}[value.error];const error=Error(text||'سرویس بررسی پاسخ نداد؛ کدت حفظ شده است. دوباره تلاش کن.');if(text)error.code=value.error;throw error;}
     return value;
    }
-   await window.ClassNotesCodingLab.mount(host,{userId:owner,lessonId:lid,assets:assets.href,lessonURL:url(lid+'/'),snapshot,
+   await window.ClassNotesCodingLab.mount(host,{userId:owner,lessonId:lid,assetVersion:new URL(entry.src).search,assets:assets.href,lessonURL:url(lid+'/'),snapshot,
     saveDraft:(state,revision)=>rpc('classroom_lab_save',{p_state:state,p_revision:revision,p_owner:owner,p_mission:mission}),
     refresh:()=>rpc('classroom_lab_state',{p_mission:mission}),getAttempt:request=>rpc('classroom_lab_receipt',{p_request:request,p_mission:mission}),submit,
     isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
@@ -253,7 +267,14 @@ if(typeof document!=="undefined"){
   }catch{if(gen===app.generation&&section.isConnected)section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>گزارش لابراتور دریافت نشد؛ کمی بعد گزارش را به‌روزرسانی کن.</p>';}
  }
 
- async function privateBlob(path){const{data,error}=await app.client.storage.from('class-materials').download(path);if(error)throw error;const mime=path.endsWith('.js')?'text/javascript':path.endsWith('.svg')?'image/svg+xml':path.endsWith('.pdf')?'application/pdf':path.endsWith('.ipynb')?'application/x-ipynb+json':data.type;const blob=mime?new Blob([data],{type:mime}):data;const u=URL.createObjectURL(blob);objectURLs.add(u);return u;}
+ async function privateBlob(path){
+  const gen=app.generation,key=`${gen}:${path}`;if(privateDownloads.has(key))return privateDownloads.get(key);
+  const task=(async()=>{const{data,error}=await app.client.storage.from('class-materials').download(path);if(error)throw error;
+   if(gen!==app.generation)throw Error('ACCOUNT_CHANGED');
+   const mime=path.endsWith('.js')?'text/javascript':path.endsWith('.svg')?'image/svg+xml':path.endsWith('.pdf')?'application/pdf':path.endsWith('.ipynb')?'application/x-ipynb+json':data.type;
+   const blob=mime?new Blob([data],{type:mime}):data,u=URL.createObjectURL(blob);objectURLs.add(u);return u;
+  })();privateDownloads.set(key,task);try{return await task}finally{if(privateDownloads.get(key)===task)privateDownloads.delete(key)}
+ }
  async function loadLesson(){
   const info=lesson(lid),root=$('#main'),gen=app.generation;
   window.ClassNotesMotion?.clearLesson();
@@ -268,10 +289,10 @@ if(typeof document!=="undefined"){
     root.querySelector('#exercise .lesson-prose')?.append(section);
    }
    root.querySelector('.breadcrumb')?.remove();const navigation=document.createElement('div');navigation.innerHTML=lessonTrail(info)+lessonAccess(info);root.prepend(navigation);
-   for(const image of $$('[data-private-path]',root)){const path=image.dataset.privatePath;privateBlob(path).then(u=>{if(gen===app.generation&&image.isConnected)image.src=u;}).catch(()=>{image.alt+=' — تصویر دریافت نشد؛ صفحه را دوباره باز کن.';});}
+   for(const image of $$('[data-private-path]',root)){const path=image.dataset.privatePath;privateBlob(path).then(u=>{if(gen===app.generation&&image.isConnected)image.src=u;}).catch(()=>{if(gen===app.generation&&image.isConnected)image.alt+=' — تصویر دریافت نشد؛ صفحه را دوباره باز کن.';});}
    $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();if(a.dataset.downloading==='true')return;const children=Array.from(a.childNodes);a.dataset.downloading='true';a.setAttribute('aria-disabled','true');a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(a.dataset.privateDownload.endsWith('.ipynb')?'دریافت نوت‌بوک کامل نشد. اتصال را بررسی و دوباره تلاش کن؛ اگر ادامه داشت، با مدرس در میان بگذار.':friendly(err));}finally{a.replaceChildren(...children);delete a.dataset.downloading;a.removeAttribute('aria-disabled');}}));
    for(const path of payload.scripts){const u=await privateBlob(path);if(gen!==app.generation)return;await loadScript(u);}
-   await loadScript(new URL('space3d.js',assets).href);
+   if(root.querySelector('[data-space3d]')){await loadScript(assetURL('space3d.js').href);if(gen!==app.generation)return;window.ClassNotesSpace?.refresh(root);}
    if(['machine-learning/vector-distance','machine-learning/prediction-problem'].includes(lid)){
     try{
      const lab=new URL('python-lab.js',assets),worker=new URL('python-worker.mjs',assets);

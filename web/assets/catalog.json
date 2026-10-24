@@ -1,0 +1,42 @@
+[
+  {
+    "id": "machine-learning",
+    "title": "ماشین لرنینگ",
+    "display_title": "Machine Learning",
+    "description": "جزوه‌ها و تمرین‌های کلاس ماشین لرنینگ؛ با توضیح پیوسته، مثال و کد.",
+    "lessons": [
+      {
+        "id": "machine-learning/vector-distance",
+        "slug": "vector-distance",
+        "title": "از یک جدول تا نزدیک‌ترین نمونه",
+        "subtitle": "فهم بردار، ماتریس و فاصلهٔ اقلیدسی با NumPy",
+        "number": "01",
+        "description": "یک مسیر پیوسته از خواندن داده تا محاسبهٔ فاصله، broadcasting و انتخاب همسایه‌ها.",
+        "tags": [
+          "NumPy",
+          "بردار و ماتریس",
+          "فاصلهٔ اقلیدسی"
+        ],
+        "hero_kind": null,
+        "notebook": "vector-distance-practice.ipynb",
+        "quiz_version": 1
+      },
+      {
+        "id": "machine-learning/prediction-problem",
+        "slug": "prediction-problem",
+        "title": "از مشورت گرفتن تا طبقه‌بندی باینری",
+        "subtitle": "دو ویژگی، دو کلاس؛ فهم kNN با دادهٔ پزشکیِ ساختگی",
+        "number": "02",
+        "description": "با تمثیلِ مشورت گرفتن شروع می‌کنیم، دو کلاس را روی صفحه می‌بینیم و رأی همسایه‌ها را با NumPy محاسبه می‌کنیم.",
+        "tags": [
+          "طبقه‌بندی باینری",
+          "kNN",
+          "NumPy"
+        ],
+        "hero_kind": "binary2d",
+        "notebook": "prediction-problem-practice.ipynb",
+        "quiz_version": 1
+      }
+    ]
+  }
+]

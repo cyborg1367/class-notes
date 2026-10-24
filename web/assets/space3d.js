@@ -24,8 +24,10 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = { rotateSpace, projectSpace, SPACE_HOME, SPACE_POINTS };
 }
 
-if (typeof document !== "undefined") {
-  document.querySelectorAll("[data-space3d]").forEach(root => {
+const mountedSpaces=new WeakSet();
+function mountSpaces(scope){
+  scope.querySelectorAll("[data-space3d]").forEach(root => {
+    if(mountedSpaces.has(root))return;mountedSpaces.add(root);
     const svg = root.querySelector(".space-canvas");
     const fallback = root.querySelector(".space-fallback");
     const status = root.querySelector(".space-status");
@@ -138,3 +140,5 @@ if (typeof document !== "undefined") {
     root.classList.add("is-ready");
   });
 }
+
+if(typeof document!=="undefined"){window.ClassNotesSpace={refresh:mountSpaces};mountSpaces(document);}

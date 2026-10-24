@@ -26,8 +26,8 @@
 .interactive-distance figcaption{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.9}
 @media(max-width:760px){.brand .brand-mark{width:30px;height:30px}.instructor-credit{font-size:12px;margin-top:18px}.footer-credit{flex-basis:100%;order:3}.space-controls button{min-width:36px;min-height:40px}.space-tools{justify-content:center}.space-tools>p{flex-basis:100%;text-align:center}.interactive-distance{padding:10px}}
 @media print{.space-tools,.space-legend,.space-canvas{display:none!important}.space-view .space-fallback{display:block!important}.footer-credit{display:none}}
-@font-face{font-family:Vazirmatn;src:url('fonts/Vazirmatn-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
-@font-face{font-family:Vazirmatn;src:url('fonts/Vazirmatn-Bold.ttf') format('truetype');font-weight:600 900;font-display:swap}
+@font-face{font-family:Vazirmatn;src:url('fonts/Vazirmatn-Regular.woff2') format('woff2'),url('fonts/Vazirmatn-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:Vazirmatn;src:url('fonts/Vazirmatn-Bold.woff2') format('woff2'),url('fonts/Vazirmatn-Bold.ttf') format('truetype');font-weight:600 900;font-display:swap}
 :root{--font-body:Vazirmatn,Tahoma,sans-serif;--font-display:Vazirmatn,Tahoma,sans-serif}
 body{font-size:16px;line-height:1.95;overflow-wrap:break-word}
 [hidden]{display:none!important}

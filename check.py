@@ -53,3 +53,24 @@ for p in DIST.rglob('*'):
 
 second=DIST/'lab/machine-learning/prediction-problem/index.html'
 assert second.exists() and 'data-page="lab"' in second.read_text() and 'data-gate' in second.read_text(),'Missing gated second-lesson lab'
+
+# Version drift and catalog drift must fail CI, not surprise students after deploy.
+import json,hashlib
+manifest=json.loads((DIST/'assets/asset-manifest.json').read_text())
+version=manifest['version']
+assert re.fullmatch(r'[a-f0-9]{16}',version),'Invalid asset fingerprint'
+for name,digest in manifest['files'].items():
+ assert hashlib.sha256((DIST/name).read_bytes()).hexdigest()==digest,('Asset changed after fingerprinting',name)
+canonical=json.loads((DIST/'assets/catalog.json').read_text())
+for p,q in pages.items():
+ s=p.read_text();m=re.search(r'<script id="catalog-data" type="application/json">(.*?)</script>',s,re.S)
+ assert m and json.loads(m[1])==canonical,('Catalog differs from canonical source',p)
+ for value in q.links:
+  u=urlsplit(value)
+  if u.scheme or u.netloc or not u.path:continue
+  target=(p.parent/unquote(u.path)).resolve()
+  if target.is_relative_to((DIST/'assets').resolve()) and target.suffix in {'.js','.mjs','.css','.woff2','.ttf','.svg','.png'}:
+   from urllib.parse import parse_qs
+   assert parse_qs(u.query).get('v')==[version],('Stale asset URL',p,value)
+assert not (DIST/'assets/lab-checks.py').exists(),'Legacy browser grader must not ship'
+print('Checked shared asset fingerprint, canonical catalog and obsolete-file exclusion.')

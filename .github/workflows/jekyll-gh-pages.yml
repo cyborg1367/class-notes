@@ -29,6 +29,12 @@ jobs:
       - name: Check website
         run: python3 check.py
 
+      - name: Test deterministic build and public assets
+        run: python3 -m unittest discover -s tests
+
+      - name: Test public script loading
+        run: node --test tests/runtime.test.cjs
+
       - name: Upload website
         uses: actions/upload-pages-artifact@v4
         with:

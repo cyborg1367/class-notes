@@ -1,4 +1,6 @@
-import {highlight} from './coding-lab-model.mjs?v=3.6.0';
+const modelURL=new URL('./coding-lab-model.mjs',import.meta.url);
+modelURL.search=new URL(import.meta.url).search;
+const {highlight}=await import(modelURL.href);
 export {highlight};
 export const missionId='quality-knn-v1';
 export const dataset={"columns":[{"name":"n_links","label":"تعداد لینک‌ها"},{"name":"n_promo_words","label":"تعداد واژه‌های تبلیغاتی"}],"names":["SMS-01","SMS-02","SMS-03","SMS-04","SMS-05","SMS-06","SMS-07","SMS-08","SMS-09","SMS-10","SMS-11","SMS-12"],"texts":["جلسه فردا ساعت ده برگزار می‌شود.","تخفیف ویژه خرید امروز: https://example.com/shop","فایل جلسه را از این لینک دانلود کن: https://example.com/file","برای دریافت جایزه تماس بگیر.","لینک برنامه مسابقه و توضیح جایزه برای اعضای کلاس: https://example.com/class https://example.com/rules","تخفیف امروز و جایزه خرید: https://example.com/sale https://example.com/gift","قرعه‌کشی فروشگاه: https://example.com/a https://example.com/b https://example.com/c","جایزه و تخفیف ویژه: https://example.com/offer","فایل جلسه و تمرین: https://example.com/lesson https://example.com/homework","امروز دیر می‌رسم.","تخفیف و جایزه برای خرید امروز!","سه منبع درس: https://example.com/one https://example.com/two https://example.com/three"],"X":[[0,0],[1,1],[1,0],[0,1],[2,1],[2,2],[3,1],[1,2],[2,0],[0,0],[0,2],[3,0]],"y":[0,1,0,1,0,1,1,1,0,0,1,0],"query":[2,1],"queryText":"درباره جایزه، این دو صفحه را ببین: https://example.com/new-a https://example.com/new-b"};

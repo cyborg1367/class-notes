@@ -16,3 +16,6 @@ __pycache__/
 /supabase/
 /.env.example
 /QA-INSTRUCTOR.md
+
+# Editor metadata and generated asset output stay local.
+/.idea/

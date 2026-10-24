@@ -1,6 +1,6 @@
 // This worker receives lesson data and code only, never auth credentials.
 const INDEX = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/';
-let py, namespace, originalX, originalQuery, busy = false, request = 0, remaining = 12000;
+let py, namespace, busy = false, request = 0, remaining = 12000;
 const send = (type, extra = {}) => self.postMessage({type, request, ...extra});
 function output(text) {
   if (!remaining) return;
@@ -26,12 +26,11 @@ self.onmessage = async ({data: d}) => {
     if (!py || typeof d.code !== 'string' || d.code.length > 20000 || !['run','console'].includes(d.type)) return;
     if (d.type !== 'console') {
       if (typeof d.bootstrap !== 'string' || d.bootstrap.length > 20000) return;
-      namespace?.destroy(); originalX?.destroy(); originalQuery?.destroy();
+      namespace?.destroy();
       namespace = py.toPy({__name__: '__main__'});
       let bootstrapResult = await py.runPythonAsync(d.bootstrap, {globals: namespace, filename: 'dataset.py'});
       bootstrapResult?.destroy?.();
-      const x = namespace.get('X'), q = namespace.get('query');
-      try { originalX = x.copy(); originalQuery = q.copy(); } finally { x.destroy(); q.destroy(); }
+
     }
     if (!namespace) throw Error('Run your editor code before using the console.');
     let result = await py.runPythonAsync(d.code, {globals: namespace, filename: d.type === 'console' ? '<console>' : 'exercise.py'});
