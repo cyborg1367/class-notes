@@ -590,3 +590,50 @@ body.lab-notebook-ready .portal-main{padding:0;}
 .lab-tutor-prompts { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 22px; }
 .lab-tutor-prompts button { background:transparent; border:1px solid var(--line-strong,#b7ad96); border-radius:2px; padding:6px 9px; font:inherit; font-size:11px; color:inherit; cursor:pointer; }
 .lab-tutor-prompts button:hover { background:var(--paper-deep,#e7dec9); }
+
+/* IDE-style assistant tab and shared horizontal panel splitter. */
+.lab-open-notebook .lab-workspace { grid-template-columns:minmax(0,var(--lab-panel-share,41.85fr)) 8px minmax(0,var(--lab-code-share,58.15fr)); }
+.lab-panel-resizer { min-width:8px; position:relative; cursor:col-resize; touch-action:none; background:var(--lab-paper); outline-offset:-2px; }
+.lab-panel-resizer::after { content:''; position:absolute; width:2px; height:34px; inset:50% auto auto 3px; transform:translateY(-50%); border-radius:2px; background:#6c776680; }
+.lab-panel-resizer:hover,.lab-panel-resizer:focus-visible,.is-panel-resizing .lab-panel-resizer { background:#aeb8a080; }
+.is-panel-resizing,.is-panel-resizing * { cursor:col-resize!important; user-select:none!important; }
+.lab-open-notebook .lab-workspace.is-focused { grid-template-columns:minmax(0,1fr); }
+.lab-workspace.is-focused .lab-panel-resizer { display:none; }
+.lab-open-notebook .lab-tabs { gap:clamp(12px,2vw,28px); padding-inline:20px; }
+.lab-open-notebook .lab-instructions.is-tutor-active .lab-instruction-scroll { overflow:hidden; display:flex; flex-direction:column; max-height:none; scrollbar-gutter:auto; }
+.lab-open-notebook .lab-instruction-scroll>#lab-panel-assistant { padding:0; min-height:0; flex:1; height:100%; overflow:hidden; }
+.lab-open-notebook #lab-panel-assistant .lab-tutor-docked { position:static; inset:auto; width:100%; max-width:none; height:100%; max-height:none; min-height:0; margin:0; padding:0; border:0; border-radius:0; box-shadow:none; display:flex; flex-direction:column; overflow:hidden; background:transparent; animation:none; }
+.lab-open-notebook #lab-panel-assistant .lab-tutor-docked[hidden] { display:none; }
+.lab-open-notebook .lab-tutor-docked .lab-tutor-head { flex:0 0 auto; padding:14px 18px 0; }
+.lab-open-notebook .lab-tutor-docked .lab-tutor-head h2 { font-size:17px; line-height:1.7; margin:2px 0 0; letter-spacing:0; }
+.lab-open-notebook .lab-tutor-docked .lab-tutor-head .lab-tutor-eyebrow { font-size:10px; margin:0; }
+.lab-tutor-docked .lab-tutor-close { width:28px; height:28px; font-size:20px; }
+.lab-tutor-docked .lab-tutor-stage-row { flex:0 0 auto; margin:0 18px; }
+.lab-open-notebook .lab-tutor-docked .lab-tutor-stage { font-size:12px; line-height:1.8; margin:8px 0; }
+.lab-tutor-transcript { flex:1 1 0; min-height:0; overflow:auto; padding:18px; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#8f927c66 transparent; overflow-anchor:none; }
+.lab-tutor-transcript::-webkit-scrollbar { width:5px; }
+.lab-tutor-transcript::-webkit-scrollbar-thumb { background:#8f927c66; border-radius:5px; }
+.lab-open-notebook .lab-tutor-docked .lab-tutor-message-label { font-size:10px; line-height:1.6; margin:0 0 6px; }
+.lab-open-notebook .lab-tutor-docked .lab-tutor-message-text,.lab-open-notebook .lab-tutor-docked .lab-tutor-welcome { font-size:14px; line-height:1.95; margin:0; }
+.lab-tutor-docked .lab-tutor-thread { gap:14px; margin:0; }
+.lab-tutor-docked .lab-tutor-message { padding:10px 12px; }
+.lab-tutor-composer { flex:0 0 auto; min-height:0; padding:12px 18px; border-top:1px solid var(--line-strong); background:var(--lab-paper); }
+.lab-tutor-docked .lab-tutor-form { gap:7px; }
+.lab-tutor-docked .lab-tutor-form>label[for] { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.lab-tutor-docked .lab-tutor-form textarea { min-height:62px; max-height:140px; height:76px; resize:vertical; font-size:13px; line-height:1.8; }
+.lab-tutor-docked .lab-tutor-consent { font-size:11px; line-height:1.7; }
+.lab-tutor-details { font-size:10px; color:var(--muted); }
+.lab-tutor-details summary { cursor:pointer; }
+.lab-open-notebook .lab-tutor-docked .lab-tutor-privacy { font-size:10px; line-height:1.8; margin:7px 0; max-height:88px; overflow:auto; }
+.lab-tutor-docked .lab-tutor-send { min-height:34px; padding:6px 12px; font-size:12px; }
+.lab-open-notebook .lab-tutor-docked .lab-tutor-status { font-size:11px; line-height:1.7; margin:7px 0 0; overflow-wrap:anywhere; }
+.lab-tutor-status:empty { display:none; }
+@media(max-width:860px) {
+ .lab-open-notebook .lab-workspace { grid-template-columns:minmax(0,1fr); }
+ .lab-panel-resizer { display:none; }
+ .lab-open-notebook .lab-instructions.is-tutor-active { height:clamp(480px,78dvh,760px); }
+}
+@media(max-height:600px) and (min-width:861px) {
+ .lab-tutor-docked .lab-tutor-head { display:none; }
+ .lab-tutor-docked .lab-tutor-composer { padding-block:8px; }
+}

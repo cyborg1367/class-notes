@@ -31,6 +31,7 @@ async function mount(root,options){
    <button id="lab-tab-mission" data-lab-tab="mission" role="tab" aria-controls="lab-panel-mission" aria-selected="true" type="button">مأموریت</button>
    <button id="lab-tab-data" data-lab-tab="data" role="tab" aria-controls="lab-panel-data" aria-selected="false" tabindex="-1" type="button">داده‌ها</button>
    <button id="lab-tab-guide" data-lab-tab="guide" role="tab" aria-controls="lab-panel-guide" aria-selected="false" tabindex="-1" type="button">راهنما</button>
+   ${missionId==='greenhouse-v1'&&options.tutorRequest?'<button id="lab-tab-assistant" data-lab-tab="assistant" role="tab" aria-controls="lab-panel-assistant" aria-selected="false" tabindex="-1" type="button">دستیار</button>':''}
   </div>
   <div class="lab-instruction-scroll">
   <section class="lab-task" id="lab-panel-mission" role="tabpanel" aria-labelledby="lab-tab-mission" tabindex="0">
@@ -61,8 +62,10 @@ async function mount(root,options){
    <details class="mission-contract"><summary>چطور با این محیط کار کنم؟</summary><ol class="mission-guide-steps"><li>در تابع خواسته‌شده، <code>pass</code> را با راه‌حل خودت جایگزین کن.</li><li>تابع باید جواب را با <code>return</code> برگرداند. خط <code>print(...)</code> زیر آن، جواب را در خروجی نشان می‌دهد.</li><li>«اجرای کد» را بزن و خروجی یا خطا را ببین. می‌توانی چند بار کدت را تغییر بدهی و امتحان کنی.</li><li>وقتی آماده بودی، «بررسی پاسخ» را بزن تا مرحله ارزیابی شود و XP بگیری.</li></ol></details>
    <a class="quiet-link" href="${E(lessonURL)}">مرور جزوه ←</a>
   </section>
+   ${missionId==='greenhouse-v1'&&options.tutorRequest?'<section id="lab-panel-assistant" role="tabpanel" aria-labelledby="lab-tab-assistant" tabindex="0" hidden><p data-tutor-loading role="status">برای گفتگو تب دستیار را باز کن.</p></section>':''}
   </div>
  </aside>
+ <div class="lab-panel-resizer" data-panel-resizer role="separator" aria-label="تغییر عرض پنل راهنما و دستیار" aria-orientation="vertical" tabindex="0"></div>
  <section class="lab-editor-panel" aria-label="ویرایشگر و خروجی">
   <div class="lab-editor-toolbar"><span class="lab-file" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2h6l4 4v12H5ZM11 2v5h4M8 10h4m-4 3h4"/></svg>${E(meta.filename)}<span class="lab-file-dot" aria-hidden="true"></span></span>
 
@@ -90,17 +93,20 @@ async function mount(root,options){
  const $=s=>root.querySelector(s),editor=$('#lab-code'),output=$('[data-output]'),save=$('[data-save]'),explanation=$('#lab-explanation'),command=$('#lab-command');
  root.classList.add('lab-open-notebook');document.body.classList.add('lab-notebook-ready');
  const alive=()=>!disposed&&isCurrent();
- const layout=mountLayout(root);
+ const layout=mountLayout(root,{onTabChange(name){if(name==='assistant')void openTutor()}});
  const experience=mountExperience(root,{userId,missionId,meta,dataset,stages,hasProgress:!!(trusted.draft||trusted.attempts||trusted.completed?.length||cached?.dirty)});
  let tutor=null,tutorLoading=false;
  const tutorButton=$('[data-tutor-open]');
  const tutorContext=()=>({mission:missionId,task:stages[state.active].id,title:stages[state.active].title,code:editor.value,output:output.textContent||''});
- if(tutorButton)tutorButton.onclick=async()=>{
-  if(tutorLoading||!alive())return;tutorLoading=true;tutorButton.disabled=true;
-  try{if(!tutor){const {mountTutor}=await import(assetURL('coding-lab-tutor.mjs'));if(!alive())return;tutor=mountTutor(root,{request:options.tutorRequest,getContext:tutorContext,isCurrent:alive,opener:tutorButton})}tutor.open()}
-  catch{if(alive())saveStatus('کمک آموزشی دریافت نشد؛ دوباره تلاش کن.',true)}
-  finally{tutorLoading=false;if(alive())tutorButton.disabled=false}
- };
+ async function openTutor(){
+  if(tutorLoading||!alive())return;tutorLoading=true;
+  const host=$('#lab-panel-assistant');if(!host)return;
+  try{if(!tutor){const {mountTutor}=await import(assetURL('coding-lab-tutor.mjs'));if(!alive())return;host.replaceChildren();tutor=mountTutor(root,{host,onClose:()=>layout.selectTab('mission',true),request:options.tutorRequest,getContext:tutorContext,isCurrent:alive,opener:tutorButton})}if(!host.hidden)tutor.open({focus:false})}
+  catch{if(alive()){host.textContent='دستیار دریافت نشد؛ دوباره این تب را باز کن.';}}
+  finally{tutorLoading=false}
+ }
+ if(tutorButton)tutorButton.onclick=()=>layout.selectTab('assistant',true);
+
  const toolsMenu=$('[data-tools]'),consoleTools=$('.lab-console-tools');
  $('[data-lab-teacher-link]').hidden=document.querySelector('[data-teacher-link]')?.hidden!==false;
  function dismissTools(e){for(const menu of [toolsMenu,consoleTools])if(!menu.contains(e.target)||e.target.closest('.lab-tools-menu button,.lab-console-menu button'))menu.open=false}
