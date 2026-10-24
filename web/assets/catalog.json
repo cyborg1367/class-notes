@@ -19,7 +19,14 @@
         ],
         "hero_kind": null,
         "notebook": "vector-distance-practice.ipynb",
-        "quiz_version": 1
+        "quiz_version": 1,
+        "lab": {
+          "mission": "greenhouse-v1",
+          "title": "کارآگاه گلخانه",
+          "path": "lab/machine-learning/vector-distance/",
+          "model": "coding-lab-model.mjs",
+          "bridge": "در جزوه، بردار و فاصله را شناختیم. در این لابراتور، با داده‌های یک گلخانه نزدیک‌ترین وضعیت‌ها را پیدا می‌کنیم."
+        }
       },
       {
         "id": "machine-learning/prediction-problem",
@@ -35,7 +42,14 @@
         ],
         "hero_kind": "binary2d",
         "notebook": "prediction-problem-practice.ipynb",
-        "quiz_version": 1
+        "quiz_version": 1,
+        "lab": {
+          "mission": "quality-knn-v1",
+          "title": "کارآگاه پیامک",
+          "path": "lab/machine-learning/prediction-problem/",
+          "model": "coding-lab-classification.mjs",
+          "bridge": "در جزوه، طبقه‌بندی را با داده‌های پزشکیِ ساختگی آموختیم. اینجا همان منطق رأی‌گیری همسایه‌ها را برای تشخیص پیامک‌های تبلیغاتی به کار می‌بریم."
+        }
       }
     ]
   }

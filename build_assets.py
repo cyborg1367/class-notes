@@ -3,7 +3,7 @@ from pathlib import Path
 from urllib.parse import urlsplit, parse_qsl, urlencode
 import hashlib, json, re, posixpath
 
-VERSIONED_SUFFIXES={'.css','.js','.mjs','.svg','.png','.woff','.woff2','.ttf'}
+VERSIONED_SUFFIXES={'.css','.js','.mjs','.svg','.png','.webp','.woff','.woff2','.ttf'}
 CONFIG_FILES={'auth-config.json','lab-service.json'}
 
 def asset_version(root):
@@ -29,11 +29,30 @@ def rewrite_asset_url(value,page,dist,version):
         return with_version(value,version)
     return value
 
+def validate_catalog(catalog, dist):
+    missions=set(); routes=set()
+    for course in catalog:
+        for lesson in course['lessons']:
+            lab=lesson.get('lab')
+            if lab is None: continue
+            assert isinstance(lab,dict) and set(lab)=={'mission','title','path','model','bridge'}, 'Invalid lab catalog fields'
+            assert all(isinstance(v,str) and v.strip() for v in lab.values()), 'Empty lab catalog field'
+            assert re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*',lab['mission']), 'Invalid lab mission id'
+            assert lab['mission'] not in missions, 'Duplicate lab mission id'
+            assert lab['path']=='lab/'+lesson['id']+'/' and '..' not in lab['path'].split('/'), 'Invalid lab route'
+            assert lab['path'] not in routes and (dist/lab['path']/'index.html').is_file(), 'Missing or duplicate lab route'
+            assert re.fullmatch(r'coding-lab-[a-z0-9-]+\.mjs',lab['model']) and (dist/'assets'/lab['model']).is_file(), 'Missing or invalid lab model'
+            model=(dist/'assets'/lab['model']).read_text()
+            match=re.search(r"export const missionId\s*=\s*['\"]([^'\"]+)['\"]",model)
+            assert match and match[1]==lab['mission'], 'Lab model mission differs from catalog'
+            missions.add(lab['mission']); routes.add(lab['path'])
+
 def prepare_public_assets(root,dist):
     version=asset_version(root)
     catalog=json.loads((dist/'assets/catalog.json').read_text())
     ids=[lesson['id'] for course in catalog for lesson in course['lessons']]
     assert len(ids)==len(set(ids)), 'Duplicate lesson ids in canonical catalog'
+    validate_catalog(catalog,dist)
     serialized=json.dumps(catalog,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
     for page in sorted(dist.rglob('*.html')):
         text=page.read_text()

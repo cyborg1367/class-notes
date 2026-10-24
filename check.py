@@ -69,7 +69,7 @@ for p,q in pages.items():
   u=urlsplit(value)
   if u.scheme or u.netloc or not u.path:continue
   target=(p.parent/unquote(u.path)).resolve()
-  if target.is_relative_to((DIST/'assets').resolve()) and target.suffix in {'.js','.mjs','.css','.woff2','.ttf','.svg','.png'}:
+  if target.is_relative_to((DIST/'assets').resolve()) and target.suffix in {'.js','.mjs','.css','.woff2','.ttf','.svg','.png','.webp'}:
    from urllib.parse import parse_qs
    assert parse_qs(u.query).get('v')==[version],('Stale asset URL',p,value)
 assert not (DIST/'assets/lab-checks.py').exists(),'Legacy browser grader must not ship'

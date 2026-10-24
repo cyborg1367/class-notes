@@ -6,8 +6,12 @@ async function mount(root,options){
  const {userId,assets,lessonURL,isCurrent,saveDraft,refresh,submit,getAttempt}=options;
  if(!userId||!isCurrent())return;
  const assetURL=path=>{const u=new URL(path,assets);u.search=options.assetVersion||'?v=build';return u;};
- const [{stages,dataset,bootstrap,normalize,available,highlight,missionId,meta},{mountLayout},{mountExperience}]=await Promise.all([import(assetURL(options.lessonId==='machine-learning/prediction-problem'?'coding-lab-classification.mjs':'coding-lab-model.mjs')),import(assetURL('coding-lab-layout.mjs')),import(assetURL('coding-lab-experience.mjs'))]);
+ if(!options.lab?.model||!options.lab?.mission)throw Error('LAB_CATALOG_REQUIRED');
+ const [model,{mountLayout},{mountExperience}]=await Promise.all([import(assetURL(options.lab.model)),import(assetURL('coding-lab-layout.mjs')),import(assetURL('coding-lab-experience.mjs'))]);
  if(!isCurrent())return;
+ const {stages,dataset,bootstrap,normalize,available,highlight,missionId}=model;
+ if(missionId!==options.lab.mission||options.snapshot?.mission&&options.snapshot.mission!==missionId)throw Error('LAB_CATALOG_MISMATCH');
+ const meta={...model.meta,title:options.lab.title,lessonBridge:options.lab.bridge};
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
  let trusted=options.snapshot,revision=Number(trusted.revision||0),state=normalize(cached?.dirty?cached.state:trusted.draft);

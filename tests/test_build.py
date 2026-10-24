@@ -58,3 +58,41 @@ class PublicBuildTests(unittest.TestCase):
  def test_query_and_fragment_preserved(self):self.assertEqual(with_version('a.css?theme=paper&v=old#x','new'),'a.css?theme=paper&v=new#x')
 
 if __name__=='__main__':unittest.main()
+
+
+class LabCatalogTests(unittest.TestCase):
+ def setUp(self):
+  self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
+  (self.root/'assets').mkdir();(self.root/'lab/course/one').mkdir(parents=True)
+  (self.root/'lab/course/one/index.html').write_text('<html></html>')
+  (self.root/'assets/coding-lab-example.mjs').write_text("export const missionId='stable-v1';")
+  self.lab={'mission':'stable-v1','title':'Lab','path':'lab/course/one/','model':'coding-lab-example.mjs','bridge':'Apply the lesson to fresh data.'}
+  self.catalog=[{'lessons':[{'id':'course/one','lab':self.lab}]}]
+ def tearDown(self):self.temp.cleanup()
+ def validate(self):
+  from build_assets import validate_catalog
+  validate_catalog(self.catalog,self.root)
+ def test_valid_lab_and_lessons_without_labs(self):
+  self.catalog[0]['lessons'].append({'id':'course/two'});self.validate()
+ def test_wrong_model_mission_cannot_publish(self):
+  self.lab['mission']='different-v1'
+  with self.assertRaisesRegex(AssertionError,'model mission'):self.validate()
+ def test_missing_model_cannot_publish(self):
+  self.lab['model']='coding-lab-missing.mjs'
+  with self.assertRaisesRegex(AssertionError,'lab model'):self.validate()
+ def test_wrong_or_missing_route_cannot_publish(self):
+  self.lab['path']='lab/course/two/'
+  with self.assertRaisesRegex(AssertionError,'lab route'):self.validate()
+ def test_duplicate_mission_cannot_publish(self):
+  self.catalog[0]['lessons'].append({'id':'course/two','lab':dict(self.lab)})
+  with self.assertRaisesRegex(AssertionError,'Duplicate lab mission'):self.validate()
+ def test_external_model_cannot_publish(self):
+  self.lab['model']='https://example.org/model.mjs'
+  with self.assertRaisesRegex(AssertionError,'lab model'):self.validate()
+ def test_current_catalog_preserves_existing_mission_identity(self):
+  catalog=json.loads((ROOT/'web/assets/catalog.json').read_text())
+  labs={l['id']:l['lab'] for c in catalog for l in c['lessons'] if l.get('lab')}
+  self.assertEqual(labs['machine-learning/vector-distance']['mission'],'greenhouse-v1')
+  self.assertEqual(labs['machine-learning/prediction-problem']['mission'],'quality-knn-v1')
+  source=(ROOT/'web/assets/portal.js').read_text()
+  self.assertNotIn('greenhouse-v1',source);self.assertNotIn('quality-knn-v1',source)
