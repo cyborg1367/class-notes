@@ -206,9 +206,19 @@ if(typeof document!=="undefined"){
     if(!result.ok){const text={CLASS_ACCESS_REQUIRED:'عضویت کلاس فعال نیست؛ وضعیت دسترسی را بررسی کن.',TASK_LOCKED:'ابتدا تسک قبلی را انجام بده.',LAB_RATE_LIMIT:'چند لحظه صبر کن و دوباره تلاش کن؛ تعداد بررسی‌های اخیر به حد مجاز رسیده است.',LAB_BUDGET_EXHAUSTED:'سهمیهٔ بررسی فعلاً تمام شده است؛ با مدرس در میان بگذار. کدت ذخیره می‌شود و اجرای محلی در دسترس است.',LAB_PAUSED:'بررسی نهایی موقتاً توسط مدرس متوقف شده است؛ کدت را محلی آزمایش و ذخیره کن.',REQUEST_CONFLICT:'این درخواست با کد دیگری ثبت شده است؛ صفحه را بازخوانی کن.',SIGN_IN_REQUIRED:'دوباره وارد حساب خودت شو.'}[value.error];const error=Error(text||'سرویس بررسی پاسخ نداد؛ کدت حفظ شده است. دوباره تلاش کن.');if(text)error.code=value.error;throw error;}
     return value;
    }
+   async function tutorRequest(body,signal){
+    const {data,error}=await app.client.auth.getSession();
+    if(error||gen!==app.generation||data.session?.user?.id!==owner){const err=Error('SIGN_IN_REQUIRED');err.code='SIGN_IN_REQUIRED';throw err;}
+    const endpoint=new URL('/functions/v1/classroom-tutor/help',app.config.supabaseUrl);
+    const response=await fetch(endpoint.href,{method:'POST',headers:{'Content-Type':'application/json','apikey':app.config.publishableKey,'Authorization':'Bearer '+data.session.access_token},body:JSON.stringify(body),credentials:'omit',signal});
+    const value=await response.json();
+    if(gen!==app.generation)throw Error('ACCOUNT_CHANGED');
+    if(!response.ok){const err=Error('TUTOR_REQUEST_FAILED');err.code=value.error;throw err;}
+    return value;
+   }
    await window.ClassNotesCodingLab.mount(host,{userId:owner,lessonId:lid,lab:info.lab,assetVersion:new URL(entry.src).search,assets:assets.href,lessonURL:url(lid+'/'),snapshot,
     saveDraft:(state,revision)=>rpc('classroom_lab_save',{p_state:state,p_revision:revision,p_owner:owner,p_mission:mission}),
-    refresh:()=>rpc('classroom_lab_state',{p_mission:mission}),getAttempt:request=>rpc('classroom_lab_receipt',{p_request:request,p_mission:mission}),submit,
+    refresh:()=>rpc('classroom_lab_state',{p_mission:mission}),getAttempt:request=>rpc('classroom_lab_receipt',{p_request:request,p_mission:mission}),submit,tutorRequest,
     isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
   }catch(err){if(gen!==app.generation)return;host.innerHTML='<div class="gate-card"><h1>لابراتور دریافت نشد.</h1><p>'+E(friendly(err))+'</p><button type="button" class="button-outline" data-lab-retry>تلاش دوباره</button></div>';host.querySelector('button').onclick=loadCodingLab;}
  }

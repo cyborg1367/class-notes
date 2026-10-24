@@ -49,6 +49,7 @@ assert not any(p.name.startswith('.env') for p in DIST.rglob('*')), 'Do not publ
 for p in DIST.rglob('*'):
  if p.is_file() and p.suffix in ['.json','.js','.mjs','.html','.py']:
   assert not re.search(r'sb_secret_[A-Za-z0-9_-]{20,}',p.read_text()), 'A server-only key is present in the public build'
+  assert not re.search(r'\bgsk_[A-Za-z0-9_-]{20,}',p.read_text()), 'A Groq API key is present in the public build'
   assert not re.search(r'\be2b_[A-Za-z0-9_-]{20,}',p.read_text()), 'An E2B key is present in the public build'
 
 second=DIST/'lab/machine-learning/prediction-problem/index.html'

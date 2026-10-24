@@ -40,7 +40,7 @@ async function mount(root,options){
    <p class="mission-action" data-action></p>
    <dl class="mission-io"><div><dt data-input-title></dt><dd data-input></dd></div><div><dt data-result-title></dt><dd data-result></dd></div></dl>
    <details class="mission-contract"><summary>یک مثال کوچک</summary><div class="mission-task-text" data-task></div><pre data-example dir="ltr" tabindex="0"></pre></details>
-   <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg>Hint</button><span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
+   <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg>Hint</button>${missionId==='greenhouse-v1'&&options.tutorRequest?'<button type="button" class="lab-help-button" data-tutor-open>کمک آموزشی</button>':''}<span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
    <div data-reflection hidden><label for="lab-explanation">پیش‌بینی و نتیجهٔ آزمایش تو</label><textarea id="lab-explanation" maxlength="3000" rows="3" placeholder="پیش از اجرا چه حدسی داشتی؟ پس از اجرا چه چیزی فهمیدی؟"></textarea></div>
    <div class="lab-feedback" data-feedback role="status" aria-live="polite" hidden></div>
    <button type="button" class="button-forest lab-next" data-next disabled>مرحلهٔ بعد ←</button>
@@ -92,6 +92,15 @@ async function mount(root,options){
  const alive=()=>!disposed&&isCurrent();
  const layout=mountLayout(root);
  const experience=mountExperience(root,{userId,missionId,meta,dataset,stages,hasProgress:!!(trusted.draft||trusted.attempts||trusted.completed?.length||cached?.dirty)});
+ let tutor=null,tutorLoading=false;
+ const tutorButton=$('[data-tutor-open]');
+ const tutorContext=()=>({mission:missionId,task:stages[state.active].id,title:stages[state.active].title,code:editor.value,output:output.textContent||''});
+ if(tutorButton)tutorButton.onclick=async()=>{
+  if(tutorLoading||!alive())return;tutorLoading=true;tutorButton.disabled=true;
+  try{if(!tutor){const {mountTutor}=await import(assetURL('coding-lab-tutor.mjs'));if(!alive())return;tutor=mountTutor(root,{request:options.tutorRequest,getContext:tutorContext,isCurrent:alive,opener:tutorButton})}tutor.open()}
+  catch{if(alive())saveStatus('کمک آموزشی دریافت نشد؛ دوباره تلاش کن.',true)}
+  finally{tutorLoading=false;if(alive())tutorButton.disabled=false}
+ };
  const toolsMenu=$('[data-tools]'),consoleTools=$('.lab-console-tools');
  $('[data-lab-teacher-link]').hidden=document.querySelector('[data-teacher-link]')?.hidden!==false;
  function dismissTools(e){for(const menu of [toolsMenu,consoleTools])if(!menu.contains(e.target)||e.target.closest('.lab-tools-menu button,.lab-console-menu button'))menu.open=false}
@@ -155,6 +164,7 @@ async function mount(root,options){
  function paint(){ $('[data-highlight]').innerHTML=highlight(editor.value)+'\n';$('.lab-lines').textContent=editor.value.split('\n').map((_,i)=>i+1).join('\n');sync() }
  function hints(){const n=state.hints[state.active];$('[data-hints]').innerHTML=stages[state.active].hints.slice(0,n).map((h,i)=>`<p><b lang="en">${i+1}</b> ${E(h)}</p>`).join('');$('[data-hint]').disabled=n>=3;$('[data-hint-label]').textContent='Hint';$('[data-hint-count]').textContent=`${n} / 3`}
  function select(focus=false){
+  tutor?.setStage(tutorContext());
   const s=stages[state.active];if(!state.codes[state.active])state.codes[state.active]=(state.active?state.codes[state.active-1]:'')+s.starter;
   editor.value=state.codes[state.active];explanation.value=state.explanation;hasRun=false;
   $('[data-task-number]').textContent=`مرحلهٔ ${(state.active+1).toLocaleString('fa-IR')} از ۶`;
@@ -228,8 +238,8 @@ async function mount(root,options){
   catch{if(alive())saveStatus('نسخهٔ حساب دریافت نشد؛ کد محلی حفظ شده است.',true)}
   finally{cloudLoading=false;if(alive())controls()}
  };
- function pagehide(){experience.close(false);closeCelebration();clearTimeout(localSaveTimer);persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
- function dispose(){if(disposed)return;clearTimeout(localSaveTimer);if(paintFrame!==null&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(paintFrame);persist();disposed=true;document.body.classList.remove('lab-notebook-ready');root.classList.remove('lab-open-notebook');layout.dispose();experience.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
+ function pagehide(){tutor?.close(false);experience.close(false);closeCelebration();clearTimeout(localSaveTimer);persist();controller?.abort();terminate();if(alive())controls('برای ادامه محیط محلی را دوباره فعال کن.')}
+ function dispose(){if(disposed)return;clearTimeout(localSaveTimer);if(paintFrame!==null&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(paintFrame);persist();disposed=true;document.body.classList.remove('lab-notebook-ready');root.classList.remove('lab-open-notebook');layout.dispose();experience.dispose();tutor?.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
  window.addEventListener('pagehide',pagehide);select();persist();saveStatus(conflict?'نسخهٔ محلی با حساب تفاوت دارد؛ پیش از دریافت نسخهٔ حساب، کدت را دانلود کن.':dirty?'کد این مرورگر بازیابی شد.':'ذخیرهٔ خودکار فعال است.',conflict);experience.start();return current
 }
 window.ClassNotesCodingLab={mount,dispose:()=>current?.dispose()};
