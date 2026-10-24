@@ -576,3 +576,17 @@ body.lab-notebook-ready .portal-main{padding:0;}
 .lab-tutor-text,.lab-tutor-question { font-size:14px; margin:10px 0; }
 .lab-tutor-question { padding-inline-start:12px; border-inline-start:2px solid var(--teal-deep,#52675e); }
 @media (prefers-reduced-motion:no-preference) { .lab-tutor[open] { animation:tutor-enter .18s ease-out; } @keyframes tutor-enter { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } } }
+
+/* Conversational tutor v2: plain-text messages, same paper drawer. */
+.lab-tutor-stage-row { display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--line,#d5cbb8); margin-bottom:18px; }
+.lab-tutor-stage-row .lab-tutor-stage { border:0; margin:12px 0; padding:0; }
+.lab-tutor-reset { flex-shrink:0; border:0; background:transparent; padding:8px 0; font:inherit; font-size:11px; color:var(--muted,#6b6357); text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
+.lab-tutor-thread { display:grid; gap:18px; margin-bottom:20px; }
+.lab-tutor-message { padding:12px 14px; border:1px solid var(--line,#d5cbb8); border-radius:2px; background:#ffffff30; overflow-wrap:anywhere; }
+.lab-tutor-message[data-role="assistant"] { border-inline-start:2px solid var(--teal-deep,#52675e); background:transparent; }
+.lab-tutor-message-label { font-size:10px; color:var(--muted,#6b6357); margin:0 0 7px; }
+.lab-tutor-message-text { font-size:14px; line-height:2.05; white-space:pre-wrap; margin:0; }
+.lab-tutor-welcome { font-size:14px; line-height:2; }
+.lab-tutor-prompts { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 22px; }
+.lab-tutor-prompts button { background:transparent; border:1px solid var(--line-strong,#b7ad96); border-radius:2px; padding:6px 9px; font:inherit; font-size:11px; color:inherit; cursor:pointer; }
+.lab-tutor-prompts button:hover { background:var(--paper-deep,#e7dec9); }
