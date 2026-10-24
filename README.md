@@ -4,7 +4,7 @@ A Persian, right-to-left classroom portal for course notes, quizzes, and hands-o
 
 Students can read course material, practice code in their browser, submit lab missions for independent grading, and follow their progress through server-recorded XP.
 
-[راهنمای فارسی](README.fa.md) · [Build workflow](.github/workflows/jekyll-gh-pages.yml)
+ · [Build workflow](.github/workflows/jekyll-gh-pages.yml)
 
 ## What students can do
 
