@@ -86,6 +86,7 @@ if(typeof document!=="undefined"){
  const catalog=JSON.parse($('#catalog-data').textContent),fa=n=>Number(n).toLocaleString('fa-IR'),url=p=>new URL(p,base).href;
  const num=n=>Number(n).toLocaleString('en-US',{useGrouping:false}),score=(n,m)=>'<bdi dir="ltr">'+num(n)+' / '+num(m)+'</bdi>',blankLabel=i=>String.fromCharCode(65+i);
  const app={client:null,user:null,state:null,generation:0,serviceError:null};window.Classroom=app;
+ let presence=null,presenceTicket=0;
  const objectURLs=new Set(),privateDownloads=new Map();let lastUser=null,initializing=true;
  function status(el,text,error=false){if(el){el.textContent=text;el.dataset.error=String(error);}}
  function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
@@ -106,7 +107,7 @@ if(typeof document!=="undefined"){
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
  async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;app.state=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;presenceTicket++;presence?.dispose();presence=null;app.state=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
   if(!initializing&&old!==next){if(old){if(['lesson','lab','quiz','dashboard','instructor','course'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
  }
@@ -157,6 +158,19 @@ if(typeof document!=="undefined"){
   if(page==='lesson')await loadLesson();
   if(page==='lab')await loadCodingLab();
   if(page==='quiz')await loadQuiz();
+  void mountClassroomPresence();
+ }
+ async function mountClassroomPresence(){
+  const ticket=++presenceTicket,gen=app.generation;presence?.dispose();presence=null;
+  if(!app.user||app.serviceError)return;
+  const owner=app.user.id,courses=catalog.filter(c=>member(c.id)).map(c=>({id:c.id,title:c.display_title||c.title}));
+  try{
+   const moduleURL=assetURL('classroom-presence.mjs');
+   const {mountPresence}=await import(moduleURL.href);
+   if(ticket!==presenceTicket||gen!==app.generation)return;
+   if(!document.querySelector('link[data-presence-style]')){const css=document.createElement('link');css.rel='stylesheet';css.href=assetURL('classroom-presence.css').href;css.dataset.presenceStyle='';document.head.append(css);}
+   presence=mountPresence({client:app.client,rpc,userId:owner,courses,courseId:lesson(lid)?.course.id||lid,anchor:page==='lab'?$('.lab-site-links'):$('.portal-nav'),account:$('[data-account-member]'),isCurrent:()=>gen===app.generation&&app.user?.id===owner});
+  }catch{/* Presence never blocks lessons, grading or login. */}
  }
  function studyState(course){
   if(!app.user)return {last:null,opened:[]};

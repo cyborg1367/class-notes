@@ -1,0 +1,23 @@
+.classroom-presence { position:relative; flex:0 0 auto; direction:rtl; font-family:var(--font-body); }
+.classroom-presence>summary { display:flex; align-items:center; gap:7px; min-height:34px; padding:4px 9px; border:1px solid var(--line-strong,#b7ad96); border-radius:2px; color:var(--ink,#302c25); font-size:11px; line-height:1.8; cursor:pointer; list-style:none; white-space:nowrap; background:#ffffff30; }
+.classroom-presence>summary::-webkit-details-marker { display:none; }
+.presence-dot { display:inline-block; flex:0 0 6px; width:6px; height:6px; border-radius:50%; background:#7a7b70; }
+.classroom-presence[data-connected="true"] .presence-dot { background:#477561; }
+.presence-popover { position:absolute; inset:calc(100% + 9px) auto auto 0; box-sizing:border-box; width:min(290px,calc(100vw - 32px)); padding:17px; background:var(--paper,#f3ead7); color:var(--ink,#302c25); border:1px solid var(--line-strong,#b7ad96); border-radius:2px; box-shadow:0 8px 24px #302c251a; z-index:180; }
+.presence-popover p { margin:0 0 10px; font-size:12px; line-height:1.8; }
+.presence-popover .presence-heading { font-weight:700; }
+.presence-popover ul { margin:0; padding:0; max-height:240px; overflow:auto; list-style:none; scrollbar-width:thin; }
+.presence-popover li { display:flex; align-items:center; gap:9px; padding:8px 0; font-size:12px; overflow-wrap:anywhere; border-bottom:1px solid var(--line,#d5cbb8); }
+.presence-popover .presence-note { font-size:10px; color:var(--muted,#6b6357); margin:12px 0 0; }
+.presence-popover select { width:100%; font:inherit; font-size:12px; margin-bottom:12px; border:1px solid var(--line-strong); background:transparent; padding:5px; }
+.presence-setting { margin-top:22px; padding-top:16px; border-top:1px solid var(--line,#d5cbb8); }
+.presence-setting label { display:flex; gap:9px; align-items:center; font-size:13px; cursor:pointer; }
+.presence-setting input { width:16px; height:16px; accent-color:#477561; }
+.presence-setting p { font-size:11px; line-height:1.9; margin:9px 0 0; color:var(--muted,#6b6357); }
+.lab-site-links:has(.classroom-presence) { gap:12px; flex-wrap:wrap; align-content:center; }
+.lab-site-links .classroom-presence>summary { font-size:10px; min-height:27px; padding:2px 7px; }
+.classroom-presence summary:focus-visible,.presence-setting input:focus-visible { outline:2px solid var(--teal-deep,#52675e); outline-offset:3px; }
+@media(max-width:760px) { .portal-nav:has(>.classroom-presence) { flex-wrap:wrap; gap:8px 14px; padding-block:8px; } .portal-nav>.classroom-presence { margin-inline-start:auto; } }
+
+@media(max-width:760px) { .presence-class-word { display:none; } .portal-header:has(.classroom-presence) .portal-links { top:100%; } }
+.lab-site-links .presence-class-word { display:none; }
