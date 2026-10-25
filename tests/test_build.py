@@ -96,3 +96,13 @@ class LabCatalogTests(unittest.TestCase):
   self.assertEqual(labs['machine-learning/prediction-problem']['mission'],'quality-knn-v1')
   source=(ROOT/'web/assets/portal.js').read_text()
   self.assertNotIn('greenhouse-v1',source);self.assertNotIn('quality-knn-v1',source)
+ def test_dashboard_skill_must_reference_a_real_task(self):
+  self.catalog[0]['lessons'][0]['practice_skills']=[{'task':'made-up','label':'Unverified skill'}]
+  with self.assertRaisesRegex(AssertionError,'dashboard task'):self.validate()
+ def test_dashboard_steps_accept_public_task_contracts(self):
+  (self.root/'assets/coding-lab-example.mjs').write_text("export const missionId='stable-v1'; export const stages=[{id:'inspect'}];")
+  lesson=self.catalog[0]['lessons'][0]
+  lesson['lab_steps']=[{'id':'inspect','title':'Inspect data'}]
+  lesson['practice_skills']=[{'task':'inspect','label':'Data shape'}]
+  lesson['dashboard_art']='greenhouse'
+  self.validate()

@@ -249,42 +249,32 @@ if(typeof document!=="undefined"){
    $('[data-course-result]',row).innerHTML=result?`آخرین نتیجهٔ نسخهٔ ${num(result.version)}: ${result.last_score!=null?score(result.last_score,result.maximum):'برای مشاهده باز کن'} · <a href="${E(url('quiz/'+l.id+'/?attempt='+encodeURIComponent(result.last_id)))}">مشاهدهٔ نتیجه</a>`:'برای این نسخه از آزمون هنوز نتیجه‌ای ثبت نشده است.';
   }
  }
+ let dashboardGeneration=0;
  async function dashboard(){
-  const root=$('[data-dashboard]'),notice=$('[data-page-status]');let resultsRoot=$('[data-dashboard-results]');if(!resultsRoot){resultsRoot=document.createElement('section');resultsRoot.id='results';resultsRoot.setAttribute('data-dashboard-results','');root.after(resultsRoot);}resultsRoot.setAttribute('tabindex','-1');status(notice,'');resultsRoot.hidden=true;
+  const root=$('[data-dashboard]'),notice=$('[data-page-status]'),gen=app.generation,renderId=++dashboardGeneration;
+  let resultsRoot=$('[data-dashboard-results]');if(!resultsRoot){resultsRoot=document.createElement('section');resultsRoot.id='results';resultsRoot.setAttribute('data-dashboard-results','');root.after(resultsRoot);}resultsRoot.setAttribute('tabindex','-1');resultsRoot.hidden=true;status(notice,'');
   if(!app.user||app.serviceError){renderGate(root,catalog[0].id);return;}
   const active=catalog.filter(c=>member(c.id)),other=catalog.filter(c=>!member(c.id));
+  const owner=app.user,study=Object.fromEntries(active.map(c=>[c.id,studyState(c)]));
   const results=(app.state?.results||[]).filter(r=>{const l=lesson(r.lesson_id);return l&&member(l.course.id);}).sort((a,b)=>(Date.parse(b.last_at)||0)-(Date.parse(a.last_at)||0));
-  root.innerHTML=`<section aria-labelledby="my-classes-title"><div class="section-heading"><h2 id="my-classes-title">کلاس‌های من</h2><a class="quiet-link" href="${E(url('index.html#classes'))}">همهٔ کلاس‌ها ←</a></div><div class="continue-grid${active.length===1?' continue-grid-single':''}">${active.map(c=>{
-   const state=studyState(c),last=c.lessons.find(l=>l.id===state.last),target=last||c.lessons[0];
-   return `<article class="continue-card" data-continue-course="${E(c.id)}"><p class="eyebrow">عضویت فعال</p><h3 dir="auto">${E(c.display_title||c.title)}</h3><p class="continue-label">${last?'آخرین یادداشت بازشده در این مرورگر':'نقطهٔ شروع کلاس'}</p><p class="continue-title"><span dir="ltr">${E(target.number)}</span> · ${E(target.title)}</p><div class="portal-actions"><a class="button-forest" data-resume-study href="${E(url(target.id+'/'))}">${last?'ادامهٔ مطالعه':'شروع مطالعه'} ←</a><a class="button-outline" href="${E(url(c.id+'/'))}">فهرست یادداشت‌ها</a></div><p class="small-note">${fa(state.opened.length)} از ${fa(c.lessons.length)} یادداشت در این مرورگر باز شده است؛ این تعداد به معنی تکمیل مطالعه نیست.</p></article>`;
-  }).join('')||'<div class="panel-card"><p>هنوز عضویت فعالی نداری. از بخش زیر برای کلاس موردنظر درخواست دسترسی بده.</p></div>'}</div></section>`;
-  if(other.length){const section=document.createElement('section');section.className='membership-section';section.innerHTML='<div class="section-heading"><h2>عضویت و درخواست دسترسی</h2></div>';
-   for(const c of other){const item=document.createElement('article');item.innerHTML=`<h3 dir="auto">${E(c.display_title||c.title)}</h3><div data-course-gate></div>`;section.append(item);renderGate($('[data-course-gate]',item),c.id);}root.append(section);
-  }
-  resultsRoot.hidden=false;
-  resultsRoot.innerHTML=`<div class="section-heading"><div><p class="eyebrow">آزمون‌ها</p><h2>نتایج من</h2></div><p>${num(results.reduce((s,r)=>s+Number(r.attempts),0))} تلاش در ${num(results.length)} نسخهٔ آزمون ثبت شده است.</p></div><div class="dashboard-results">${results.map(r=>{
-   const l=lesson(r.lesson_id);
-   return `<article class="dashboard-result" data-result-lesson="${E(r.lesson_id)}"><div class="result-heading"><div><p class="eyebrow" dir="auto">${E(l.course.display_title||l.course.title)} · نسخهٔ ${num(r.version)}</p><h3>${E(l.title)}</h3></div>${r.last_at?'<p class="small-note">آخرین ثبت: '+E(date(r.last_at))+'</p>':''}</div>${summaryHTML(r,r.maximum)}<div class="portal-actions"><a class="button-forest" href="${E(url('quiz/'+l.id+'/?attempt='+encodeURIComponent(r.last_id)))}">مشاهدهٔ آخرین نتیجه ←</a><a class="button-outline" href="${E(url(l.id+'/'))}">مرور یادداشت</a><a class="quiet-link" href="${E(url('quiz/'+l.id+'/'))}">تمرین و آزمون</a></div></article>`;
-  }).join('')||'<div class="panel-card"><p>هنوز نتیجهٔ آزمونی ثبت نشده است. پس از مطالعهٔ هر یادداشت، از صفحهٔ کلاس به تمرین و آزمون آن برو.</p></div>'}</div>`;  if(new URL(location.href).hash==='#results'){resultsRoot.focus();resultsRoot.scrollIntoView({block:'start'});}
-  if(catalog.some(c=>member(c.id)&&c.lessons.some(l=>l.lab)))void labGrowthCard(root,app.generation);
- }
-
- async function labGrowthCard(root,gen){
-  const section=document.createElement('section');section.className='xp-dashboard';section.setAttribute('aria-labelledby','lab-growth-title');root.append(section);
-  section.innerHTML='<h2 id="lab-growth-title">مسیر رشد لابراتور</h2><p role="status">در حال دریافت پیشرفت ثبت‌شده…</p>';
-  const labs=catalog.filter(c=>member(c.id)).flatMap(c=>c.lessons.filter(l=>l.lab).map(l=>l.lab));
-  const results=await Promise.allSettled(labs.map(l=>rpc('classroom_lab_state',{p_mission:l.mission})));
-  if(gen!==app.generation||!section.isConnected)return;
-  const total=results.reduce((sum,r)=>sum+(r.status==='fulfilled'?Number(r.value.xp)||0:0),0);
-  const maximum=results.some(r=>r.status==='rejected')?'—':results.reduce((sum,r)=>sum+Number(r.value.maximum||0),0);
-  section.innerHTML=`<div class="xp-dashboard-head"><h2 id="lab-growth-title">مسیر رشد لابراتور</h2><strong class="xp-dashboard-total" dir="ltr">${results.some(r=>r.status==='rejected')?'—':total} <small>/ ${maximum} XP</small></strong></div>`;
-  labs.forEach((lab,i)=>{
-   const row=document.createElement('article');row.className='xp-dashboard-lab';section.append(row);
-   const result=results[i];
-   if(result.status==='rejected'){row.innerHTML=`<h3>${E(lab.title)}</h3><p>پیشرفت این لابراتور دریافت نشد؛ صفحه را دوباره بارگذاری کن.</p>`;return;}
-   const state=result.value,xp=Number(state.xp)||0,done=new Set(state.completed||[]);
-   row.innerHTML=`<div class="xp-dashboard-head"><h3>${E(lab.title)}</h3><strong dir="ltr">${xp} / ${Number(state.maximum)||300} XP</strong></div><progress max="${Number(state.maximum)||300}" value="${xp}" aria-label="${E(lab.title)} XP"></progress><p lang="en" dir="ltr">${done.size} of ${state.tasks.length} missions completed</p><div class="xp-dashboard-path">${state.tasks.map(t=>`<span data-earned="${done.has(t.id)}" dir="ltr">${done.has(t.id)?'✓ ':''}${t.xp} XP</span>`).join('')}</div>${state.badge?'<span class="xp-badge">✓ مأموریت کامل شد</span>':''}<div class="portal-actions"><a class="button-forest" href="${E(url(lab.path))}">${done.size?'ادامهٔ مأموریت':'شروع مأموریت'} ←</a></div>`;
-  });
+  const alive=()=>gen===app.generation&&renderId===dashboardGeneration&&app.user?.id===owner.id;
+  root.innerHTML='<p class="dash-empty-note" role="status">در حال دریافت مسیر یادگیری…</p>';
+  try{
+   const labs=active.flatMap(c=>c.lessons.filter(l=>l.lab));
+   const [module,snapshots]=await Promise.all([import(assetURL('dashboard-ui.mjs').href),Promise.allSettled(labs.map(l=>rpc('classroom_lab_state',{p_mission:l.lab.mission})))]);
+   if(!alive()||!root.isConnected)return;
+   let storage;try{storage=localStorage}catch{}
+   module.mountDashboard(root,{user:owner,courses:active,results,study,states:Object.fromEntries(labs.map((l,i)=>[l.id,snapshots[i]])),url,assetURL:path=>assetURL(path).href,storage,isCurrent:alive,onRetry:dashboard});
+   if(other.length){const section=document.createElement('section');section.className='membership-section';section.innerHTML='<div class="section-heading"><h2>عضویت و درخواست دسترسی</h2></div>';
+    for(const c of other){const item=document.createElement('article');item.innerHTML=`<h3 dir="auto">${E(c.display_title||c.title)}</h3><div data-course-gate></div>`;section.append(item);renderGate($('[data-course-gate]',item),c.id);}root.append(section);
+   }
+   resultsRoot.hidden=!results.length;
+   resultsRoot.innerHTML=`<details class="dash-results-details"><summary>جزئیات نتایج آزمون‌ها · ${fa(results.length)} نتیجه</summary><div class="dash-results-body"><div class="dashboard-results">${results.map(r=>{
+    const l=lesson(r.lesson_id);
+    return `<article class="dashboard-result" data-result-lesson="${E(r.lesson_id)}"><div class="result-heading"><div><p class="eyebrow" dir="auto">${E(l.course.display_title||l.course.title)} · نسخهٔ ${num(r.version)}</p><h3>${E(l.title)}</h3></div>${r.last_at?'<p class="small-note">آخرین ثبت: '+E(date(r.last_at))+'</p>':''}</div>${summaryHTML(r,r.maximum)}<div class="portal-actions"><a class="button-outline" href="${E(url('quiz/'+l.id+'/?attempt='+encodeURIComponent(r.last_id)))}">مشاهدهٔ آخرین نتیجه ←</a><a class="quiet-link" href="${E(url('quiz/'+l.id+'/'))}">تمرین و آزمون</a></div></article>`;
+   }).join('')}</div></div></details>`;
+   if(new URL(location.href).hash==='#results'&&results.length){$('details',resultsRoot).open=true;resultsRoot.focus();resultsRoot.scrollIntoView({block:'start'});}
+  }catch{if(alive()){root.innerHTML='<section class="gate-card"><h2>داشبورد دریافت نشد.</h2><p>برای دریافت مسیر یادگیری دوباره تلاش کن.</p><button class="button-outline" type="button" data-dashboard-retry>تلاش دوباره</button></section>';$('[data-dashboard-retry]',root).onclick=dashboard;}}
  }
  async function labGrowthReport(root,courseId,gen){
   const section=document.createElement('section');section.className='panel-card';root.append(section);section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>در حال دریافت…</p>';

@@ -45,6 +45,15 @@ def validate_catalog(catalog, dist):
             model=(dist/'assets'/lab['model']).read_text()
             match=re.search(r"export const missionId\s*=\s*['\"]([^'\"]+)['\"]",model)
             assert match and match[1]==lab['mission'], 'Lab model mission differs from catalog'
+            task_ids=set(re.findall(r"\bid\s*:\s*['\"]([^'\"]+)['\"]",model))
+            for field in ['lab_steps','practice_skills']:
+                values=lesson.get(field,[])
+                assert isinstance(values,list), 'Invalid dashboard lesson metadata'
+                for value in values:
+                    key='id' if field=='lab_steps' else 'task'
+                    label='title' if field=='lab_steps' else 'label'
+                    assert isinstance(value,dict) and set(value)=={key,label} and value[key] in task_ids and isinstance(value[label],str) and 0<len(value[label])<=80, 'Invalid dashboard task metadata'
+            assert lesson.get('dashboard_art','greenhouse') in {'greenhouse','sms'}, 'Invalid dashboard artwork'
             missions.add(lab['mission']); routes.add(lab['path'])
 
 def prepare_public_assets(root,dist):

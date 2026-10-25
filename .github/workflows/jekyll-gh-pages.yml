@@ -32,8 +32,8 @@ jobs:
       - name: Test deterministic build and public assets
         run: python3 -m unittest discover -s tests
 
-      - name: Test public script loading
-        run: node --test tests/runtime.test.cjs
+      - name: Test public runtime and dashboard states
+        run: node --test tests/*.test.cjs tests/*.test.mjs
 
       - name: Upload website
         uses: actions/upload-pages-artifact@v4
