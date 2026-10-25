@@ -22,3 +22,7 @@ body[data-lesson-id="machine-learning/evaluating-knn"] .hero-figure svg { displa
 body[data-lesson-id="machine-learning/evaluating-knn"] .hero-strip { list-style:none; }
 .lesson-resources { margin-block:32px 64px; }
 @media print { .evaluation-dataset-scroll { max-height:none!important; overflow:visible; } .copy-code { display:none!important; } }
+
+body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-topic { margin-top:36px; scroll-margin-top:96px; }
+body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-topic>h3 { font-size:23px; line-height:1.8; margin-bottom:18px; color:var(--ink); }
+body[data-lesson-id="machine-learning/evaluating-knn"] .portal-quiz-link .button-outline, body[data-lesson-id="machine-learning/evaluating-knn"] .portal-quiz-link .button-forest { margin-block:6px; }
