@@ -1,0 +1,12 @@
+/* Reuse the site's paper layout; only lesson-specific content needs rules. */
+.lesson-evaluation-figure { margin: 28px 0; padding: 14px; border: 1px solid var(--line-strong); border-radius: 3px; background: #fff; }
+.lesson-evaluation-figure img { display: block; width: 100%; height: auto; }
+.lesson-evaluation-figure figcaption { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.9; text-align: center; }
+.lesson-formula { direction: ltr; unicode-bidi: isolate; margin: 24px 0; padding: 14px 12px; border-block: 1px solid var(--line); font-family: monospace; font-size: 14px; line-height: 1.8; text-align: center; overflow-wrap: anywhere; }
+body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose :not(pre) > code { display: inline-block; direction: ltr; unicode-bidi: isolate; }
+body[data-lesson-id="machine-learning/evaluating-knn"] .code-block pre { overflow-x: auto; white-space: pre; direction: ltr; text-align: left; }
+body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table { width: 100%; border-collapse: collapse; margin-block: 24px; font-size: 14px; }
+body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table th,
+body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table td { padding: 9px 12px; border-bottom: 1px solid var(--line); }
+body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table th { background: var(--highlight-soft); }
+@media (max-width: 600px) { .lesson-evaluation-figure { padding: 5px; } .lesson-formula { font-size: 12px; } body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table { font-size: 12px; } body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table td, body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table th { padding: 7px 5px; } }

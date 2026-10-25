@@ -190,7 +190,7 @@ if(typeof document!=="undefined"){
   return `<nav class="shell route-trail" aria-label="مسیر صفحه"><ol><li><a href="${E(url('index.html'))}">صفحهٔ اصلی</a></li><li><a href="${E(url('index.html#classes'))}">کلاس‌ها</a></li><li><a dir="auto" href="${E(url(info.course.id+'/'))}">${E(info.course.display_title||info.course.title)}</a></li><li><span aria-current="page">یادداشت <bdi dir="ltr">${E(info.number)}</bdi> · ${E(info.title)}</span></li></ol></nav>`;
  }
  function lessonAccess(info){
-  return `<nav class="shell lesson-shortcuts" aria-label="دسترسی‌های یادداشت"><a class="quiet-link" href="${E(url(info.course.id+'/'))}">فهرست یادداشت‌های کلاس ←</a>${info.lab?'<a class="button-forest" href="'+E(url(info.lab.path))+'">ورود به لابراتور کدنویسی ←</a>':''}<a class="button-outline" href="${E(url('quiz/'+info.id+'/'))}">تمرین و آزمون این یادداشت</a></nav>`;
+  return `<nav class="shell lesson-shortcuts" aria-label="دسترسی‌های یادداشت"><a class="quiet-link" href="${E(url(info.course.id+'/'))}">فهرست یادداشت‌های کلاس ←</a>${info.lab?'<a class="button-forest" href="'+E(url(info.lab.path))+'">ورود به لابراتور کدنویسی ←</a>':''}${info.quiz_version?'<a class="button-outline" href="'+E(url('quiz/'+info.id+'/'))+'">تمرین و آزمون این یادداشت</a>':''}</nav>`;
  }
  async function loadCodingLab(){
   const info=lesson(lid),root=$('#main'),gen=app.generation;
@@ -246,7 +246,7 @@ if(typeof document!=="undefined"){
   for(const l of c.lessons){
    const row=$(`[data-course-lesson="${l.id}"]`),result=app.state?.results?.find(r=>r.lesson_id===l.id&&Number(r.version)===Number(l.quiz_version));
    $('[data-study-status]',row).textContent=state.opened.includes(l.id)?'در این مرورگر باز شده است.':'هنوز در این مرورگر باز نشده است.';
-   $('[data-course-result]',row).innerHTML=result?`آخرین نتیجهٔ نسخهٔ ${num(result.version)}: ${result.last_score!=null?score(result.last_score,result.maximum):'برای مشاهده باز کن'} · <a href="${E(url('quiz/'+l.id+'/?attempt='+encodeURIComponent(result.last_id)))}">مشاهدهٔ نتیجه</a>`:'برای این نسخه از آزمون هنوز نتیجه‌ای ثبت نشده است.';
+   $('[data-course-result]',row).innerHTML=!l.quiz_version?'':result?`آخرین نتیجهٔ نسخهٔ ${num(result.version)}: ${result.last_score!=null?score(result.last_score,result.maximum):'برای مشاهده باز کن'} · <a href="${E(url('quiz/'+l.id+'/?attempt='+encodeURIComponent(result.last_id)))}">مشاهدهٔ نتیجه</a>`:'برای این نسخه از آزمون هنوز نتیجه‌ای ثبت نشده است.';
   }
  }
  let dashboardGeneration=0;
@@ -299,26 +299,20 @@ if(typeof document!=="undefined"){
    const payload=await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
    root.innerHTML=payload.body;document.body.classList.add('classroom-loaded');
    portalMountLessonHero(root,info.hero_kind);
-   if(info.notebook){
+   // Hands-on coding belongs in the dedicated lab. Keep worked examples.
+   root.querySelectorAll('#exercise, [data-python-lab], .python-lab').forEach(el=>el.remove());
+   root.querySelectorAll('a[href="#exercise"]').forEach(el=>(el.closest('li')||el).remove());
+   // Preserve notebook access even after removing the old exercise section.
+   if(info.notebook&&!root.querySelector('[data-private-download$=".ipynb"]')){
     const section=document.createElement('section');section.className='notebook-download';section.setAttribute('aria-labelledby','notebook-title');
-    section.innerHTML='<h3 id="notebook-title">تمرین را در نوت‌بوک ادامه بده</h3><p>توضیحات آموزشی انگلیسی، مثال‌های قابل اجرا، نمودار و تمرین‌های این یادداشت را دانلود کن.</p><a class="button-outline" href="#" data-private-download="'+E(info.course.id+'/'+info.notebook)+'">دانلود نوت‌بوک انگلیسی <bdi dir="ltr">(.ipynb)</bdi> ↓</a><p class="small-note">فایل را با Jupyter Notebook یا JupyterLab باز کن. راهنمای شروع و کتابخانه‌های لازم داخل فایل آمده است؛ پاسخ تمرین اصلی ارائه نشده است.</p>';
-    root.querySelector('#exercise .lesson-prose')?.append(section);
+    section.innerHTML='<h3 id="notebook-title">نسخهٔ انگلیسی در Jupyter Notebook</h3><p>توضیحات و مثال‌های این یادداشت را در نوت‌بوک انگلیسی دنبال کن.</p><a class="button-outline" href="#" data-private-download="'+E(info.course.id+'/'+info.notebook)+'">دانلود نوت‌بوک انگلیسی <bdi dir="ltr">(.ipynb)</bdi> ↓</a>';
+    (root.querySelector('.lesson-body')||root).append(section);
    }
    root.querySelector('.breadcrumb')?.remove();const navigation=document.createElement('div');navigation.innerHTML=lessonTrail(info)+lessonAccess(info);root.prepend(navigation);
    for(const image of $$('[data-private-path]',root)){const path=image.dataset.privatePath;privateBlob(path).then(u=>{if(gen===app.generation&&image.isConnected)image.src=u;}).catch(()=>{if(gen===app.generation&&image.isConnected)image.alt+=' — تصویر دریافت نشد؛ صفحه را دوباره باز کن.';});}
    $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();if(a.dataset.downloading==='true')return;const children=Array.from(a.childNodes);a.dataset.downloading='true';a.setAttribute('aria-disabled','true');a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(a.dataset.privateDownload.endsWith('.ipynb')?'دریافت نوت‌بوک کامل نشد. اتصال را بررسی و دوباره تلاش کن؛ اگر ادامه داشت، با مدرس در میان بگذار.':friendly(err));}finally{a.replaceChildren(...children);delete a.dataset.downloading;a.removeAttribute('aria-disabled');}}));
-   for(const path of payload.scripts){const u=await privateBlob(path);if(gen!==app.generation)return;await loadScript(u);}
+   for(const path of payload.scripts||[]){const u=await privateBlob(path);if(gen!==app.generation)return;await loadScript(u);}
    if(root.querySelector('[data-space3d]')){await loadScript(assetURL('space3d.js').href);if(gen!==app.generation)return;window.ClassNotesSpace?.refresh(root);}
-   if(['machine-learning/vector-distance','machine-learning/prediction-problem'].includes(lid)){
-    try{
-     const lab=new URL('python-lab.js',assets),worker=new URL('python-worker.mjs',assets);
-     lab.search=worker.search=new URL(entry.src).search;
-     if(!window.ClassNotesPython)await loadScript(lab.href);
-     if(gen===app.generation)window.ClassNotesPython?.mount(root,{userId:app.user.id,lessonId:lid,workerURL:worker.href});
-    }catch{
-     if(gen===app.generation){const note=document.createElement('p');note.className='small-note';note.textContent='محیط اجرای Python دریافت نشد؛ برای تلاش دوباره صفحه را بازخوانی کن.';root.querySelector('#exercise .lesson-prose')?.append(note);}
-    }
-   }
    document.dispatchEvent(new CustomEvent('class-notes-user',{detail:{userId:app.user.id}}));
    worksheet();recordStudy(info);window.ClassNotesMotion?.refresh(root);
   }catch(err){if(gen===app.generation){root.innerHTML=lessonTrail(info)+'<section class="shell portal-main" id="top"><div class="gate-card"><h2>دریافت یادداشت کامل نشد.</h2><p>'+E(friendly(err))+'</p><a class="button-outline" href="'+E(url('dashboard/'))+'">داشبورد ←</a></div></section>';}}

@@ -132,6 +132,22 @@
             "label": "طبقه‌بندی"
           }
         ]
+      },
+      {
+        "id": "machine-learning/evaluating-knn",
+        "slug": "evaluating-knn",
+        "title": "از پیش‌بینی یک نمونه تا ارزیابی یک طبقه‌بند",
+        "subtitle": "دادهٔ آموزش و آزمون، مرز تصمیم و شناخت اشتباه‌های kNN",
+        "number": "03",
+        "description": "از خواندن CSV با pandas تا دادهٔ آموزش و آزمون، مرز تصمیم، Accuracy و شناخت نوع خطاها.",
+        "tags": [
+          "pandas",
+          "scikit-learn",
+          "ارزیابی مدل"
+        ],
+        "hero_kind": null,
+        "quiz_version": null,
+        "notebook": "evaluating-knn/evaluating-knn-explained.ipynb"
       }
     ]
   }

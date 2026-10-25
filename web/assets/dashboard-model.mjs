@@ -20,6 +20,7 @@ export function dashboardModel({courses,results=[],study={},states={}}){
  const incompleteUnknown=labs.some(l=>l.progress.status!=='ready');
  if(!target&&incompleteUnknown){mode='unavailable';target=labs.find(l=>l.progress.status!=='ready')}
  if(!target){target=incomplete.find(l=>l.last&&l.opened)||incomplete.find(l=>l.opened)||null;if(target)mode='lab'}
+ if(!target&&labs.length&&ready.length===labs.length&&ready.every(l=>l.progress.finished)){const unread=lessons.find(l=>!l.lab&&!l.opened);if(unread){target=unread;mode='study'}}
  if(!target&&labs.length&&ready.length===labs.length&&ready.every(l=>l.progress.finished)){target=labs.at(-1);mode='complete'}
  if(!target){target=lessons.find(l=>!l.opened&&(!l.progress||!l.progress.finished))||null;if(target)mode='study'}
  if(!target&&incomplete.length){target=incomplete[0];mode='lab'}
