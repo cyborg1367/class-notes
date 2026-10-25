@@ -10,3 +10,15 @@ body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table th,
 body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table td { padding: 9px 12px; border-bottom: 1px solid var(--line); }
 body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table th { background: var(--highlight-soft); }
 @media (max-width: 600px) { .lesson-evaluation-figure { padding: 5px; } .lesson-formula { font-size: 12px; } body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table { font-size: 12px; } body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table td, body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-prose > table th { padding: 7px 5px; } }
+/* Code uses the same site.css classes and colors as the earlier notes. */
+body[data-lesson-id="machine-learning/evaluating-knn"] .code-block pre code { display:block; padding:0; background:none; color:inherit; font:inherit; border:0; border-radius:0; white-space:inherit; overflow-wrap:normal; max-width:none; }
+.evaluation-dataset-scroll { max-height:241px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; }
+.evaluation-dataset-scroll::-webkit-scrollbar { width:6px; height:6px; }
+.evaluation-dataset-scroll::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:8px; }
+.evaluation-dataset table { width:100%; border-collapse:collapse; table-layout:fixed; margin:0; font-size:14px; }
+.evaluation-dataset th,.evaluation-dataset td { height:40px; box-sizing:border-box; padding:7px 12px; line-height:24px; border-bottom:1px solid var(--line); text-align:center; direction:ltr; white-space:nowrap; }
+.evaluation-dataset thead th { position:sticky; top:0; z-index:1; background:var(--highlight-soft); }
+body[data-lesson-id="machine-learning/evaluating-knn"] .hero-figure svg { display:block; width:100%; height:auto; }
+body[data-lesson-id="machine-learning/evaluating-knn"] .hero-strip { list-style:none; }
+.lesson-resources { margin-block:32px 64px; }
+@media print { .evaluation-dataset-scroll { max-height:none!important; overflow:visible; } .copy-code { display:none!important; } }
