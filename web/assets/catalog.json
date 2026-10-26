@@ -146,7 +146,7 @@
           "ارزیابی مدل"
         ],
         "hero_kind": null,
-        "quiz_version": null,
+        "quiz_version": 1,
         "notebook": "evaluating-knn/evaluating-knn-explained.ipynb"
       }
     ]
