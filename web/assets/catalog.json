@@ -147,7 +147,55 @@
         ],
         "hero_kind": null,
         "quiz_version": 1,
-        "notebook": "evaluating-knn/evaluating-knn-explained.ipynb"
+        "notebook": "evaluating-knn/evaluating-knn-explained.ipynb",
+        "lab": {
+          "mission": "evaluation-knn-v1",
+          "title": "قبل از انتشار",
+          "path": "lab/machine-learning/evaluating-knn/",
+          "model": "coding-lab-evaluation.mjs",
+          "bridge": "در یادداشت، دادهٔ آموزش و آزمون و معیارهای ارزیابی را شناختیم. اینجا اعتبار یک فیلتر پیامک را با دادهٔ تازه و یک آزمون مستقل بررسی می‌کنیم."
+        },
+        "dashboard_art": "evaluation",
+        "lab_steps": [
+          {
+            "id": "split-data",
+            "title": "یک آزمون مستقل بساز"
+          },
+          {
+            "id": "fit-predict",
+            "title": "مدل را فقط با آموزش آماده کن"
+          },
+          {
+            "id": "score",
+            "title": "گزارش ۱۰۰٪ را بررسی کن"
+          },
+          {
+            "id": "confusion",
+            "title": "جهت اشتباه‌ها را باز کن"
+          },
+          {
+            "id": "decision-region",
+            "title": "نقشهٔ تصمیم را بساز"
+          },
+          {
+            "id": "evaluation-report",
+            "title": "گزارش قابل استفاده تحویل بده"
+          }
+        ],
+        "practice_skills": [
+          {
+            "task": "split-data",
+            "label": "آزمون مستقل"
+          },
+          {
+            "task": "confusion",
+            "label": "شناخت نوع خطا"
+          },
+          {
+            "task": "evaluation-report",
+            "label": "ارزیابی مدل"
+          }
+        ]
       }
     ]
   }

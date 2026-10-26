@@ -11,7 +11,7 @@ async function mount(root,options){
  if(!isCurrent())return;
  const {stages,dataset,bootstrap,normalize,available,highlight,missionId}=model;
  if(missionId!==options.lab.mission||options.snapshot?.mission&&options.snapshot.mission!==missionId)throw Error('LAB_CATALOG_MISMATCH');
- const meta={...model.meta,title:options.lab.title,lessonBridge:options.lab.bridge};
+ const meta={...model.meta,lessonId:options.lessonId,title:options.lab.title,lessonBridge:options.lab.bridge};
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
  let trusted=options.snapshot,revision=Number(trusted.revision||0),state=normalize(cached?.dirty?cached.state:trusted.draft);
@@ -19,6 +19,7 @@ async function mount(root,options){
  let worker=null,phase='idle',checking=false,hasRun=false,disposed=false,epoch=0,request=0,activeRequest=0,timer,autosave,pollTimer,controller,outputSize=0,localSaveTimer=null,paintFrame=null;
  let pending=cached?.pending||null;
  state.active=Math.min(state.active,available(trusted));
+ if(missionId==='evaluation-knn-v1')root.classList.add('lab-evaluation');else root.classList.remove('lab-evaluation');
  root.innerHTML=`<header class="lab-top mission-top">
  <a class="lab-wordmark" href="${E(new URL('../index.html',assets).href)}"><strong>دفتر کلاس</strong><small lang="en" dir="ltr">CLASS NOTES</small></a>
  <div class="mission-xp" lang="en" dir="ltr" aria-label="Lab progress"><div class="mission-xp-orbit" data-header-progress role="progressbar" aria-label="Lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" cx="120" cy="120" r="108" pathLength="100"/></svg><div class="mission-xp-core" aria-hidden="true"><strong class="mission-xp-value" data-xp>0</strong></div></div><div class="mission-xp-copy"><span class="mission-xp-limit">of <span data-xp-maximum>300</span> XP</span><p class="mission-xp-count" data-count></p><span class="mission-xp-percent" data-xp-percent></span></div></div>
@@ -31,7 +32,7 @@ async function mount(root,options){
    <button id="lab-tab-mission" data-lab-tab="mission" role="tab" aria-controls="lab-panel-mission" aria-selected="true" type="button">مأموریت</button>
    <button id="lab-tab-data" data-lab-tab="data" role="tab" aria-controls="lab-panel-data" aria-selected="false" tabindex="-1" type="button">داده‌ها</button>
    <button id="lab-tab-guide" data-lab-tab="guide" role="tab" aria-controls="lab-panel-guide" aria-selected="false" tabindex="-1" type="button">راهنما</button>
-   ${missionId==='greenhouse-v1'&&options.tutorRequest?'<button id="lab-tab-assistant" data-lab-tab="assistant" role="tab" aria-controls="lab-panel-assistant" aria-selected="false" tabindex="-1" type="button">دستیار</button>':''}
+   ${options.tutorRequest?'<button id="lab-tab-assistant" data-lab-tab="assistant" role="tab" aria-controls="lab-panel-assistant" aria-selected="false" tabindex="-1" type="button">دستیار</button>':''}
   </div>
   <div class="lab-instruction-scroll">
   <section class="lab-task" id="lab-panel-mission" role="tabpanel" aria-labelledby="lab-tab-mission" tabindex="0">
@@ -41,7 +42,7 @@ async function mount(root,options){
    <p class="mission-action" data-action></p>
    <dl class="mission-io"><div><dt data-input-title></dt><dd data-input></dd></div><div><dt data-result-title></dt><dd data-result></dd></div></dl>
    <details class="mission-contract"><summary>یک مثال کوچک</summary><div class="mission-task-text" data-task></div><pre data-example dir="ltr" tabindex="0"></pre></details>
-   <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg>Hint</button>${missionId==='greenhouse-v1'&&options.tutorRequest?'<button type="button" class="lab-help-button" data-tutor-open>کمک آموزشی</button>':''}<span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
+   <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg>Hint</button>${options.tutorRequest?'<button type="button" class="lab-help-button" data-tutor-open>کمک آموزشی</button>':''}<span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
    <div data-reflection hidden><label for="lab-explanation">پیش‌بینی و نتیجهٔ آزمایش تو</label><textarea id="lab-explanation" maxlength="3000" rows="3" placeholder="پیش از اجرا چه حدسی داشتی؟ پس از اجرا چه چیزی فهمیدی؟"></textarea></div>
    <div class="lab-feedback" data-feedback role="status" aria-live="polite" hidden></div>
    <button type="button" class="button-forest lab-next" data-next disabled>مرحلهٔ بعد ←</button>
@@ -50,11 +51,13 @@ async function mount(root,options){
   <section class="mission-dataset" id="lab-panel-data" role="tabpanel" aria-labelledby="lab-tab-data" tabindex="0" hidden>
    <p class="lab-panel-kicker">داده‌های آمادهٔ این تمرین</p><h2>${E(meta.dataTitle)}</h2>
    ${meta.dataIntro}
-   <div class="mission-query"><span>${E(meta.queryLabel)} · <code>query</code></span>${dataset.queryText?`<blockquote class="lab-message-text">${E(dataset.queryText)}</blockquote>`:''}<strong dir="ltr">${E(JSON.stringify(dataset.query))}</strong><p>${E(meta.queryHelp)}</p></div>
+   ${model.csvAsset?`<a class="button-outline" href="${E(assetURL(model.csvAsset).href)}" download>Download CSV ↓</a>`:''}
+   <div class="mission-query"><span>${E(meta.queryLabel)}${model.csvAsset?'':' · <code>query</code>'}</span>${dataset.queryText?`<blockquote class="lab-message-text">${E(dataset.queryText)}</blockquote>`:''}<strong dir="ltr">${model.csvAsset?'test_size=0.25 · seed=42 · k=3':E(JSON.stringify(dataset.query))}</strong><p>${E(meta.queryHelp)}</p></div>
    <div class="mission-query" data-second-query hidden><span>وضعیت دوم · <code>query_new</code></span><strong dir="ltr">${E(JSON.stringify(dataset.query_new))}</strong><p>${E(meta.secondHelp||'')}</p></div>
    <div class="mission-table" tabindex="0" aria-label="${E(meta.tableTitle)}"><table><caption>${E(meta.tableTitle)} · اندیس‌ها از صفر شروع می‌شوند</caption><thead><tr><th>اندیس</th><th>شناسه</th>${dataset.columns.map(c=>`<th>${c.label}<small lang="en">${c.name}</small></th>`).join('')}${dataset.texts?'<th>متن پیامک</th>':''}${dataset.y?'<th>برچسب <small lang="en">y</small></th>':''}</tr></thead><tbody>${dataset.X.map((row,i)=>`<tr><th dir="ltr">${i}</th><td dir="ltr">${dataset.names[i]}</td>${row.map(v=>`<td>${v}</td>`).join('')}${dataset.texts?`<td class="lab-message-cell">${E(dataset.texts[i])}</td>`:''}${dataset.y?`<td>${dataset.y[i]}${dataset.texts?` · ${dataset.y[i]?'تبلیغاتی':'عادی'}`:''}</td>`:''}</tr>`).join('')}</tbody></table></div>
    <details class="mission-contract"><summary>آرایه‌های آماده در Python</summary><p>${meta.variables}</p><pre dir="ltr" tabindex="0">${E(bootstrap)}</pre></details>
   </section>
+  ${model.previewCode?'<section class="lab-evaluation-preview" data-evaluation-preview aria-label="خروجی تصویری ارزیابی" hidden></section>':''}
   <section class="mission-guide" id="lab-panel-guide" role="tabpanel" aria-labelledby="lab-tab-guide" tabindex="0" hidden>
    <p class="lab-panel-kicker">وقتی به کمک نیاز داری</p><h2>قدم بعدی را پیدا کن</h2>
    <div class="mission-hints"><button type="button" data-hint class="lab-hint-button" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg><span data-hint-label>Hint</span></button><span class="mission-hint-count" data-hint-count lang="en" dir="ltr"></span><div data-hints></div></div>
@@ -62,7 +65,7 @@ async function mount(root,options){
    <details class="mission-contract"><summary>چطور با این محیط کار کنم؟</summary><ol class="mission-guide-steps"><li>در تابع خواسته‌شده، <code>pass</code> را با راه‌حل خودت جایگزین کن.</li><li>تابع باید جواب را با <code>return</code> برگرداند. خط <code>print(...)</code> زیر آن، جواب را در خروجی نشان می‌دهد.</li><li>«اجرای کد» را بزن و خروجی یا خطا را ببین. می‌توانی چند بار کدت را تغییر بدهی و امتحان کنی.</li><li>وقتی آماده بودی، «بررسی پاسخ» را بزن تا مرحله ارزیابی شود و XP بگیری.</li></ol></details>
    <a class="quiet-link" href="${E(lessonURL)}">مرور جزوه ←</a>
   </section>
-   ${missionId==='greenhouse-v1'&&options.tutorRequest?'<section id="lab-panel-assistant" role="tabpanel" aria-labelledby="lab-tab-assistant" tabindex="0" hidden><p data-tutor-loading role="status">برای گفتگو تب دستیار را باز کن.</p></section>':''}
+   ${options.tutorRequest?'<section id="lab-panel-assistant" role="tabpanel" aria-labelledby="lab-tab-assistant" tabindex="0" hidden><p data-tutor-loading role="status">برای گفتگو تب دستیار را باز کن.</p></section>':''}
   </div>
  </aside>
  <div class="lab-panel-resizer" data-panel-resizer role="separator" aria-label="تغییر عرض پنل راهنما و دستیار" aria-orientation="vertical" tabindex="0"></div>
@@ -93,6 +96,9 @@ async function mount(root,options){
  const $=s=>root.querySelector(s),editor=$('#lab-code'),output=$('[data-output]'),save=$('[data-save]'),explanation=$('#lab-explanation'),command=$('#lab-command');
  root.classList.add('lab-open-notebook');document.body.classList.add('lab-notebook-ready');
  const alive=()=>!disposed&&isCurrent();
+ const previewHost=$('[data-evaluation-preview]');if(previewHost)$('#lab-panel-data h2').after(previewHost);
+ let previewRenderer=null;
+ async function preview(value,runRequest){const stage=state.active;if(!previewHost||!alive())return;if(!previewRenderer){const module=await import(assetURL('coding-lab-evaluation-view.mjs'));if(!alive())return;previewRenderer=module.renderEvaluationPreview;}if(!alive()||state.active!==stage||activeRequest!==runRequest)return;previewRenderer(previewHost,value,dataset);layout.selectTab('data',false);}
  const layout=mountLayout(root,{onTabChange(name){if(name==='assistant')void openTutor()}});
  const experience=mountExperience(root,{userId,missionId,meta,dataset,stages,hasProgress:!!(trusted.draft||trusted.attempts||trusted.completed?.length||cached?.dirty)});
  let tutor=null,tutorLoading=false;
@@ -176,7 +182,7 @@ async function mount(root,options){
   $('[data-task-number]').textContent=`مرحلهٔ ${(state.active+1).toLocaleString('fa-IR')} از ۶`;
   $('#lab-task-title').textContent=s.title;$('[data-concept]').textContent=s.brief;$('[data-action]').innerHTML=s.action;$('[data-task]').innerHTML=s.task;$('[data-example]').textContent=s.example;$('[data-input-title]').textContent=s.inputTitle;$('[data-result-title]').textContent=s.resultTitle;$('[data-input]').innerHTML=s.input;$('[data-result]').innerHTML=s.result;$('[data-task-reward]').textContent=`+${s.xp} XP`;$('[data-reflection]').hidden=state.active!==5;$('[data-second-query]').hidden=!dataset.query_new||state.active!==5;layout.showMission();$('.lab-instruction-scroll').scrollTop=0;
   feedback('');
-  output.textContent='';outputSize=0;hints();paint();controls();if(focus)$('#lab-task-title').focus()
+  output.textContent='';outputSize=0;if(previewHost){previewHost.hidden=true;previewHost.replaceChildren();}hints();paint();controls();if(focus)$('#lab-task-title').focus()
  }
  function controls(message,error=false,refreshProgress=true){
   const busy=checking||['loading','running'].includes(phase);
@@ -189,19 +195,20 @@ async function mount(root,options){
  function fail(message){terminate();controls(message,true)}
  $('[data-activate]').onclick=()=>{
   if(!alive()||checking||worker)return;
-  try{worker=new Worker(assetURL('coding-lab-worker.mjs'),{type:'module'});const generation=++epoch;phase='loading';controls('در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
+  try{worker=new Worker(assetURL('coding-lab-worker.mjs'),{type:'module'});const generation=++epoch;phase='loading';controls(model.packages?'در حال آماده‌سازی Python، pandas و scikit-learn…':'در حال آماده‌سازی Python و NumPy…');timer=setTimeout(()=>fail('بارگذاری کامل نشد؛ اتصال را بررسی و دوباره فعال‌سازی کن.'),120000);
    worker.onerror=e=>{e.preventDefault?.();if(alive()&&generation===epoch)fail('محیط محلی دریافت نشد؛ اتصال اینترنت را بررسی کن. بررسی نهایی سرور مستقل از این محیط است.')};
    worker.onmessage=({data})=>{if(!alive()||generation!==epoch||data?.request!==activeRequest)return;
     if(data.type==='stage')controls('Python آماده است؛ در حال دریافت NumPy…');
+    if(data.type==='preview'){void preview(data.value,data.request);return;}
     if(data.type==='ready'){clearTimeout(timer);phase='ready';controls();if(runWhenReady){runWhenReady=false;run('run')}}
     if(data.type==='load-error'){fail('دریافت محیط کامل نشد؛ اتصال را بررسی کن.');return}
     if(phase!=='running')return;
     if(data.type==='output')append(data.text);
     if(data.type==='error'||data.type==='done'){clearTimeout(timer);if(data.type==='error')append('\n'+data.text);if(!output.textContent)output.textContent='# Finished. No printed output.\n';hasRun=true;phase='ready';controls()}
-   };activeRequest=++request;worker.postMessage({type:'init',request:activeRequest})
+   };activeRequest=++request;worker.postMessage({type:'init',request:activeRequest,packages:model.packages||['numpy']})
   }catch{fail('محیط محلی باز نشد؛ مرورگر و اتصال را بررسی کن.')}
  };
- function run(type,code=editor.value){if(!alive()||phase!=='ready'||checking||!code.trim())return;layout.openConsole();if(type==='console')append('>>> '+code+'\n');else{output.textContent='';outputSize=0}phase='running';controls('در حال اجرا…');activeRequest=++request;timer=setTimeout(()=>{append('\n[Stopped: time limit]\n');fail('اجرا پس از ۱۵ ثانیه متوقف شد. کدت را بررسی و محیط را دوباره فعال کن.')},15000);worker.postMessage({type,code,bootstrap:type==='console'?undefined:bootstrap,request:activeRequest})}
+ function run(type,code=editor.value){if(!alive()||phase!=='ready'||checking||!code.trim())return;layout.openConsole();if(type==='console')append('>>> '+code+'\n');else{output.textContent='';outputSize=0}phase='running';controls('در حال اجرا…');activeRequest=++request;timer=setTimeout(()=>{append('\n[Stopped: time limit]\n');fail('اجرا پس از ۱۵ ثانیه متوقف شد. کدت را بررسی و محیط را دوباره فعال کن.')},15000);worker.postMessage({type,code,bootstrap:type==='console'?undefined:bootstrap,previewCode:type==='run'&&state.active>=4?model.previewCode:undefined,request:activeRequest})}
  $('[data-run]').onclick=()=>{if(!alive()||checking||['loading','running'].includes(phase))return;layout.openConsole();if(phase==='idle'){runWhenReady=true;$('[data-activate]').onclick()}else run('run')};$('[data-stop]').onclick=()=>{terminate();append('\n[Stopped]\n');controls()};
  $('.lab-console-form').onsubmit=e=>{e.preventDefault();if(hasRun){const code=command.value;command.value='';run('console',code)}};
  $('[data-clear]').onclick=()=>{output.textContent='';outputSize=0};editor.addEventListener('scroll',sync);
@@ -250,3 +257,4 @@ async function mount(root,options){
 }
 window.ClassNotesCodingLab={mount,dispose:()=>current?.dispose()};
 })();
+

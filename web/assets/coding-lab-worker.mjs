@@ -18,7 +18,9 @@ self.onmessage = async ({data: d}) => {
       const {loadPyodide} = await import(INDEX + 'pyodide.mjs');
       py = await loadPyodide({indexURL: INDEX});
       send('stage');
-      await py.loadPackage('numpy');
+      const allowed=new Set(['numpy','pandas','scikit-learn']);
+      const packages=Array.isArray(d.packages)&&d.packages.length<=3&&d.packages.every(p=>allowed.has(p))?d.packages:['numpy'];
+      await py.loadPackage(packages);
       py.setStdin({error: true});
       py.setStdout({batched: output}); py.setStderr({batched: output});
       send('ready'); return;
@@ -40,8 +42,14 @@ self.onmessage = async ({data: d}) => {
         try { output(repr(result)); } finally { repr.destroy(); }
       }
     } finally { result?.destroy?.(); }
+    if(d.type==='run'&&typeof d.previewCode==='string'&&d.previewCode.length<6000){
+      try{const raw=await py.runPythonAsync(d.previewCode,{globals:namespace,filename:'practice-preview.py'});
+        if(typeof raw==='string'&&raw.length<50000)send('preview',{value:JSON.parse(raw)});
+      }catch{/* A practice chart must not replace the learner's console output. */}
+    }
     send('done');
   } catch (error) {
     send(py && d.type !== 'init' ? 'error' : 'load-error', {text: String(error).slice(0, 12000)});
   } finally { busy = false; }
 };
+

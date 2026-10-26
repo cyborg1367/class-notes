@@ -3,7 +3,7 @@ from pathlib import Path
 from urllib.parse import urlsplit, parse_qsl, urlencode
 import hashlib, json, re, posixpath
 
-VERSIONED_SUFFIXES={'.css','.js','.mjs','.svg','.png','.webp','.woff','.woff2','.ttf'}
+VERSIONED_SUFFIXES={'.css','.js','.mjs','.svg','.png','.webp','.woff','.woff2','.ttf','.csv'}
 CONFIG_FILES={'auth-config.json','lab-service.json'}
 
 def asset_version(root):
@@ -53,7 +53,7 @@ def validate_catalog(catalog, dist):
                     key='id' if field=='lab_steps' else 'task'
                     label='title' if field=='lab_steps' else 'label'
                     assert isinstance(value,dict) and set(value)=={key,label} and value[key] in task_ids and isinstance(value[label],str) and 0<len(value[label])<=80, 'Invalid dashboard task metadata'
-            assert lesson.get('dashboard_art','greenhouse') in {'greenhouse','sms'}, 'Invalid dashboard artwork'
+            assert lesson.get('dashboard_art','greenhouse') in {'greenhouse','sms','evaluation'}, 'Invalid dashboard artwork'
             missions.add(lab['mission']); routes.add(lab['path'])
 
 def prepare_public_assets(root,dist):

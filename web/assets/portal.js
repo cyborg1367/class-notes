@@ -279,7 +279,7 @@ if(typeof document!=="undefined"){
  async function labGrowthReport(root,courseId,gen){
   const section=document.createElement('section');section.className='panel-card';root.append(section);section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>در حال دریافت…</p>';
   try{const rows=await rpc('classroom_lab_teacher_report',{p_course:courseId});if(gen!==app.generation||!section.isConnected)return;
-   section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p class="small-note">هر دو لابراتور · XP ثبت‌شده با بررسی مستقل. تعداد تلاش به‌تنهایی معیار ضعف نیست.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو</th><th>XP</th><th>تسک کامل</th><th>تلاش بررسی</th><th>آخرین فعالیت</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${E(r.name||'')}<br><bdi>${E(r.email||'')}</bdi></td><td>${fa(r.xp)} / ${fa(r.maximum||600)}</td><td>${fa(r.completed)} / ${fa(r.task_count||12)}</td><td>${fa(r.attempts)}</td><td>${r.last_at?E(date(r.last_at)):'—'}</td></tr>`).join('')+'</tbody></table></div>';
+   section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p class="small-note">هر سه لابراتور · XP ثبت‌شده با بررسی مستقل. تعداد تلاش به‌تنهایی معیار ضعف نیست.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو</th><th>XP</th><th>تسک کامل</th><th>تلاش بررسی</th><th>آخرین فعالیت</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${E(r.name||'')}<br><bdi>${E(r.email||'')}</bdi></td><td>${fa(r.xp)} / ${fa(r.maximum||900)}</td><td>${fa(r.completed)} / ${fa(r.task_count||18)}</td><td>${fa(r.attempts)}</td><td>${r.last_at?E(date(r.last_at)):'—'}</td></tr>`).join('')+'</tbody></table></div>';
   }catch{if(gen===app.generation&&section.isConnected)section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>گزارش لابراتور دریافت نشد؛ کمی بعد گزارش را به‌روزرسانی کن.</p>';}
  }
 
@@ -472,3 +472,4 @@ if(typeof document!=="undefined"){
  }
  window.ClassroomReady=boot();
 }
+

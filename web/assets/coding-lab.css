@@ -659,3 +659,15 @@ body.lab-notebook-ready .portal-main{padding:0;}
  font-size:14px;
 }
 .lab-open-notebook .lab-tabs::after { left:24px; right:24px; }
+
+/* Evaluation output is in the Data tab, not above the editor. */
+.lab-evaluation-preview{margin-top:22px;padding-top:18px;border-top:1px solid var(--line,#c8bea5)}
+.lab-evaluation-preview h3{font-size:18px;margin:0 0 12px}
+.lab-evaluation-preview p{font-size:14px;line-height:1.9}
+.lab-evaluation-chart{display:block;width:100%;height:auto;background:#f7f1df;border:1px solid #c8bea5}
+.lab-evaluation-legend{display:flex;gap:12px;flex-wrap:wrap;color:#555c4c;font-size:12px;margin-block:12px}
+.lab-evaluation-report{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-block:14px}
+.lab-evaluation-report div{padding:10px 6px;background:#eee7d2;border:1px solid #c8bea5;text-align:center}
+.lab-evaluation-report dt{font-size:11px;color:#555c4c}.lab-evaluation-report dd{margin:6px 0 0;font-size:19px;direction:ltr}
+.lab-evaluation-matrix{width:100%;border-collapse:collapse;font-size:12px}.lab-evaluation-matrix td,.lab-evaluation-matrix th{padding:10px;border:1px solid #c8bea5;text-align:center}.lab-evaluation-matrix td{background:#e5ddef;color:#282037}
+.lab-evaluation .mission-query{line-height:1.9}.lab-evaluation .mission-query strong{font-size:13px}
