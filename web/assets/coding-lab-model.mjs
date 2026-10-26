@@ -1,3 +1,4 @@
+export const imports="import numpy as np";
 export const missionId='greenhouse-v1';
 export const dataset={
  columns:[{name:'moisture',label:'رطوبت'},{name:'light',label:'روشنایی'},{name:'warmth',label:'گرما'}],
@@ -18,7 +19,7 @@ export const stages=[
  task:"<p>تابع <code>inspect_data(X)</code> را کامل کن تا دو چیز را گزارش کند:</p><ul><li><code>n_samples</code>: تعداد سطرها، یعنی تعداد سابقه‌ها.</li><li><code>n_features</code>: تعداد ستون‌ها، یعنی تعداد ویژگی‌های هر سابقه.</li></ul><p>این دو عدد را در یک دیکشنری برگردان. آن‌ها را از خود ورودی به دست بیاور.</p>",
  example:'inspect_data(np.zeros((4, 2)))\n# {"n_samples": 4, "n_features": 2}',
  hints:['به این فکر کن که نمونه و ویژگی در کدام جهت جدول قرار دارند.','خروجی باید اندازهٔ دو محور ورودی را گزارش کند؛ عدد ثابت ننویس.','ویژگی shape در آرایهٔ NumPy اندازهٔ محورهای آن را نگه می‌دارد.'],
- starter:'# Mission 1: Describe any rectangular dataset.\ndef inspect_data(X):\n    pass\n\nprint(inspect_data(X))\n'},
+ starter:imports+'\n\n'+'# Mission 1: Describe any rectangular dataset.\ndef inspect_data(X):\n    pass\n\nprint(inspect_data(X))\n'},
  {id:'pair',title:"دو وضعیت را مقایسه کن",xp:30,function:'pair_distance',
  inputTitle:"ورودی: دو وضعیت هم‌اندازه",
  resultTitle:"خروجی: یک عدد برای فاصلهٔ دو وضعیت",
@@ -114,3 +115,4 @@ export function highlight(code){
 }
 
 export const meta={introTitle:'امروزِ گلخانه به کدام سابقه شبیه است؟',introGoal:'در شش مأموریت، ابزاری می‌سازی که نزدیک‌ترین سابقه‌ها را پیدا کند و تغییر گروه همسایه‌ها را تشخیص بدهد.',lessonId:'machine-learning/vector-distance',title:'کارآگاه گلخانه',filename:'greenhouse.py',finish:'ابزار جست‌وجوی تو آماده است.',dataTitle:'هر سطر، یک نوبت ثبت',tableTitle:'سابقه‌های گلخانه',queryLabel:'وضعیت امروز',queryHelp:'آن را با هر سطر جدول مقایسه خواهیم کرد.',secondHelp:'در مرحلهٔ ششم بررسی می‌کنی با تغییر وضعیت، همسایه‌ها چه تغییری می‌کنند.',dataIntro:'<p>جدول <code>X</code> شامل ۱۰ سابقه است. سه ستون آن به ترتیب <strong>رطوبت، روشنایی، گرما</strong> هستند. مثلاً <code dir="ltr">X[0] = [2, 8, 3]</code> یعنی رطوبت ۲، روشنایی ۸ و گرما ۳.</p><p>عددها امتیازهای ساختگی از ۰ تا ۱۰ هستند و واحد فیزیکی ندارند. هر سه ویژگی از قبل روی مقیاس مشترک‌اند.</p>',variables:'<code>np</code>، <code>X</code>، <code>names</code>، <code>query</code> و <code>query_new</code> هنگام اجرای کد آماده‌اند.',storyTitle:'مسئلهٔ گلخانه چیست؟',story:'<p>به پژوهشگر یک گلخانه کمک می‌کنی تا وضعیت امروز را با ده سابقهٔ حسگرها مقایسه کند. فاصلهٔ کمتر یعنی شباهت بیشتر.</p><p>در شش مرحله، از شناخت جدول به ساخت ابزار جست‌وجو می‌رسی.</p>'};
+

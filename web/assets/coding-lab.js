@@ -11,7 +11,7 @@ async function mount(root,options){
  if(!isCurrent())return;
  const {stages,dataset,bootstrap,normalize,available,highlight,missionId}=model;
  if(missionId!==options.lab.mission||options.snapshot?.mission&&options.snapshot.mission!==missionId)throw Error('LAB_CATALOG_MISMATCH');
- const meta={...model.meta,lessonId:options.lessonId,title:options.lab.title,lessonBridge:options.lab.bridge};
+ const meta={...model.meta,filename:model.meta?.filename||'exercise.py',lessonId:options.lessonId,title:options.lab.title,lessonBridge:options.lab.bridge};
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
  let trusted=options.snapshot,revision=Number(trusted.revision||0),state=normalize(cached?.dirty?cached.state:trusted.draft);
@@ -74,7 +74,7 @@ async function mount(root,options){
 
    <div class="lab-actions"><button class="lab-run-button" data-run type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6Z"/></svg>اجرای کد</button><button class="lab-run-button" data-stop type="button" hidden disabled>توقف</button><button class="button-forest" data-check type="button">بررسی پاسخ</button></div>
    <button class="lab-last-feedback" data-last-feedback type="button" hidden>آخرین بازخورد</button>
-   <details class="lab-tools" data-tools><summary aria-label="ابزارها و وضعیت ذخیره" title="ابزارها و وضعیت ذخیره"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="lab-save-alert" data-save-alert hidden aria-label="ذخیره نیاز به بررسی دارد">!</span></summary><div class="lab-tools-menu"><p data-save role="status" aria-live="polite"></p><button data-download type="button">دانلود کد</button><button data-reset type="button">بازنشانی این مرحله</button><button data-cloud-load type="button">دریافت نسخهٔ حساب</button><button data-refresh type="button">همگام‌سازی پیشرفت</button><button data-activate type="button">راه‌اندازی Python</button><a href="${E(new URL('account/',new URL('../',assets)).href)}">حساب کاربری</a><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">داشبورد</a><a data-lab-teacher-link hidden href="${E(new URL('instructor/',new URL('../',assets)).href)}">پنل مدرس</a></div></details>   <button class="lab-tool-button lab-focus-button" data-focus type="button" aria-pressed="false" title="فضای بیشتر برای کدنویسی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg><span data-focus-label>تمرکز</span></button>
+   <details class="lab-tools" data-tools><summary aria-label="ابزارها و وضعیت ذخیره" title="ابزارها و وضعیت ذخیره"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="lab-save-alert" data-save-alert hidden aria-label="ذخیره نیاز به بررسی دارد">!</span></summary><div class="lab-tools-menu"><p data-save role="status" aria-live="polite"></p><button data-download type="button">دانلود کد</button><button data-imports type="button">افزودن importهای لازم</button><button data-reset type="button">بازنشانی این مرحله</button><button data-cloud-load type="button">دریافت نسخهٔ حساب</button><button data-refresh type="button">همگام‌سازی پیشرفت</button><button data-activate type="button">راه‌اندازی Python</button><a href="${E(new URL('account/',new URL('../',assets)).href)}">حساب کاربری</a><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">داشبورد</a><a data-lab-teacher-link hidden href="${E(new URL('instructor/',new URL('../',assets)).href)}">پنل مدرس</a></div></details>   <button class="lab-tool-button lab-focus-button" data-focus type="button" aria-pressed="false" title="فضای بیشتر برای کدنویسی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg><span data-focus-label>تمرکز</span></button>
   </div>
   <div class="lab-split-area" data-split>
    <div class="lab-code-wrap" id="lab-editor-region"><pre class="lab-lines" aria-hidden="true"></pre><div class="lab-code"><pre data-highlight aria-hidden="true"></pre><textarea id="lab-code" aria-label="کد Python" dir="ltr" lang="en" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" maxlength="20000"></textarea></div></div>
@@ -175,9 +175,17 @@ async function mount(root,options){
  function sync(){const pre=$('[data-highlight]');pre.scrollTop=editor.scrollTop;pre.scrollLeft=editor.scrollLeft;$('.lab-lines').scrollTop=editor.scrollTop}
  function paint(){ $('[data-highlight]').innerHTML=highlight(editor.value)+'\n';$('.lab-lines').textContent=editor.value.split('\n').map((_,i)=>i+1).join('\n');sync() }
  function hints(){const n=state.hints[state.active];$('[data-hints]').innerHTML=stages[state.active].hints.slice(0,n).map((h,i)=>`<p><b lang="en">${i+1}</b> ${E(h)}</p>`).join('');$('[data-hint]').disabled=n>=3;$('[data-hint-label]').textContent='Hint';$('[data-hint-count]').textContent=`${n} / 3`}
+ function missingImports(code){
+  const present=new Set(code.split('\n').map(line=>line.replace(/\s+#.*$/,'').trimEnd()));
+  return (model.imports||'').split('\n').filter(line=>line&&!present.has(line)).join('\n');
+ }
+ function starterCode(){
+  const code=(state.active?state.codes[state.active-1]:'')+stages[state.active].starter;
+  const missing=missingImports(code);return missing?missing+'\n\n'+code:code;
+ }
  function select(focus=false){
   tutor?.setStage(tutorContext());
-  const s=stages[state.active];if(!state.codes[state.active])state.codes[state.active]=(state.active?state.codes[state.active-1]:'')+s.starter;
+  const s=stages[state.active];if(!state.codes[state.active])state.codes[state.active]=starterCode();
   editor.value=state.codes[state.active];explanation.value=state.explanation;hasRun=false;
   $('[data-task-number]').textContent=`مرحلهٔ ${(state.active+1).toLocaleString('fa-IR')} از ۶`;
   $('#lab-task-title').textContent=s.title;$('[data-concept]').textContent=s.brief;$('[data-action]').innerHTML=s.action;$('[data-task]').innerHTML=s.task;$('[data-example]').textContent=s.example;$('[data-input-title]').textContent=s.inputTitle;$('[data-result-title]').textContent=s.resultTitle;$('[data-input]').innerHTML=s.input;$('[data-result]').innerHTML=s.result;$('[data-task-reward]').textContent=`+${s.xp} XP`;$('[data-reflection]').hidden=state.active!==5;$('[data-second-query]').hidden=!dataset.query_new||state.active!==5;layout.showMission();$('.lab-instruction-scroll').scrollTop=0;
@@ -186,7 +194,7 @@ async function mount(root,options){
  }
  function controls(message,error=false,refreshProgress=true){
   const busy=checking||['loading','running'].includes(phase);
-  editor.readOnly=explanation.disabled=busy;$('[data-check]').disabled=busy;$('[data-run]').disabled=busy;$('[data-activate]').hidden=!!worker;$('[data-activate]').disabled=busy;$('[data-stop]').disabled=!['loading','running'].includes(phase);$('[data-stop]').hidden=$('[data-stop]').disabled;$('[data-run]').hidden=!$('[data-stop]').disabled;$('[data-reset]').disabled=busy;$('[data-cloud-load]').disabled=busy||saving||cloudLoading;
+  editor.readOnly=explanation.disabled=busy;$('[data-check]').disabled=busy;$('[data-run]').disabled=busy;$('[data-activate]').hidden=!!worker;$('[data-activate]').disabled=busy;$('[data-stop]').disabled=!['loading','running'].includes(phase);$('[data-stop]').hidden=$('[data-stop]').disabled;$('[data-run]').hidden=!$('[data-stop]').disabled;$('[data-reset]').disabled=busy;$('[data-imports]').disabled=busy||!missingImports(editor.value);$('[data-cloud-load]').disabled=busy||saving||cloudLoading;
   command.disabled=$('.lab-console-form button').disabled=busy||phase!=='ready'||!hasRun;
   const runtime=$('[data-runtime]');runtime.textContent=message||'';runtime.hidden=!message||(!busy&&!error);root.setAttribute('aria-busy',String(busy));experience.setBusy(busy);if(refreshProgress)progress()
  }
@@ -219,7 +227,17 @@ async function mount(root,options){
  $('[data-hint]').onclick=()=>{if(state.hints[state.active]<3){state.hints[state.active]++;hints();change()}};
  $('.mission-path').onclick=e=>{const b=e.target.closest('[data-stage]');if(!b||b.disabled)return;state.active=Number(b.dataset.stage);select(true);change()};
  $('[data-next]').onclick=()=>{if(state.active<available(trusted)&&state.active<5){state.active++;select(true);change()}};
- $('[data-reset]').onclick=()=>{if(!confirm('کد این تسک با قالب آغازین جایگزین شود؟ XP قبلی حفظ می‌شود.'))return;state.codes[state.active]=(state.active?state.codes[state.active-1]:'')+stages[state.active].starter;select();change()};
+ $('[data-imports]').onclick=()=>{
+  if(editor.readOnly)return;
+  const missing=missingImports(editor.value);if(!missing)return;
+  if(/^\s*from\s+__future__\b/m.test(editor.value)){saveStatus('کد شامل __future__ است؛ importهای ابزارها را پس از آن اضافه کن.',true);return;}
+  const prefix=missing+'\n\n';
+  if(editor.value.length+prefix.length>20000){saveStatus('برای افزودن importها، چند خط از کد را کوتاه کن؛ سقف ویرایشگر ۲۰٬۰۰۰ نویسه است.',true);return;}
+  const start=editor.selectionStart,end=editor.selectionEnd,top=editor.scrollTop,left=editor.scrollLeft;
+  editor.value=prefix+editor.value;editor.selectionStart=start+prefix.length;editor.selectionEnd=end+prefix.length;
+  editor.oninput();paint();editor.scrollTop=top;editor.scrollLeft=left;sync();toolsMenu.open=false;editor.focus();
+ };
+ $('[data-reset]').onclick=()=>{if(!confirm('کد این تسک با قالب آغازین جایگزین شود؟ XP قبلی حفظ می‌شود.'))return;state.codes[state.active]=starterCode();select();change()};
  $('[data-download]').onclick=()=>{const text=bootstrap+'\n'+editor.value+'\n# Reflection\n'+state.explanation.split('\n').map(l=>'# '+l).join('\n'),href=URL.createObjectURL(new Blob([text],{type:'text/x-python;charset=utf-8'})),a=document.createElement('a');a.href=href;a.download=`${meta.downloadPrefix||missionId}-${stages[state.active].id}.py`;a.click();setTimeout(()=>URL.revokeObjectURL(href),1000)};
  function pollDelay(ms,signal){return new Promise((resolve,reject)=>{const cancel=()=>{clearTimeout(pollTimer);reject(new Error('Aborted'))};signal.addEventListener('abort',cancel,{once:true});pollTimer=setTimeout(()=>{signal.removeEventListener('abort',cancel);resolve()},ms)})}
  $('[data-check]').onclick=async()=>{
