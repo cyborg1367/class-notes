@@ -21,7 +21,7 @@ async function mount(root,options){
  state.active=Math.min(state.active,available(trusted));
  if(missionId==='evaluation-knn-v1')root.classList.add('lab-evaluation');else root.classList.remove('lab-evaluation');
  root.innerHTML=`<header class="lab-top mission-top">
- <a class="lab-wordmark" href="${E(new URL('../index.html',assets).href)}"><strong>دفتر کلاس</strong><small lang="en" dir="ltr">CLASS NOTES</small></a>
+ <div class="lab-identity"><a class="lab-wordmark" href="${E(new URL('../index.html',assets).href)}"><strong>دفتر کلاس</strong><small lang="en" dir="ltr">CLASS NOTES</small></a><div data-lab-account></div></div>
  <div class="mission-xp" lang="en" dir="ltr" aria-label="Lab progress"><div class="mission-xp-orbit" data-header-progress role="progressbar" aria-label="Lab XP" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"><svg class="xp-ring" viewBox="0 0 240 240" aria-hidden="true"><circle class="xp-ring-disc" cx="120" cy="120" r="99"/><circle class="xp-ring-track" cx="120" cy="120" r="108" pathLength="100"/><circle class="xp-ring-fill" cx="120" cy="120" r="108" pathLength="100"/></svg><div class="mission-xp-core" aria-hidden="true"><strong class="mission-xp-value" data-xp>0</strong></div></div><div class="mission-xp-copy"><span class="mission-xp-limit">of <span data-xp-maximum>300</span> XP</span><p class="mission-xp-count" data-count></p><span class="mission-xp-percent" data-xp-percent></span></div></div>
  <nav class="lab-site-links" aria-label="پیمایش لابراتور"><a href="${E(lessonURL)}">یادگیری</a><a href="${E(new URL(`quiz/${meta.lessonId}/`,new URL('../',assets)).href)}">تمرین‌ها</a><a href="${E(new URL('machine-learning/',new URL('../',assets)).href)}">مسیرها</a></nav>
  <div class="lab-mission-heading"><div class="lab-heading-copy"><h1>${E(meta.title)}</h1><button class="lab-story-review" data-story-review type="button">مرور داستان</button></div>  <nav class="mission-navigation" aria-label="مراحل مأموریت"><span class="mission-navigation-label">مسیر مأموریت</span><ol class="mission-path" aria-label="مراحل مأموریت"></ol></nav></div></header>
@@ -151,16 +151,23 @@ async function mount(root,options){
  celebration.onclick=e=>{if(e.target===celebration)closeCelebration()};
  celebration.addEventListener('cancel',e=>{e.preventDefault();closeCelebration()});
  celebration.addEventListener('close',()=>{celebrationStep=null;celebration.classList.remove('is-celebrating')});
- current={dispose};
+ current={dispose,prepareSignOut};
  function feedback(text,error=false){const box=$('[data-feedback]');box.textContent=text;box.hidden=!text;box.dataset.error=String(error)}
  function persist(){try{localStorage.setItem(key,JSON.stringify({state,dirty,revision,pending}));return true}catch{saveStatus('ذخیرهٔ مرورگر ممکن نیست؛ کدت را دانلود کن.',true);return false}}
  function change(){dirty=true;changed++;clearTimeout(localSaveTimer);localSaveTimer=setTimeout(()=>{localSaveTimer=null;if(alive())persist()},150);clearTimeout(autosave);if(conflict)saveStatus('کد محلی با نسخهٔ حساب تفاوت دارد. ابتدا کدت را دانلود کن؛ سپس نسخهٔ حساب را دریافت کن.',true);else{saveStatus('در حال ذخیره…');autosave=setTimeout(flush,1000)}}
- async function flush(){
+ let flushPromise=null;
+ function flush(){if(flushPromise)return flushPromise;flushPromise=flushDraft().finally(()=>{flushPromise=null;});return flushPromise;}
+ async function flushDraft(){
   if(!alive()||saving||cloudLoading||!dirty||conflict)return;
   saving=true;const serial=changed;
   try{const remote=await saveDraft(JSON.parse(JSON.stringify(state)),revision);if(!alive())return;revision=Number(remote.revision);applyTrusted(remote);if(changed===serial){dirty=false;saveStatus('در حساب ذخیره شد.')}persist()}
   catch(error){if(!alive())return;conflict=/LAB_PROGRESS_CONFLICT/.test(String(error?.message));saveStatus(conflict?'نسخهٔ حساب تغییر کرده است. پیش از دریافت آن، کد محلی را دانلود کن.':'ذخیره در حساب کامل نشد. کد این مرورگر حفظ شده است.',true)}
   finally{saving=false;if(alive()&&dirty&&!conflict&&changed!==serial)autosave=setTimeout(flush,1000)}
+ }
+ async function prepareSignOut(){
+  clearTimeout(autosave);clearTimeout(localSaveTimer);const localSaved=persist();
+  for(let attempt=0;attempt<3&&alive()&&dirty&&!conflict&&!cloudLoading;attempt++)await flush();
+  return {saved:!dirty,localSaved:persist()&&localSaved};
  }
  function applyTrusted(remote){trusted={...remote,xp:Math.max(Number(trusted.xp||0),Number(remote.xp||0)),completed:[...new Set([...(trusted.completed||[]),...(remote.completed||[])])]};progress()}
  function progress(){
@@ -273,6 +280,6 @@ async function mount(root,options){
  function dispose(){if(disposed)return;clearTimeout(localSaveTimer);if(paintFrame!==null&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(paintFrame);persist();disposed=true;document.body.classList.remove('lab-notebook-ready');root.classList.remove('lab-open-notebook');layout.dispose();experience.dispose();tutor?.dispose();root.removeEventListener('click',dismissTools);root.removeEventListener('keydown',closeTools);closeCelebration();clearTimeout(autosave);clearTimeout(pollTimer);controller?.abort();terminate();window.removeEventListener('pagehide',pagehide);if(current?.dispose===dispose)current=null}
  window.addEventListener('pagehide',pagehide);select();persist();saveStatus(conflict?'نسخهٔ محلی با حساب تفاوت دارد؛ پیش از دریافت نسخهٔ حساب، کدت را دانلود کن.':dirty?'کد این مرورگر بازیابی شد.':'ذخیرهٔ خودکار فعال است.',conflict);experience.start();return current
 }
-window.ClassNotesCodingLab={mount,dispose:()=>current?.dispose()};
+window.ClassNotesCodingLab={mount,dispose:()=>current?.dispose(),prepareSignOut:()=>current?.prepareSignOut()||Promise.resolve({saved:true})};
 })();
 

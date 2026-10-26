@@ -86,7 +86,7 @@ if(typeof document!=="undefined"){
  const catalog=JSON.parse($('#catalog-data').textContent),fa=n=>Number(n).toLocaleString('fa-IR'),url=p=>new URL(p,base).href;
  const num=n=>Number(n).toLocaleString('en-US',{useGrouping:false}),score=(n,m)=>'<bdi dir="ltr">'+num(n)+' / '+num(m)+'</bdi>',blankLabel=i=>String.fromCharCode(65+i);
  const app={client:null,user:null,state:null,generation:0,serviceError:null};window.Classroom=app;
- let presence=null,presenceTicket=0;
+ let presence=null,presenceTicket=0,accountUI=null,authReady=false,authFailed=false,authBusy=false,manualSignOut=false,beforeSignOut=null,toastTimer;
  const objectURLs=new Set(),privateDownloads=new Map();let lastUser=null,initializing=true;
  function status(el,text,error=false){if(el){el.textContent=text;el.dataset.error=String(error);}}
  function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
@@ -99,7 +99,11 @@ if(typeof document!=="undefined"){
  function storageSet(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
  function clearObjects(){for(const u of objectURLs)URL.revokeObjectURL(u);objectURLs.clear();privateDownloads.clear();}
  function authUI(){
-  $$('[data-account-link]').forEach(a=>{if(page==='dashboard'&&app.user)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');a.textContent=app.user?'داشبورد ←':'ورود به حساب ←';a.href=app.user?url('dashboard/'):url('account/');});
+  accountUI?.update({user:app.user,ready:authReady,error:authFailed,busy:authBusy,teacher:!!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active')});
+  $$('[data-signin]').forEach(b=>{b.disabled=!authReady||authFailed||!!authBusy;});
+  $$('[data-signout]').forEach(b=>{b.disabled=!!authBusy;});
+  $$('[data-account-intro-guest]').forEach(el=>{el.hidden=!!app.user;});
+  $$('[data-account-intro-member]').forEach(el=>{el.hidden=!app.user;});
   if($('[data-account-guest]'))$('[data-account-guest]').hidden=!!app.user;
   if($('[data-account-member]'))$('[data-account-member]').hidden=!app.user;
   if($('[data-user-name]'))$('[data-user-name]').textContent=app.user?.user_metadata?.full_name||'';
@@ -107,9 +111,16 @@ if(typeof document!=="undefined"){
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
  async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;presenceTicket++;presence?.dispose();presence=null;app.state=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;presenceTicket++;presence?.dispose();presence=null;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
-  if(!initializing&&old!==next){if(old){if(['lesson','lab','quiz','dashboard','instructor','course'].includes(page))$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';location.reload();}else{setTimeout(async()=>{await refreshState();await mount();},0);}}
+  if(!initializing&&old!==next){
+   const privatePage=['lesson','lab','quiz','dashboard','instructor','course'].includes(page);
+   if(old&&privatePage)$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';
+   if(manualSignOut)return;
+   if(old&&next){location.reload();return;}
+   if(old&&!next&&privatePage){location.replace(url('index.html'));return;}
+   setTimeout(async()=>{if(app.user)await refreshState();await mount();},0);
+  }
  }
  const loadScript=portalCreateScriptLoader(document);
  const assetURL=path=>{const u=new URL(path,assets);u.search=new URL(entry.src).search;return u;};
@@ -124,26 +135,47 @@ if(typeof document!=="undefined"){
   if(returned||oauthError){try{previous=sessionStorage.getItem(key);sessionStorage.removeItem(key);}catch{}}
   const next=portalReturn(previous||current.searchParams.get('next'),base);
   if($('[data-continue]'))$('[data-continue]').href=next;
+  function notify(text,error=false){status($('[data-auth-status]'),text,error);const toast=$('#toast');if(toast){toast.textContent=text;toast.classList.add('is-visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('is-visible'),6500);}}
   try{
+   const {mountAccountUI,saveBeforeSignOut}=await import(assetURL('account-menu.mjs').href);
+   accountUI=mountAccountUI({urls:{account:url('account/'),dashboard:url('dashboard/'),teacher:url('instructor/')},onSignIn:async target=>{
+    if(!authReady||authBusy||!app.client||app.user)return;
+    authBusy='in';authUI();notify('در حال رفتن به Google…');
+    try{const destination=target?.matches('[data-login-link]')?new URL(target.getAttribute('href'),base).searchParams.get('next'):page==='account'?next:['home','about'].includes(page)?url('dashboard/'):location.href;
+     const safeNext=portalReturn(destination,base);try{sessionStorage.setItem(key,safeNext);}catch{}
+     const {error}=await app.client.auth.signInWithOAuth({provider:'google',options:{redirectTo:url('account/'),queryParams:{prompt:'select_account'}}});if(error)throw error;
+    }catch{authBusy=false;authUI();notify('ورود شروع نشد؛ اتصال را بررسی کن و دوباره تلاش کن.',true);}
+   },onSignOut:async()=>{
+    if(!app.user||authBusy)return;
+    const owner=app.user.id,gen=app.generation,save=beforeSignOut,main=$('#main'),wasInert=main?.inert;
+    const isCurrent=()=>app.user?.id===owner&&app.generation===gen;
+    authBusy='out';authUI();if(main)main.inert=true;
+    try{const done=await saveBeforeSignOut({
+     save:()=>isCurrent()?(page==='lab'?window.ClassNotesCodingLab?.prepareSignOut()||{saved:true}:save?.()||{saved:true}):{saved:false},
+     confirm:result=>accountUI.confirmUnsaved(result),isCurrent,
+     signOut:()=>{manualSignOut=true;return app.client.auth.signOut({scope:'local'});}
+    });
+     if(done){onUser(null);notify('از حساب خارج شدی.');if(['lesson','lab','quiz','dashboard','instructor','course'].includes(page)){try{sessionStorage.setItem('class-notes-signout:'+base.pathname,'1');}catch{}location.replace(url('index.html'));}}
+    }catch{notify('خروج از حساب انجام نشد؛ اتصال را بررسی کن و دوباره تلاش کن.',true);}
+    finally{manualSignOut=false;authBusy=false;if(main?.isConnected)main.inert=!!wasInert;authUI();accountUI?.focusAccount();}
+   }});
    const response=await fetch(new URL('auth-config.json',assets),{cache:'no-cache',credentials:'same-origin'});if(!response.ok)throw Error('CONFIG_UNAVAILABLE');
-   const config=await response.json();if(!portalConfig(config)){status($('[data-auth-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');status($('[data-page-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');return;}
+   const config=await response.json();if(!portalConfig(config)){status($('[data-auth-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');status($('[data-page-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');authReady=true;authFailed=true;authUI();notify('ورود به کلاس هنوز راه‌اندازی نشده است.',true);return;}
    await loadScript(assetURL('vendor/supabase/supabase.js').href);
    app.config=config;
    app.client=window.supabase.createClient(config.supabaseUrl,config.publishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,storageKey:`class-notes-auth:${base.pathname}`}});
    app.client.auth.onAuthStateChange((_event,session)=>onUser(session?.user||null));
-   const{data,error}=await app.client.auth.getSession();if(error)throw error;onUser(data.session?.user||null);
+   const{data,error}=await app.client.auth.getSession();if(error)throw error;authReady=true;onUser(data.session?.user||null);
    if(returned||oauthError){['code','error','error_code','error_description'].forEach(k=>current.searchParams.delete(k));if(oauthError)current.hash='';history.replaceState(null,'',current.href);}
    if(returned&&app.user&&!oauthError){location.replace(next);return;}
-   $('[data-signin]')?.removeAttribute('disabled');
-   $('[data-signin]')?.addEventListener('click',async()=>{const b=$('[data-signin]');b.disabled=true;status($('[data-auth-status]'),'در حال رفتن به Google…');try{try{sessionStorage.setItem(key,next);}catch{}const{error}=await app.client.auth.signInWithOAuth({provider:'google',options:{redirectTo:url('account/'),queryParams:{prompt:'select_account'}}});if(error)throw error;}catch(err){status($('[data-auth-status]'),friendly(err),true);b.disabled=false;}});
-   $('[data-signout]')?.addEventListener('click',async()=>{const b=$('[data-signout]');b.disabled=true;const{error}=await app.client.auth.signOut({scope:'local'});if(error){status($('[data-auth-status]'),friendly(error),true);b.disabled=false;}else{onUser(null);status($('[data-auth-status]'),'از حساب خارج شدی.');}});
    if(app.user)await refreshState();initializing=false;authUI();
    status($('[data-auth-status]'),oauthError?'ورود کامل نشد؛ دوباره تلاش کن.':app.user?'به حساب خودت وارد شده‌ای.':'',oauthError);
    await mount();
-  }catch(err){status($('[data-auth-status]'),friendly(err),true);status($('[data-page-status]'),friendly(err),true);}
+   try{const signedOutKey='class-notes-signout:'+base.pathname;if(sessionStorage.getItem(signedOutKey)){sessionStorage.removeItem(signedOutKey);notify('از حساب خارج شدی.');}}catch{}
+  }catch(err){authReady=true;authFailed=true;authUI();status($('[data-auth-status]'),friendly(err),true);status($('[data-page-status]'),friendly(err),true);notify('بررسی حساب کامل نشد؛ صفحه را دوباره باز کن.',true);}
  }
  function renderGate(root,courseId){
-  if(!app.user){root.innerHTML=`<div class="gate-card"><h2>برای ادامه وارد شو.</h2><p>متن یادداشت‌ها و آزمون‌ها فقط برای اعضای تأییدشدهٔ کلاس در دسترس است.</p><div class="portal-actions"><a class="button-forest" href="${E(loginURL())}">ورود با Google ←</a></div></div>`;return;}
+  if(!app.user){root.innerHTML=`<div class="gate-card"><h2>برای ادامه وارد شو.</h2><p>متن یادداشت‌ها و آزمون‌ها فقط برای اعضای تأییدشدهٔ کلاس در دسترس است.</p><div class="portal-actions"><a class="button-forest" data-login-link href="${E(loginURL())}">ورود با Google ←</a></div></div>`;return;}
   if(app.serviceError){root.innerHTML='<div class="gate-card"><h2>اطلاعات کلاس دریافت نشد.</h2><p>ورود انجام شده، اما اطلاعات کلاس دریافت نشد. با مدرس در میان بگذار یا کمی بعد دوباره امتحان کن.</p><button class="button-outline" data-refresh type="button">تلاش دوباره</button></div>';root.querySelector('[data-refresh]').onclick=async()=>{await refreshState();await mount();};return;}
   const m=app.state?.memberships?.find(m=>m.course_id===courseId);
   const text=m?.status==='pending'?'درخواستت ثبت شده است؛ پس از تأیید مدرس، دسترسی فعال می‌شود.':m?.status==='suspended'?'دسترسی این کلاس فعلاً غیرفعال است. برای پیگیری با مدرس در ارتباط باش.':'برای این کلاس درخواست عضویت بده؛ دسترسی پس از تأیید مدرس فعال می‌شود.';
@@ -234,6 +266,7 @@ if(typeof document!=="undefined"){
     saveDraft:(state,revision)=>rpc('classroom_lab_save',{p_state:state,p_revision:revision,p_owner:owner,p_mission:mission}),
     refresh:()=>rpc('classroom_lab_state',{p_mission:mission}),getAttempt:request=>rpc('classroom_lab_receipt',{p_request:request,p_mission:mission}),submit,tutorRequest,
     isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
+   if(gen===app.generation&&$('[data-lab-account]'))accountUI?.attach($('[data-lab-account]'),{compact:true});
   }catch(err){if(gen!==app.generation)return;host.innerHTML='<div class="gate-card"><h1>لابراتور دریافت نشد.</h1><p>'+E(friendly(err))+'</p><button type="button" class="button-outline" data-lab-retry>تلاش دوباره</button></div>';host.querySelector('button').onclick=loadCodingLab;}
  }
  function course(){
@@ -324,7 +357,9 @@ if(typeof document!=="undefined"){
   $('[data-cloud-description]',root).textContent='پیش‌نویس را در حساب خودت ذخیره کن و روی دستگاه دیگر دریافت کن. این دکمه تحویل نهایی تکلیف نیست.';
   const imp=$('[data-draft-import]',root);imp.hidden=!Object.values(drafts.guestSnapshot()).some(Boolean);
   imp.onclick=()=>{if(confirm('پیش‌نویس بدون ورودِ همین مرورگر را خودت نوشته‌ای؟ آن را جایگزین پاسخ‌های فعلی کنیم؟')){drafts.apply(drafts.guestSnapshot());status(notice,'پیش‌نویس در جدول قرار گرفت؛ برای ذخیره در حساب دکمهٔ ذخیره را بزن.');}};
-  let busy=false;async function act(fn){if(busy)return;busy=true;$$('button',root).forEach(b=>b.disabled=true);try{await fn();}catch(err){if(gen===app.generation)status(notice,friendly(err),true);}finally{busy=false;$$('button',root).forEach(b=>b.disabled=false);}}
+  const initialWorksheet=JSON.stringify(drafts.snapshot());
+  beforeSignOut=async()=>{await worksheetTask;if(gen!==app.generation||drafts.owner()!==uid)return {saved:true};const answers=drafts.snapshot();if(JSON.stringify(answers)===initialWorksheet)return {saved:true};await rpc('classroom_draft',{p_lesson:lid,p_kind:'worksheet',p_version:1,p_answers:answers});return {saved:true};};
+  let busy=false,worksheetTask=Promise.resolve();async function act(fn){if(busy)return;busy=true;$$('button',root).forEach(b=>b.disabled=true);worksheetTask=(async()=>{try{await fn();}catch(err){if(gen===app.generation)status(notice,friendly(err),true);}finally{busy=false;$$('button',root).forEach(b=>b.disabled=false);}})();return worksheetTask;}
   $('[data-cloud-save]',root).onclick=()=>act(async()=>{if(drafts.owner()!==uid)return;status(notice,'در حال ذخیره…');await rpc('classroom_draft',{p_lesson:lid,p_kind:'worksheet',p_version:1,p_answers:drafts.snapshot()});if(gen===app.generation)status(notice,'پیش‌نویس پاسخ‌ها در حساب ذخیره شد.');});
   $('[data-cloud-load]',root).onclick=()=>act(async()=>{status(notice,'در حال دریافت…');const answers=await rpc('classroom_draft',{p_lesson:lid,p_kind:'worksheet',p_version:1});if(gen!==app.generation)return;if(!answers){status(notice,'هنوز پیش‌نویسی برای این یادداشت در حساب ذخیره نشده است.');return;}if(Object.values(drafts.snapshot()).some(Boolean)&&!confirm('پاسخ‌های فعلی با نسخهٔ ذخیره‌شده در حساب جایگزین شوند؟')){status(notice,'پاسخ‌های فعلی حفظ شدند.');return;}drafts.apply(answers);status(notice,'پیش‌نویس ذخیره‌شده از حساب دریافت شد.');});
  }
@@ -350,7 +385,7 @@ if(typeof document!=="undefined"){
   return `<section class="quiz-result" tabindex="-1"><p class="eyebrow">نتیجهٔ ثبت‌شده · تلاش ${num(record.attempt_no)}</p><h2>${score(r.score,r.maximum)}</h2>${record.created_at?'<p>'+E(date(record.created_at))+'</p>':''}<p>این نتیجه مربوط به همین تلاش است. برای مرور، پاسخ هر سؤال و توضیح آن را ببین.</p>${summaryHTML(summary,r.maximum)}<p class="small-note">${r.practice_checks||r.hints_used?'تا زمان این ثبت: '+num(r.practice_checks||0)+' بررسی تمرینی و '+num(r.hints_used||0)+' دریافت راهنما برای این نسخه انجام شده است.':'برای این نسخه، استفاده‌ای از بررسی تمرینی یا راهنما تا زمان این ثبت گزارش نشده است.'} این شمارش تجمعی است؛ نمره به‌تنهایی نشان‌دهندهٔ تسلط مستقل نیست.</p><div class="result-items">${items}</div></section>`;
  }
  async function loadQuiz(){
-  const root=$('[data-quiz-root]'),notice=$('[data-page-status]'),info=lesson(lid),gen=app.generation;
+  const root=$('[data-quiz-root]'),notice=$('[data-page-status]'),info=lesson(lid),gen=app.generation;beforeSignOut=null;
   status(notice,'');if(!app.user||app.serviceError||!member(info.course.id)){renderGate(root,info.course.id);return;}
   try{
    root.parentElement.querySelector('.quiz-context')?.remove();const context=document.createElement('nav');context.className='quiz-context';context.setAttribute('aria-label','دسترسی‌های آزمون');context.innerHTML='<a class="quiet-link" href="'+E(url(info.id+'/'))+'">بازگشت به یادداشت ←</a><a class="quiet-link" href="'+E(url(info.course.id+'/'))+'">فهرست یادداشت‌های کلاس</a><a class="quiet-link" href="'+E(url('dashboard/#results'))+'">همهٔ نتایج من</a>';root.before(context);
@@ -392,6 +427,7 @@ if(typeof document!=="undefined"){
     const rev=++revision,localOK=storageSet(key,answers);status(saveNote,localOK?'پیش‌نویس در این مرورگر ذخیره شد.':'ذخیره در مرورگر ممکن نشد؛ در حال تلاش برای ذخیره در حساب…',!localOK);clearTimeout(saveTimer);
     saveTimer=setTimeout(()=>{const snapshot=JSON.parse(JSON.stringify(answers));queue=queue.catch(()=>{}).then(async()=>{if(app.user?.id!==uid||gen!==app.generation||submitted)return;await rpc('classroom_draft',{p_lesson:lid,p_kind:'quiz',p_version:quiz.version,p_answers:snapshot});if(rev===revision&&gen===app.generation)status(saveNote,'پیش‌نویس در حساب ذخیره شد.');}).catch(()=>{if(gen===app.generation)status(saveNote,localOK?'ذخیره در حساب کامل نشد؛ پیش‌نویس مرورگر باقی است.':'پیش‌نویس ذخیره نشد؛ پیش از بستن صفحه، پاسخ‌ها را نزد خودت نگه دار.',true);});},800);
    }
+   beforeSignOut=async()=>{clearTimeout(saveTimer);await queue;if(gen!==app.generation||app.user?.id!==uid||submitted||!revision)return {saved:true};const localSaved=storageSet(key,answers);if(pending)return {saved:true,localSaved};try{await rpc('classroom_draft',{p_lesson:lid,p_kind:'quiz',p_version:quiz.version,p_answers:JSON.parse(JSON.stringify(answers))});return {saved:true,localSaved};}catch{return {saved:false,localSaved};}};
    function setMode(next){
     mode=next;$$('[data-mode]',root).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));$$('[data-practice-tools]',root).forEach(el=>el.hidden=mode!=='practice');$$('[data-feedback]',root).forEach(el=>el.hidden=true);review.hidden=true;
     $('[data-mode-note]',root).textContent=mode==='practice'?'تمرین: ابتدا خودت پاسخ بده؛ در صورت نیاز راهنمای مفهومی بگیر و سپس پاسخ را بررسی کن. نتیجهٔ آزمون با تمرین ثبت نمی‌شود.':'آزمون: پاسخ‌ها را کامل کن و پیش از ثبت نهایی مرور کن. راهنما و بررسی پاسخ در این حالت نمایش داده نمی‌شوند.';
