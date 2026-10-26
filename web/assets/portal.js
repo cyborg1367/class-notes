@@ -102,10 +102,10 @@ if(typeof document!=="undefined"){
   accountUI?.update({user:app.user,ready:authReady,error:authFailed,busy:authBusy,teacher:!!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active')});
   $$('[data-signin]').forEach(b=>{b.disabled=!authReady||authFailed||!!authBusy;});
   $$('[data-signout]').forEach(b=>{b.disabled=!!authBusy;});
-  $$('[data-account-intro-guest]').forEach(el=>{el.hidden=!!app.user;});
-  $$('[data-account-intro-member]').forEach(el=>{el.hidden=!app.user;});
-  if($('[data-account-guest]'))$('[data-account-guest]').hidden=!!app.user;
-  if($('[data-account-member]'))$('[data-account-member]').hidden=!app.user;
+  $$('[data-account-intro-guest]').forEach(el=>{el.hidden=!authReady||authFailed||!!app.user;});
+  $$('[data-account-intro-member]').forEach(el=>{el.hidden=!authReady||!app.user;});
+  if($('[data-account-guest]'))$('[data-account-guest]').hidden=!authReady||authFailed||!!app.user;
+  if($('[data-account-member]'))$('[data-account-member]').hidden=!authReady||!app.user;
   if($('[data-user-name]'))$('[data-user-name]').textContent=app.user?.user_metadata?.full_name||'';
   if($('[data-user-email]'))$('[data-user-email]').textContent=app.user?.email||'';
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
@@ -136,8 +136,17 @@ if(typeof document!=="undefined"){
   const next=portalReturn(previous||current.searchParams.get('next'),base);
   if($('[data-continue]'))$('[data-continue]').href=next;
   function notify(text,error=false){status($('[data-auth-status]'),text,error);const toast=$('#toast');if(toast){toast.textContent=text;toast.classList.add('is-visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('is-visible'),6500);}}
+  function loadingError(message){
+   const roots=$$('.page-loading'),access=$('[data-course-membership]');if(access?.firstElementChild?.matches('p[role="status"]'))roots.push(access);
+   for(const root of roots){root.setAttribute('aria-busy','false');const text=document.createElement('p');text.className='status-line';text.setAttribute('role','status');status(text,message,true);const retry=document.createElement('button');retry.type='button';retry.className='button-outline';retry.textContent='تلاش دوباره';retry.onclick=()=>location.reload();root.replaceChildren(text,retry);}
+  }
   try{
-   const {mountAccountUI,saveBeforeSignOut}=await import(assetURL('account-menu.mjs').href);
+   // Recover the session after the independent public dependencies are ready.
+   const [{mountAccountUI,saveBeforeSignOut},config]=await Promise.all([
+    import(assetURL('account-menu.mjs').href),
+    fetch(new URL('auth-config.json',assets),{cache:'no-cache',credentials:'same-origin'}).then(response=>{if(!response.ok)throw Error('CONFIG_UNAVAILABLE');return response.json();}),
+    loadScript(assetURL('vendor/supabase/supabase.js').href)
+   ]);
    accountUI=mountAccountUI({urls:{account:url('account/'),dashboard:url('dashboard/'),teacher:url('instructor/')},onSignIn:async target=>{
     if(!authReady||authBusy||!app.client||app.user)return;
     authBusy='in';authUI();notify('در حال رفتن به Google…');
@@ -159,9 +168,7 @@ if(typeof document!=="undefined"){
     }catch{notify('خروج از حساب انجام نشد؛ اتصال را بررسی کن و دوباره تلاش کن.',true);}
     finally{manualSignOut=false;authBusy=false;if(main?.isConnected)main.inert=!!wasInert;authUI();accountUI?.focusAccount();}
    }});
-   const response=await fetch(new URL('auth-config.json',assets),{cache:'no-cache',credentials:'same-origin'});if(!response.ok)throw Error('CONFIG_UNAVAILABLE');
-   const config=await response.json();if(!portalConfig(config)){status($('[data-auth-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');status($('[data-page-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');authReady=true;authFailed=true;authUI();notify('ورود به کلاس هنوز راه‌اندازی نشده است.',true);return;}
-   await loadScript(assetURL('vendor/supabase/supabase.js').href);
+   if(!portalConfig(config)){status($('[data-auth-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');status($('[data-page-status]'),'ورود به کلاس هنوز راه‌اندازی نشده است.');authReady=true;authFailed=true;authUI();loadingError('ورود به کلاس هنوز راه‌اندازی نشده است.');notify('ورود به کلاس هنوز راه‌اندازی نشده است.',true);return;}
    app.config=config;
    app.client=window.supabase.createClient(config.supabaseUrl,config.publishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,storageKey:`class-notes-auth:${base.pathname}`}});
    app.client.auth.onAuthStateChange((_event,session)=>onUser(session?.user||null));
@@ -172,7 +179,7 @@ if(typeof document!=="undefined"){
    status($('[data-auth-status]'),oauthError?'ورود کامل نشد؛ دوباره تلاش کن.':app.user?'به حساب خودت وارد شده‌ای.':'',oauthError);
    await mount();
    try{const signedOutKey='class-notes-signout:'+base.pathname;if(sessionStorage.getItem(signedOutKey)){sessionStorage.removeItem(signedOutKey);notify('از حساب خارج شدی.');}}catch{}
-  }catch(err){authReady=true;authFailed=true;authUI();status($('[data-auth-status]'),friendly(err),true);status($('[data-page-status]'),friendly(err),true);notify('بررسی حساب کامل نشد؛ صفحه را دوباره باز کن.',true);}
+  }catch(err){authReady=true;authFailed=true;authUI();status($('[data-auth-status]'),friendly(err),true);status($('[data-page-status]'),friendly(err),true);loadingError('دریافت صفحه کامل نشد؛ اتصال را بررسی کن و دوباره تلاش کن.');notify('بررسی حساب کامل نشد؛ صفحه را دوباره باز کن.',true);}
  }
  function renderGate(root,courseId){
   if(!app.user){root.innerHTML=`<div class="gate-card"><h2>برای ادامه وارد شو.</h2><p>متن یادداشت‌ها و آزمون‌ها فقط برای اعضای تأییدشدهٔ کلاس در دسترس است.</p><div class="portal-actions"><a class="button-forest" data-login-link href="${E(loginURL())}">ورود با Google ←</a></div></div>`;return;}

@@ -93,3 +93,11 @@ a.mini-lesson:hover{background:#fffdf5}
 .section-heading>h2{flex:1;min-width:0}.section-heading>.quiet-link{flex-shrink:0}.lesson-order{white-space:nowrap}.route-trail li:last-child{flex:1}
 
 .section-heading>div,.portfolio-head>div,.result-heading>div{flex:1;min-width:0}.portfolio-head>.quiet-link{flex-shrink:0}
+.page-loading{padding:24px 0 32px;min-height:185px;max-width:760px;}
+.page-loading-line{display:block;width:88%;height:12px;margin:0 0 18px;border-radius:3px;background:#858b7522;}
+.page-loading-line:nth-child(2){width:72%;}
+.page-loading-line:nth-child(3){width:45%;}
+.page-loading>p{font-size:13px;color:var(--muted,#585e4e);line-height:1.9;margin:24px 0 0;}
+.page-loading>p[data-error="true"]{color:var(--coral-ink,#88432d);}
+.page-loading:has([data-error="true"]) .page-loading-line{display:none;}
+@media(max-width:760px){.page-loading{min-height:155px;padding-block:18px 24px;}.page-loading-line{height:10px;margin-bottom:15px;}}
