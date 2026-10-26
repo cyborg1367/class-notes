@@ -5,9 +5,10 @@ import re
 ROOT=Path(__file__).resolve().parent
 DIST=ROOT/'dist'
 class Page(HTMLParser):
- def __init__(self):super().__init__();self.links=[];self.ids=[]
+ def __init__(self):super().__init__();self.links=[];self.ids=[];self.course_cards=[]
  def handle_starttag(self,t,attrs):
   a=dict(attrs)
+  if t=='article' and 'data-home-course' in a:self.course_cards.append(a)
   if t=='html':assert a.get('lang')=='fa' and a.get('dir')=='rtl'
   if a.get('id'):self.ids.append(a['id'])
   for k in ['src','href']:
@@ -63,6 +64,18 @@ assert re.fullmatch(r'[a-f0-9]{16}',version),'Invalid asset fingerprint'
 for name,digest in manifest['files'].items():
  assert hashlib.sha256((DIST/name).read_bytes()).hexdigest()==digest,('Asset changed after fingerprinting',name)
 canonical=json.loads((DIST/'assets/catalog.json').read_text())
+from build_assets import lesson_order
+courses=[c for c in canonical if c.get('lessons')]
+cards=pages[(DIST/'index.html').resolve()].course_cards
+assert len(cards)==len(courses),'Homepage must contain one summary per published course'
+for card,course in zip(cards,courses):
+ lessons=course['lessons']
+ latest=max(enumerate(lessons),key=lambda item:(lesson_order(item[1],item[0]),item[0]))[1]
+ assert card['data-home-course']==course['id'],'Homepage course differs from catalog'
+ assert card['data-latest-lesson']==latest['id'],'Homepage latest lesson is stale'
+ assert int(card['data-note-count'])==len(lessons),'Homepage lesson count is stale'
+ assert int(card['data-lab-count'])==sum(bool(l.get('lab')) for l in lessons),'Homepage lab count is stale'
+ assert int(card['data-quiz-count'])==sum(type(l.get('quiz_version')) is int and l['quiz_version']>0 for l in lessons),'Homepage quiz count is stale'
 for p,q in pages.items():
  s=p.read_text();m=re.search(r'<script id="catalog-data" type="application/json">(.*?)</script>',s,re.S)
  assert m and json.loads(m[1])==canonical,('Catalog differs from canonical source',p)
@@ -75,3 +88,4 @@ for p,q in pages.items():
    assert parse_qs(u.query).get('v')==[version],('Stale asset URL',p,value)
 assert not (DIST/'assets/lab-checks.py').exists(),'Legacy browser grader must not ship'
 print('Checked shared asset fingerprint, canonical catalog and obsolete-file exclusion.')
+print('Checked generated homepage course counts and latest-note links.')
