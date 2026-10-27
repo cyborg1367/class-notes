@@ -128,6 +128,12 @@ The workflow can also be started manually from the **Actions** tab. Backend depl
 
 The notification backend is installed through the matching private migration package. It uses existing Supabase services and requires no browser-push permission or additional provider. Meaningful content releases are announced through an authorized publication RPC after the content is ready; routine deploys and asset fingerprint changes do not generate announcements. Existing lessons form a quiet baseline on installation. Reading a notice never completes a mission or grants XP.
 
+### Runtime performance
+
+The matching private performance migration adds one authenticated page bootstrap and progress-only dashboard summaries. Saved lab code is fetched by the editor, not the dashboard. Identical simultaneous reads share a request; writes and completed authorization responses are not cached. Older backends remain compatible through missing-function fallback. HTML, CSS and lesson presentation are unchanged.
+
+For a local timing report in the current browser document, run `console.table(window.ClassroomPerformance.report())`. It reports RPC names, counts and durations without arguments, learner content or tokens, and sends no telemetry. Production latency should be measured from student networks; synthetic request-count or payload reductions do not establish an equivalent page-speed percentage.
+
 ## Security boundaries
 
 - **Keep secrets on the server.** Never place Supabase secret/service-role keys, E2B API keys, or other credentials in `web/`, frontend configuration, or public Git history.

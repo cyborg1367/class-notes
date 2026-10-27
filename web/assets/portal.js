@@ -42,6 +42,45 @@ function portalCreateScriptLoader(doc){
   return task;
  };
 }
+// Share only simultaneous, explicitly listed reads. Never cache an access grant,
+// a grading result, a draft write or a learner's content across documents.
+function portalCreateReadCoordinator({request,clock=()=>Date.now(),limit=120}){
+ const reads=new Set(['classroom_bootstrap','classroom_state','classroom_lesson','classroom_lab_state','classroom_review_summary']);
+ const pending=new Map(),events=[];let generation=0;
+ function record(name,start,error=false,shared=false){events.push({name,ms:Math.max(0,clock()-start),error,shared});if(events.length>limit)events.shift()}
+ function call(name,args={}){
+  const start=clock(),epoch=generation,read=reads.has(name),key=read?JSON.stringify([name,Object.keys(args).sort().map(k=>[k,args[k]])]):null;
+  if(read&&pending.has(key)){record(name,start,false,true);return pending.get(key)}
+  if(!read)pending.clear(); // A post-write read must not join a pre-write request.
+  const task=Promise.resolve().then(()=>{if(epoch!==generation)throw Error('ACCOUNT_CHANGED');return request(name,args)}).then(value=>{
+   if(epoch!==generation)throw Error('ACCOUNT_CHANGED');record(name,start);return value;
+  },error=>{if(epoch===generation)record(name,start,true);throw error});
+  if(read){pending.set(key,task);task.then(()=>{if(pending.get(key)===task)pending.delete(key)},()=>{if(pending.get(key)===task)pending.delete(key)})}
+  return task;
+ }
+ return {call,reset(){generation++;pending.clear();events.length=0},snapshot(){return events.map(e=>({...e}))},report(){
+  const groups={};for(const e of events){const row=groups[e.name]||={requests:0,shared:0,errors:0,total_ms:0,max_ms:0};if(e.shared){row.shared++;continue}row.requests++;row.errors+=Number(e.error);row.total_ms+=e.ms;row.max_ms=Math.max(row.max_ms,e.ms)}
+  return Object.fromEntries(Object.entries(groups).map(([name,row])=>[name,{...row,average_ms:row.requests?row.total_ms/row.requests:0}]));
+ }};
+}
+// A failed request is retryable. Successful, fingerprinted public config can be
+// reused in this document; authentication tokens are never part of this loader.
+function portalCreatePublicConfigLoader(fetchJSON){
+ const values=new Map();return function load(url){const key=String(url);if(values.has(key))return values.get(key);
+  const task=Promise.resolve().then(()=>fetchJSON(key));values.set(key,task);
+  task.catch(()=>{if(values.get(key)===task)values.delete(key)});return task;
+ };
+}
+function portalAbortable(task,signal){
+ if(!signal)return task;
+ return new Promise((resolve,reject)=>{let done=false;
+  const finish=(ok,value)=>{if(done)return;done=true;signal.removeEventListener('abort',abort);ok?resolve(value):reject(value)};
+  const abort=()=>{const error=Error('Aborted');error.name='AbortError';finish(false,error)};
+  signal.addEventListener('abort',abort,{once:true});Promise.resolve(task).then(value=>finish(true,value),error=>finish(false,error));if(signal.aborted)abort();
+ });
+}
+function portalMissingBootstrap(error){return ['PGRST202','42883'].includes(error?.code)&&/\bclassroom_bootstrap\b/.test(String(error?.message||'')+' '+String(error?.details||''))}
+
 function portalFigure(f){
  const e=portalEscape;const description=f.type==='distance2d'?`محورها هم‌مقیاس‌اند؛ U در (${f.u.join(', ')}) و V در (${f.v.join(', ')}) است.`:`محورها هم‌مقیاس‌اند؛ q در (${f.query.join(', ')}) است. `+f.points.map(p=>`${p.id}: (${p.x.join(', ')}), کلاس ${p.y}`).join('؛ ')+'. دایره کلاس صفر و مربع کلاس یک است.';let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 360" role="img" aria-label="'+e(description)+'">';
  const min=f.type==='knn2d'?3.8:0,max=f.type==='knn2d'?7.4:7,unit=270/(max-min),xy=p=>[65+(p[0]-min)*unit,305-(p[1]-min)*unit];
@@ -78,7 +117,7 @@ function portalMountLessonHero(root,kind){
  figure.innerHTML=plot+'<div class="binary-hero-legend"><span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="#21665d" stroke="#24241f"/></svg>کلاس <bdi>0</bdi></span><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12" fill="#a35236" stroke="#24241f"/></svg>کلاس <bdi>1</bdi></span><span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 8 8-8 8-8-8z" fill="#f4d835" stroke="#24241f"/></svg>پرس‌وجوی <bdi>q</bdi></span></div><p class="binary-hero-axes"><bdi>M1</bdi>: امتیاز تنفسی · <bdi>M2</bdi>: امتیاز خستگی</p><figcaption>پرونده‌ها و امتیازها کاملاً ساختگی‌اند؛ کلاسِ <bdi>q</bdi> هنوز مشخص نیست.</figcaption>';
  grid.classList.remove('hero-grid--single');grid.append(figure);
 }
-if(typeof module!=="undefined"&&module.exports)module.exports={portalEscape,portalInline,portalReturn,portalConfig,portalLabEndpoint,portalCreateScriptLoader,portalFigure,portalBlankValue,portalBlankError,portalBlankHelp,portalQuizCode,portalBinaryHero,portalMountLessonHero};
+if(typeof module!=="undefined"&&module.exports)module.exports={portalEscape,portalInline,portalReturn,portalConfig,portalLabEndpoint,portalCreateScriptLoader,portalFigure,portalBlankValue,portalBlankError,portalBlankHelp,portalQuizCode,portalBinaryHero,portalMountLessonHero,portalCreateReadCoordinator,portalCreatePublicConfigLoader,portalMissingBootstrap,portalAbortable};
 
 if(typeof document!=="undefined"){
  const $=(s,p=document)=>p.querySelector(s),$$=(s,p=document)=>Array.from(p.querySelectorAll(s)),E=portalEscape;
@@ -90,7 +129,11 @@ if(typeof document!=="undefined"){
  const objectURLs=new Set(),privateDownloads=new Map();let lastUser=null,initializing=true;
  function status(el,text,error=false){if(el){el.textContent=text;el.dataset.error=String(error);}}
  function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
- async function rpc(name,args={}){const{data,error}=await app.client.rpc(name,args);if(error)throw error;return data;}
+ const reads=portalCreateReadCoordinator({request:async(name,args)=>{const{data,error}=await app.client.rpc(name,args);if(error)throw error;return data;},clock:()=>window.performance?.now?.()??Date.now()});
+ window.ClassroomPerformance=Object.freeze({snapshot:()=>reads.snapshot(),report:()=>reads.report()});
+ const publicConfig=portalCreatePublicConfigLoader(async href=>{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);try{const response=await fetch(href,{cache:'no-cache',credentials:'same-origin',signal:controller.signal});if(!response.ok)throw Error('PUBLIC_CONFIG_UNAVAILABLE');return await response.json()}catch(error){if(controller.signal.aborted)throw Error('PUBLIC_CONFIG_TIMEOUT');throw error}finally{clearTimeout(timer)}});
+ let bootData=null,bootstrapAvailable=true,stateTicket=0;
+ const rpc=(name,args={})=>reads.call(name,args);
  function lesson(id){for(const c of catalog){const l=c.lessons.find(l=>l.id===id);if(l)return {...l,course:c};}return null;}
  const member=c=>app.state?.memberships?.find(m=>m.course_id===c&&m.status==='active');
  function loginURL(next=location.href){const u=new URL('account/',base);u.searchParams.set('next',portalReturn(next,base));return u.href;}
@@ -111,8 +154,16 @@ if(typeof document!=="undefined"){
   if($('[data-user-email]'))$('[data-user-email]').textContent=app.user?.email||'';
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
- async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;noticeTicket++;noticeUI?.dispose();noticeUI=null;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
+ async function refreshState(){const gen=app.generation,ticket=++stateTicket;bootData=null;try{
+   let bundle=null;
+   if(bootstrapAvailable){try{bundle=await rpc('classroom_bootstrap',{p_page:page,p_lesson:lid||null,p_mission:page==='lab'?lesson(lid)?.lab?.mission||null:null,p_missions:page==='dashboard'?catalog.flatMap(c=>c.lessons.filter(l=>l.lab).map(l=>l.lab.mission)):[]});
+    if(!bundle||!Array.isArray(bundle.state?.memberships)||!Array.isArray(bundle.state?.results))throw Error('INVALID_BOOTSTRAP_RESPONSE');
+   }catch(error){if(!portalMissingBootstrap(error))throw error;bootstrapAvailable=false;}}
+   const state=bundle?bundle.state:await rpc('classroom_state');
+   if(gen===app.generation&&ticket===stateTicket){bootData=bundle;app.state=state;app.serviceError=null;authUI();}
+  }catch(err){if(gen===app.generation&&ticket===stateTicket){bootData=null;app.state=null;app.serviceError=err;}}}
+
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;reads.reset();stateTicket++;bootData=null;noticeTicket++;noticeUI?.dispose();noticeUI=null;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
   if(!initializing&&old!==next){
    const privatePage=['lesson','lab','quiz','dashboard','instructor','course','review','notifications'].includes(page);
@@ -177,7 +228,7 @@ if(typeof document!=="undefined"){
    const{data,error}=await app.client.auth.getSession();if(error)throw error;authReady=true;onUser(data.session?.user||null);
    if(returned||oauthError){['code','error','error_code','error_description'].forEach(k=>current.searchParams.delete(k));if(oauthError)current.hash='';history.replaceState(null,'',current.href);}
    if(returned&&app.user&&!oauthError){location.replace(next);return;}
-   if(app.user)await refreshState();initializing=false;authUI();
+   if(app.user){if(page==='lab'&&!window.ClassNotesCodingLab)void loadScript(assetURL('coding-lab.js').href).catch(()=>{});await refreshState();}initializing=false;authUI();
    status($('[data-auth-status]'),oauthError?'ورود کامل نشد؛ دوباره تلاش کن.':app.user?'به حساب خودت وارد شده‌ای.':'',oauthError);
    await mount();
    try{const signedOutKey='class-notes-signout:'+base.pathname;if(sessionStorage.getItem(signedOutKey)){sessionStorage.removeItem(signedOutKey);notify('از حساب خارج شدی.');}}catch{}
@@ -277,17 +328,18 @@ if(typeof document!=="undefined"){
   try{
    if(!info.lab)throw Error('این یادداشت لابراتور فعالی ندارد.');
    const mission=info.lab.mission;
-   const snapshot=await rpc('classroom_lab_state',{p_mission:mission});if(gen!==app.generation)return;
-   const moduleURL=new URL('coding-lab.js',assets);moduleURL.search=new URL(entry.src).search;
-   if(!window.ClassNotesCodingLab)await loadScript(moduleURL.href);
+   const moduleURL=assetURL('coding-lab.js');
+   const [snapshot]=await Promise.all([bootData?.lab?Promise.resolve(bootData.lab):rpc('classroom_lab_state',{p_mission:mission}),window.ClassNotesCodingLab?Promise.resolve():loadScript(moduleURL.href)]);
+   if(gen!==app.generation)return;
+   const getEndpoint=async()=>{const config=await publicConfig(assetURL('lab-service.json').href);return portalLabEndpoint(config.checkURL,app.config.supabaseUrl)};
+   // Public endpoint metadata is independent of Python and authentication.
+   void getEndpoint().catch(()=>{});
    if(gen!==app.generation)return;
    const owner=app.user.id;
    async function submit(body,signal){
-    const response=await fetch(new URL('lab-service.json',assets),{cache:'no-cache',signal});
-    if(!response.ok)throw Error('بررسی نهایی هنوز در دسترس نیست؛ با مدرس در میان بگذار.');
-    const config=await response.json();let endpoint;
-    try{endpoint=portalLabEndpoint(config.checkURL,app.config.supabaseUrl);}
-    catch{throw Error('بررسی نهایی هنوز فعال نشده است. می‌توانی کدت را محلی آزمایش و ذخیره کنی؛ XP پس از فعال‌شدن بررسی ثبت می‌شود.');}
+    let endpoint;
+    try{endpoint=await portalAbortable(getEndpoint(),signal);}
+    catch(error){if(error?.name==='AbortError')throw error;throw Error('بررسی نهایی هنوز فعال نشده است. می‌توانی کدت را محلی آزمایش و ذخیره کنی؛ XP پس از فعال‌شدن بررسی ثبت می‌شود.');}
     const {data,error}=await app.client.auth.getSession();
     if(error||gen!==app.generation||data.session?.user?.id!==owner)throw Error('حساب ورود تغییر کرده است؛ صفحه را بازخوانی کن.');
     const result=await fetch(endpoint.href,{method:'POST',headers:{'Content-Type':'application/json','apikey':app.config.publishableKey,'Authorization':'Bearer '+data.session.access_token},body:JSON.stringify(body),credentials:'omit',signal});
@@ -337,7 +389,7 @@ if(typeof document!=="undefined"){
   root.innerHTML='<p class="dash-empty-note" role="status">در حال دریافت مسیر یادگیری…</p>';
   try{
    const labs=active.flatMap(c=>c.lessons.filter(l=>l.lab));
-   const [module,snapshots]=await Promise.all([import(assetURL('dashboard-ui.mjs').href),Promise.allSettled(labs.map(l=>rpc('classroom_lab_state',{p_mission:l.lab.mission})))]);
+   const [module,snapshots]=await Promise.all([import(assetURL('dashboard-ui.mjs').href),bootData?.labs?Promise.resolve(labs.map(l=>bootData.labs[l.lab.mission]||{status:'rejected'})):Promise.allSettled(labs.map(l=>rpc('classroom_lab_state',{p_mission:l.lab.mission})))]);
    if(!alive()||!root.isConnected)return;
    let storage;try{storage=localStorage}catch{}
    module.mountDashboard(root,{user:owner,courses:active,results,study,states:Object.fromEntries(labs.map((l,i)=>[l.id,snapshots[i]])),url,assetURL:path=>assetURL(path).href,storage,isCurrent:alive,onRetry:dashboard});
@@ -375,7 +427,7 @@ if(typeof document!=="undefined"){
   window.ClassNotesMotion?.clearLesson();
   if(!app.user||app.serviceError||!member(info.course.id)){root.innerHTML=lessonTrail(info)+'<section class="shell portal-main" id="top"><header class="page-head"><h1>'+E(info.title)+'</h1></header><div data-lesson-gate></div></section>';renderGate($('[data-lesson-gate]'),info.course.id);return;}
   try{
-   const payload=await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
+   const payload=bootData?.lesson||await rpc('classroom_lesson',{p_lesson:lid});if(gen!==app.generation)return;
    root.innerHTML=payload.body;document.body.classList.add('classroom-loaded');
    portalMountLessonHero(root,info.hero_kind);
    // Hands-on coding belongs in the dedicated lab. Keep worked examples.
@@ -390,7 +442,8 @@ if(typeof document!=="undefined"){
    root.querySelector('.breadcrumb')?.remove();const navigation=document.createElement('div');navigation.innerHTML=lessonTrail(info)+lessonAccess(info);root.prepend(navigation);
    for(const image of $$('[data-private-path]',root)){const path=image.dataset.privatePath;privateBlob(path).then(u=>{if(gen===app.generation&&image.isConnected)image.src=u;}).catch(()=>{if(gen===app.generation&&image.isConnected)image.alt+=' — تصویر دریافت نشد؛ صفحه را دوباره باز کن.';});}
    $$('[data-private-download]',root).forEach(a=>a.addEventListener('click',async e=>{e.preventDefault();if(a.dataset.downloading==='true')return;const children=Array.from(a.childNodes);a.dataset.downloading='true';a.setAttribute('aria-disabled','true');a.textContent='در حال دریافت…';try{const u=await privateBlob(a.dataset.privateDownload);if(gen!==app.generation)return;const link=document.createElement('a');link.href=u;link.download=a.dataset.privateDownload.split('/').pop();document.body.append(link);link.click();link.remove();}catch(err){window.alert(a.dataset.privateDownload.endsWith('.ipynb')?'دریافت نوت‌بوک کامل نشد. اتصال را بررسی و دوباره تلاش کن؛ اگر ادامه داشت، با مدرس در میان بگذار.':friendly(err));}finally{a.replaceChildren(...children);delete a.dataset.downloading;a.removeAttribute('aria-disabled');}}));
-   for(const path of payload.scripts||[]){const u=await privateBlob(path);if(gen!==app.generation)return;await loadScript(u);}
+   const scripts=await Promise.all((payload.scripts||[]).map(path=>privateBlob(path)));
+   for(const u of scripts){if(gen!==app.generation)return;await loadScript(u);}
    if(root.querySelector('[data-space3d]')){await loadScript(assetURL('space3d.js').href);if(gen!==app.generation)return;window.ClassNotesSpace?.refresh(root);}
    document.dispatchEvent(new CustomEvent('class-notes-user',{detail:{userId:app.user.id}}));
    worksheet();recordStudy(info);window.ClassNotesMotion?.refresh(root);
