@@ -322,7 +322,7 @@ if(typeof document!=="undefined"){
    module.mountDashboard(root,{user:owner,courses:active,results,study,states:Object.fromEntries(labs.map((l,i)=>[l.id,snapshots[i]])),url,assetURL:path=>assetURL(path).href,storage,isCurrent:alive,onRetry:dashboard});
    const reviewCard=document.createElement('section');reviewCard.className='dash-personal-review';
    reviewCard.innerHTML='<div><h2>دفتر مرور شخصی</h2><p data-review-count>موضوعات و یادداشت‌هایت را در یک جای مستقل مرور کن.</p></div><a href="'+E(url('review/'))+'">رفتن به دفتر مرور ←</a>';root.querySelector('.dash-continuation')?.after(reviewCard);
-   if(reviewCard.isConnected)void rpc('classroom_review_state').then(value=>{if(alive()&&reviewCard.isConnected){const count=(value?.entries||[]).filter(e=>e.due).length;reviewCard.querySelector('p').textContent=count?fa(count)+' موضوع برای مرور آماده است.':'موضوع تازه‌ای اضافه کن یا یادداشت‌های خودت را ببین.';}}).catch(()=>{});
+   if(reviewCard.isConnected)void rpc('classroom_review_summary').then(value=>{if(alive()&&reviewCard.isConnected){const count=Number(value?.due_count)||0;reviewCard.querySelector('p').textContent=count?fa(count)+' موضوع برای مرور آماده است.':'موضوع تازه‌ای اضافه کن یا یادداشت‌های خودت را ببین.';}}).catch(()=>{});
    if(other.length){const section=document.createElement('section');section.className='membership-section';section.innerHTML='<div class="section-heading"><h2>عضویت و درخواست دسترسی</h2></div>';
     for(const c of other){const item=document.createElement('article');item.innerHTML=`<h3 dir="auto">${E(c.display_title||c.title)}</h3><div data-course-gate></div>`;section.append(item);renderGate($('[data-course-gate]',item),c.id);}root.append(section);
    }
