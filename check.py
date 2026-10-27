@@ -51,6 +51,13 @@ review=DIST/'review/index.html'
 assert review.exists() and 'data-page="review"' in review.read_text() and 'data-review-root' in review.read_text(),'Missing authenticated personal notebook route'
 for asset in ['review.mjs','review.css']:
  assert (DIST/'assets'/asset).exists(),('Missing review dependency',asset)
+notices=DIST/'notifications/index.html'
+assert notices.exists() and 'data-page="notifications"' in notices.read_text() and 'data-notifications-page' in notices.read_text(),'Missing authenticated notifications route'
+for asset in ['notifications.mjs','notifications.css']:
+ assert (DIST/'assets'/asset).exists(),('Missing notification dependency',asset)
+for p in pages:
+ assert 'notifications.css' in p.read_text(),('Missing shared notification styles',p)
+assert not (DIST/'classroom_notice_private').exists(),'Notification server tables cannot ship publicly'
 assert not any('reviewbank' in p.read_text() for p in DIST.rglob('*') if p.is_file() and p.suffix in ['.js','.mjs','.json','.html']), 'Private retrieval bank leaked'
 for p in DIST.rglob('*'):
  if p.is_file() and p.suffix in ['.json','.js','.mjs','.html','.py']:

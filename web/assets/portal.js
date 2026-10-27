@@ -86,7 +86,7 @@ if(typeof document!=="undefined"){
  const catalog=JSON.parse($('#catalog-data').textContent),fa=n=>Number(n).toLocaleString('fa-IR'),url=p=>new URL(p,base).href;
  const num=n=>Number(n).toLocaleString('en-US',{useGrouping:false}),score=(n,m)=>'<bdi dir="ltr">'+num(n)+' / '+num(m)+'</bdi>',blankLabel=i=>String.fromCharCode(65+i);
  const app={client:null,user:null,state:null,generation:0,serviceError:null};window.Classroom=app;
- let reviewUI=null,reviewGeneration=0,presence=null,presenceTicket=0,accountUI=null,authReady=false,authFailed=false,authBusy=false,manualSignOut=false,beforeSignOut=null,toastTimer;
+ let noticeUI=null,noticeTicket=0,reviewUI=null,reviewGeneration=0,presence=null,presenceTicket=0,accountUI=null,authReady=false,authFailed=false,authBusy=false,manualSignOut=false,beforeSignOut=null,toastTimer;
  const objectURLs=new Set(),privateDownloads=new Map();let lastUser=null,initializing=true;
  function status(el,text,error=false){if(el){el.textContent=text;el.dataset.error=String(error);}}
  function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
@@ -100,6 +100,7 @@ if(typeof document!=="undefined"){
  function clearObjects(){for(const u of objectURLs)URL.revokeObjectURL(u);objectURLs.clear();privateDownloads.clear();}
  function authUI(){
   accountUI?.update({user:app.user,ready:authReady,error:authFailed,busy:authBusy,teacher:!!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active')});
+  if(noticeUI){$$('[data-notification-anchor]').forEach(anchor=>noticeUI.attach(anchor));noticeUI.setBusy(!!authBusy);}
   $$('[data-signin]').forEach(b=>{b.disabled=!authReady||authFailed||!!authBusy;});
   $$('[data-signout]').forEach(b=>{b.disabled=!!authBusy;});
   $$('[data-account-intro-guest]').forEach(el=>{el.hidden=!authReady||authFailed||!!app.user;});
@@ -111,10 +112,10 @@ if(typeof document!=="undefined"){
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
  async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;noticeTicket++;noticeUI?.dispose();noticeUI=null;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
   if(!initializing&&old!==next){
-   const privatePage=['lesson','lab','quiz','dashboard','instructor','course','review'].includes(page);
+   const privatePage=['lesson','lab','quiz','dashboard','instructor','course','review','notifications'].includes(page);
    if(old&&privatePage)$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';
    if(manualSignOut)return;
    if(old&&next){location.reload();return;}
@@ -128,6 +129,7 @@ if(typeof document!=="undefined"){
   const nav=$('.nav-menu');nav?.addEventListener('click',()=>{const expanded=nav.getAttribute('aria-expanded')!=='true';nav.setAttribute('aria-expanded',String(expanded));$('#portal-nav').classList.toggle('is-open',expanded);});
   $$('#portal-nav a').forEach(a=>a.addEventListener('click',()=>{$('#portal-nav').classList.remove('is-open');nav?.setAttribute('aria-expanded','false');}));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#portal-nav').classList.remove('is-open');nav?.setAttribute('aria-expanded','false');}});
+  document.addEventListener('classroom-panel-open',()=>{$('#portal-nav')?.classList.remove('is-open');nav?.setAttribute('aria-expanded','false');});
   $$('[data-login-link]').forEach(a=>{a.href=loginURL();});
   const current=new URL(location.href),hash=new URLSearchParams(current.hash.slice(1));
   const returned=current.searchParams.has('code'),oauthError=current.searchParams.has('error')||hash.has('error');
@@ -164,7 +166,7 @@ if(typeof document!=="undefined"){
      confirm:result=>accountUI.confirmUnsaved(result),isCurrent,
      signOut:()=>{manualSignOut=true;return app.client.auth.signOut({scope:'local'});}
     });
-     if(done){onUser(null);notify('از حساب خارج شدی.');if(['lesson','lab','quiz','dashboard','instructor','course','review'].includes(page)){try{sessionStorage.setItem('class-notes-signout:'+base.pathname,'1');}catch{}location.replace(url('index.html'));}}
+     if(done){onUser(null);notify('از حساب خارج شدی.');if(['lesson','lab','quiz','dashboard','instructor','course','review','notifications'].includes(page)){try{sessionStorage.setItem('class-notes-signout:'+base.pathname,'1');}catch{}location.replace(url('index.html'));}}
     }catch{notify('خروج از حساب انجام نشد؛ اتصال را بررسی کن و دوباره تلاش کن.',true);}
     finally{manualSignOut=false;authBusy=false;if(main?.isConnected)main.inert=!!wasInert;authUI();accountUI?.focusAccount();}
    }});
@@ -193,12 +195,31 @@ if(typeof document!=="undefined"){
  async function mount(){
   if(page==='dashboard')await dashboard();
   if(page==='review')await reviewNotebook();
+  if(page==='notifications')notificationsPage();
   if(page==='course')course();
   if(page==='instructor')await teacher();
   if(page==='lesson')await loadLesson();
   if(page==='lab')await loadCodingLab();
   if(page==='quiz')await loadQuiz();
+  void mountNotices();
   void mountClassroomPresence();
+ }
+ function notificationsPage(){
+  const root=$('[data-notifications-page]');
+  if(!app.user||app.serviceError){renderGate(root,catalog[0].id);return;}
+  root.innerHTML='<p class="notice-empty" role="status">در حال دریافت اعلان‌ها…</p>';
+ }
+ async function mountNotices(){
+  if(!app.user||app.serviceError)return;
+  if(noticeUI){$$('[data-notification-anchor]').forEach(anchor=>noticeUI.attach(anchor));noticeUI.attachPage($('[data-notifications-page]'));void noticeUI.refresh();return;}
+  const ticket=++noticeTicket,gen=app.generation,owner=app.user.id,alive=()=>gen===app.generation&&ticket===noticeTicket&&app.user?.id===owner;
+  try{
+   const {mountNotifications}=await import(assetURL('notifications.mjs').href);if(!alive())return;
+   noticeUI=mountNotifications({rpc,userId:owner,baseURL:base.href,isCurrent:alive});
+   $$('[data-notification-anchor]').forEach(anchor=>noticeUI.attach(anchor));noticeUI.attachPage($('[data-notifications-page]'));void noticeUI.refresh(true);
+  }catch{if(alive()&&page==='notifications'){
+   const root=$('[data-notifications-page]');root.innerHTML='<section class="gate-card"><h1>اعلان‌ها دریافت نشد.</h1><button class="button-outline" type="button">تلاش دوباره</button></section>';root.querySelector('button').onclick=mountNotices;
+  }}
  }
  async function reviewNotebook(){
   const root=$('[data-review-root]'),gen=app.generation,ticket=++reviewGeneration;
@@ -288,7 +309,7 @@ if(typeof document!=="undefined"){
     saveDraft:(state,revision)=>rpc('classroom_lab_save',{p_state:state,p_revision:revision,p_owner:owner,p_mission:mission}),
     refresh:()=>rpc('classroom_lab_state',{p_mission:mission}),getAttempt:request=>rpc('classroom_lab_receipt',{p_request:request,p_mission:mission}),submit,tutorRequest,
     isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
-   if(gen===app.generation&&$('[data-lab-account]'))accountUI?.attach($('[data-lab-account]'),{compact:true});
+   if(gen===app.generation&&$('[data-lab-account]')){accountUI?.attach($('[data-lab-account]'),{compact:true});$$('[data-notification-anchor]').forEach(anchor=>noticeUI?.attach(anchor));}
   }catch(err){if(gen!==app.generation)return;host.innerHTML='<div class="gate-card"><h1>لابراتور دریافت نشد.</h1><p>'+E(friendly(err))+'</p><button type="button" class="button-outline" data-lab-retry>تلاش دوباره</button></div>';host.querySelector('button').onclick=loadCodingLab;}
  }
  function course(){
@@ -496,7 +517,7 @@ if(typeof document!=="undefined"){
     freeze();submitButton.disabled=true;clearTimeout(saveTimer);status(submitStatus,'در حال ثبت و بررسی پاسخ‌ها…');
     try{
      await queue;const record=await rpc('classroom_submit',{p_lesson:lid,p_version:quiz.version,p_answers:pending.answers,p_submission:pending.id});if(gen!==app.generation)return;
-     submitted=true;record.answers=pending.answers;storageSet(key+':pending',null);storageSet(key,{});
+     submitted=true;document.dispatchEvent(new CustomEvent('classroom-progress-changed'));record.answers=pending.answers;storageSet(key+':pending',null);storageSet(key,{});
      try{await rpc('classroom_draft',{p_lesson:lid,p_kind:'quiz',p_version:quiz.version,p_answers:{}});}catch{}
      await refreshState();if(gen!==app.generation)return;
      const summary=app.state?.results?.find(r=>r.lesson_id===lid&&Number(r.version)===Number(quiz.version))||{first_score:previousSummary?.first_score??(record.attempt_no===1?record.result.score:null),best_score:Math.max(Number(previousSummary?.best_score||0),Number(record.result.score)),last_score:record.result.score,attempts:record.attempt_no};

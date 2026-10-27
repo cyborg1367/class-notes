@@ -180,7 +180,7 @@ export async function mountReview(root,{rpc,url,userId,lessons=[],isCurrent=()=>
  }
  async function finish(answer){
   const entryId=practiceEntry.id;store('pending:'+entryId,{run,answer});
-  const result=await rpc('classroom_review_finish',{p_run:run.id,p_answer:answer});if(!alive())return;
+  const result=await rpc('classroom_review_finish',{p_run:run.id,p_answer:answer});if(!alive())return;doc.dispatchEvent(new win.CustomEvent('classroom-progress-changed'));
   view.querySelectorAll('input,button[data-hint],button[data-skip],button[type="submit"],button[data-reread]').forEach(el=>{el.disabled=true;el.dataset.unavailable='true'});
   $('[data-answer-form]').hidden=true;$('[data-hint-text]').hidden=true;if($('[data-reread]'))$('[data-reread]').hidden=true;$('#rv-question-title').textContent=practiceEntry.title;
   const selected=run.question.options[Number(result.answer)],learning=conceptFor(practiceEntry)?.learning||{},draft=stored('reflection:'+run.id);

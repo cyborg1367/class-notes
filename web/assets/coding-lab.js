@@ -260,7 +260,7 @@ async function mount(root,options){
    if(!alive())return;
    if(result?.status==='running'){experience.showFeedback({code:'CHECK_PENDING'},'error',checkedStage,returnPoint);return}
    if(!result?.snapshot||!['passed','failed','error'].includes(result.status))throw Error('INVALID_SERVER_RESPONSE');
-   applyTrusted(result.snapshot);pending=null;persist();
+   applyTrusted(result.snapshot);document.dispatchEvent(new CustomEvent('classroom-progress-changed'));pending=null;persist();
    if(result.status!=='passed')experience.showFeedback(result.feedback,result.status,checkedStage,returnPoint);
    else if(!Number(result.xp_added))experience.showFeedback({code:'ALREADY_PASSED'},'passed',checkedStage,returnPoint);
    if(result.status==='passed'&&Number(result.xp_added)>0){experience.rememberFeedback({code:'PASSED'},'passed',checkedStage);showCelebration(task,Number(result.xp_added),xpBefore);}

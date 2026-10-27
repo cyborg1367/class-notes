@@ -25,7 +25,7 @@ export function accountMarkup({ user, ready, error, busy, teacher }, urls, id, c
     if (!user)
         return `<button class="account-signin" type="button" data-account-signin ${busy ? 'disabled' : ''} aria-label="ورود با Google">${google}<span class="account-signin-full">ورود با <bdi lang="en">Google</bdi></span><span class="account-signin-short" aria-hidden="true">ورود</span></button>`;
     const person = accountIdentity(user), photo = person.avatar ? `<img src="${escape(person.avatar)}" referrerpolicy="no-referrer" alt="" decoding="async">` : '';
-    return `${compact ? '' : `<a class="account-dashboard" href="${escape(urls.dashboard)}">داشبورد من</a>`}<button class="account-trigger" type="button" data-account-trigger aria-label="منوی حساب ${escape(person.name)}" aria-haspopup="menu" aria-expanded="false" aria-controls="${id}" ${busy ? 'disabled' : ''}><span class="account-avatar" aria-hidden="true"><span>${escape(person.initial)}</span>${photo}</span><span class="account-trigger-name">${escape(person.name.split(/\s+/)[0])}</span>${chevron}</button>
+    return `${compact ? '' : `<a class="account-dashboard" href="${escape(urls.dashboard)}">داشبورد من</a>`}<span data-notification-anchor></span><button class="account-trigger" type="button" data-account-trigger aria-label="منوی حساب ${escape(person.name)}" aria-haspopup="menu" aria-expanded="false" aria-controls="${id}" ${busy ? 'disabled' : ''}><span class="account-avatar" aria-hidden="true"><span>${escape(person.initial)}</span>${photo}</span><span class="account-trigger-name">${escape(person.name.split(/\s+/)[0])}</span>${chevron}</button>
  <section class="account-popover" id="${id}" aria-label="حساب کاربری" hidden><div class="account-person"><strong dir="auto">${escape(person.name)}</strong><bdi dir="ltr">${escape(person.email)}</bdi></div><div class="account-menu-items" role="menu" aria-label="عملیات حساب"><a class="account-menu-dashboard" role="menuitem" tabindex="-1" href="${escape(urls.dashboard)}">${dashboardIcon}داشبورد من</a><a role="menuitem" tabindex="-1" href="${escape(urls.account)}">${userIcon}حساب کاربری</a>${urls.review ? `<a role="menuitem" tabindex="-1" href="${escape(urls.review)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 5c4-2 6-1 9 1 3-2 5-3 9-1v15c-4-2-6-1-9 1-3-2-5-3-9-1ZM12 6v15"/></svg>دفتر مرور شخصی</a>` : ''}${teacher ? `<a role="menuitem" tabindex="-1" href="${escape(urls.teacher)}">${dashboardIcon}پنل مدرس</a>` : ''}<button class="account-exit" type="button" role="menuitem" tabindex="-1" data-account-signout ${busy ? 'disabled' : ''}>${exitIcon}<span>${busy === 'out' ? 'در حال خروج…' : 'خروج از حساب'}</span></button></div></section>`;
 }
 export async function saveBeforeSignOut({ save, confirm, isCurrent, signOut, timeout = 8000 }) {
@@ -59,7 +59,7 @@ export function mountAccountUI({ doc = document, win = window, urls, onSignIn, o
     function close(focus = false) { if (!active)
         return; const { root, menu } = active; active = null; menu.hidden = true; const trigger = root.querySelector('[data-account-trigger]'); trigger?.setAttribute('aria-expanded', 'false'); if (focus)
         trigger?.focus(); }
-    function open(root, last = false) { close(); const menu = root.querySelector('.account-popover'); if (!menu)
+    function open(root, last = false) { close(); doc.dispatchEvent(new win.CustomEvent('classroom-panel-open',{detail:{kind:'account'}})); const menu = root.querySelector('.account-popover'); if (!menu)
         return; menu.hidden = false; root.querySelector('[data-account-trigger]').setAttribute('aria-expanded', 'true'); active = { root, menu }; place(); const list = items(menu); (last ? list.at(-1) : list[0])?.focus(); }
     function render(root) { const { id, compact } = roots.get(root); root.dataset.authState = !state.ready ? 'loading' : state.user ? 'member' : state.error ? 'error' : 'guest'; root.setAttribute('aria-busy', String(!state.ready || !!state.busy)); root.innerHTML = accountMarkup(state, urls, id, compact); root.querySelector('.account-avatar img')?.addEventListener('error', event => event.currentTarget.remove(), { once: true }); }
     function attach(anchor, { compact = false } = {}) { const existing = [...roots.keys()].find(root => root.parentElement === anchor); if (existing)
@@ -134,6 +134,8 @@ export function mountAccountUI({ doc = document, win = window, urls, onSignIn, o
     } }
     function focusin(event) { if (active && !active.root.contains(event.target))
         close(); }
+    function otherPanel(event){if(event.detail?.kind!=='account')close();}
+    doc.addEventListener('classroom-panel-open',otherPanel);
     doc.addEventListener('click', click);
     doc.addEventListener('keydown', keydown);
     doc.addEventListener('focusin', focusin);
@@ -148,5 +150,5 @@ export function mountAccountUI({ doc = document, win = window, urls, onSignIn, o
     } return new Promise(resolve => { function finish(value) { node.close(); node.remove(); dialog = null; resolve(value); } node.querySelector('[data-stay]').onclick = () => finish(false); node.querySelector('[data-leave]').onclick = () => finish(true); node.addEventListener('cancel', event => { event.preventDefault(); finish(false); }); node.showModal(); node.querySelector('[data-stay]').focus(); }); }
     update({});
     return { update, attach, close, confirmUnsaved, focusAccount() { const all = [...roots.keys()]; const root = doc.body.classList.contains('lab-notebook-ready') ? all.find(root => roots.get(root).compact) || all[0] : all[0]; root?.querySelector('[data-account-trigger],[data-account-signin],a')?.focus(); }, dispose() { close(); dialog?.close(); dialog?.remove(); for (const root of roots.keys())
-            root.remove(); roots.clear(); doc.removeEventListener('click', click); doc.removeEventListener('keydown', keydown); doc.removeEventListener('focusin', focusin); win.removeEventListener('resize', place); win.removeEventListener('scroll', place, true); } };
+            root.remove(); roots.clear(); doc.removeEventListener('classroom-panel-open',otherPanel); doc.removeEventListener('click', click); doc.removeEventListener('keydown', keydown); doc.removeEventListener('focusin', focusin); win.removeEventListener('resize', place); win.removeEventListener('scroll', place, true); } };
 }

@@ -13,6 +13,8 @@ Students can read course material, practice code in their browser, submit lab mi
 - **Practice Python:** write code in an editor with syntax highlighting and an adjustable output console.
 - **Complete guided missions:** explore a scenario and its dataset, solve tasks, and receive diagnostic feedback with optional hints.
 - **Earn XP:** receive credit for successfully graded missions and see progress in the dashboard.
+- **Review with a purpose:** revisit evidence from earlier work, read a focused explanation, answer a fresh question, and keep a private reflection in the personal review notebook.
+- **Follow relevant updates:** use a quiet in-site notification inbox for unfinished labs, due reviews, newly published material, and class access. Read state, postponed reminders, and category preferences belong to each student's account.
 
 ### Current labs
 
@@ -20,6 +22,7 @@ Students can read course material, practice code in their browser, submit lab mi
 | --- | --- | ---: | ---: |
 | Greenhouse Detective | Dataset shapes, vector distances, nearest neighbors, and comparing queries | 6 | 300 |
 | SMS Detective | Labeled examples, neighbor voting, majority decisions, and k-nearest-neighbor classification | 6 | 300 |
+| Before Release | Independent train/test splits, prediction, evaluation metrics, confusion matrices, and decision regions | 6 | 300 |
 
 The SMS lab uses synthetic messages and prepared numeric features. Students work with those features rather than implementing a text-processing pipeline.
 
@@ -49,9 +52,10 @@ GitHub Pages hosts the frontend; it does not run Python grading or provide a tru
 │   ├── assets/         # Styles, scripts, fonts, and public configuration
 │   └── ...             # Account, course, lesson, and lab pages
 ├── build.py            # Validates public configuration and creates dist/
+├── build_assets.py     # Shared asset fingerprints and canonical catalog rendering
 ├── check.py            # Checks generated pages and public-output safety
-├── README.md           # English project overview
-└── README.fa.md        # Persian instructor guide
+├── tests/              # Build and public runtime contracts
+└── README.md           # English project overview
 ```
 
 `dist/` is generated output and is not committed. Instructor-only server code, migrations, reference solutions, and private test packages are intentionally excluded from the public repository.
@@ -120,6 +124,10 @@ Open <http://localhost:8000>. Serve **`dist/`**, rather than opening HTML files 
 
 The workflow can also be started manually from the **Actions** tab. Backend deployment is separate: publishing the static site does not apply SQL migrations or deploy a Supabase Edge Function.
 
+### Notification releases
+
+The notification backend is installed through the matching private migration package. It uses existing Supabase services and requires no browser-push permission or additional provider. Meaningful content releases are announced through an authorized publication RPC after the content is ready; routine deploys and asset fingerprint changes do not generate announcements. Existing lessons form a quiet baseline on installation. Reading a notice never completes a mission or grants XP.
+
 ## Security boundaries
 
 - **Keep secrets on the server.** Never place Supabase secret/service-role keys, E2B API keys, or other credentials in `web/`, frontend configuration, or public Git history.
@@ -143,3 +151,4 @@ The frontend uses PKCE authentication and constrains the configured grading endp
 This project is designed for an instructor-managed classroom. The public repository provides the website, not a complete one-command backend installation. A working production classroom also needs its private materials, membership policies, database functions, storage rules, grading service, and provider credentials configured by the instructor.
 
 Third-party assets retain their respective licenses and notices; see the bundled dependency directories for details.
+
