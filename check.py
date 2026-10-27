@@ -47,6 +47,11 @@ print(f'Checked {len(pages)} RTL routes, local links/assets, and public/private 
 assert not (DIST/"server").exists(), "Trusted server code must not ship as website content"
 assert not (DIST/"supabase").exists(), "Edge Function source must stay in the instructor package"
 assert not any(p.name.startswith('.env') for p in DIST.rglob('*')), 'Do not publish environment files'
+review=DIST/'review/index.html'
+assert review.exists() and 'data-page="review"' in review.read_text() and 'data-review-root' in review.read_text(),'Missing authenticated personal notebook route'
+for asset in ['review.mjs','review.css']:
+ assert (DIST/'assets'/asset).exists(),('Missing review dependency',asset)
+assert not any('reviewbank' in p.read_text() for p in DIST.rglob('*') if p.is_file() and p.suffix in ['.js','.mjs','.json','.html']), 'Private retrieval bank leaked'
 for p in DIST.rglob('*'):
  if p.is_file() and p.suffix in ['.json','.js','.mjs','.html','.py']:
   assert not re.search(r'sb_secret_[A-Za-z0-9_-]{20,}',p.read_text()), 'A server-only key is present in the public build'

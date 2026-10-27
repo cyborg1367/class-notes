@@ -29,6 +29,12 @@ test('identity metadata is escaped and image URLs cannot use executable or crede
     assert.ok(html.includes('&lt;img'));
     assert.equal(accountIdentity({ email: 'student@example.com' }).name, 'student');
 });
+test('signed-in compact lab accounts can reach the independent review notebook',()=>{
+ const html=accountMarkup({ready:true,user},{...urls,review:'https://class.test/notes/review/'},'lab-menu',true);
+ assert.ok(html.includes('دفتر مرور شخصی'));
+ assert.ok(html.includes('href="https://class.test/notes/review/"'));
+ assert.ok(!accountMarkup({ready:true},{...urls,review:'https://class.test/notes/review/'},'guest').includes('دفتر مرور شخصی'));
+});
 test('OAuth return targets stay inside the site and account callbacks fall back to dashboard', () => {
     const base = new URL('https://class.test/notes/');
     for (const target of ['https://evil.test/', '/other/', 'https://class.test/notes/account/', 'https://class.test/notes/%2e%2e/private'])

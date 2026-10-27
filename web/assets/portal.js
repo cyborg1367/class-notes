@@ -86,7 +86,7 @@ if(typeof document!=="undefined"){
  const catalog=JSON.parse($('#catalog-data').textContent),fa=n=>Number(n).toLocaleString('fa-IR'),url=p=>new URL(p,base).href;
  const num=n=>Number(n).toLocaleString('en-US',{useGrouping:false}),score=(n,m)=>'<bdi dir="ltr">'+num(n)+' / '+num(m)+'</bdi>',blankLabel=i=>String.fromCharCode(65+i);
  const app={client:null,user:null,state:null,generation:0,serviceError:null};window.Classroom=app;
- let presence=null,presenceTicket=0,accountUI=null,authReady=false,authFailed=false,authBusy=false,manualSignOut=false,beforeSignOut=null,toastTimer;
+ let reviewUI=null,reviewGeneration=0,presence=null,presenceTicket=0,accountUI=null,authReady=false,authFailed=false,authBusy=false,manualSignOut=false,beforeSignOut=null,toastTimer;
  const objectURLs=new Set(),privateDownloads=new Map();let lastUser=null,initializing=true;
  function status(el,text,error=false){if(el){el.textContent=text;el.dataset.error=String(error);}}
  function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
@@ -111,10 +111,10 @@ if(typeof document!=="undefined"){
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
  async function refreshState(){const gen=app.generation;try{const state=await rpc('classroom_state');if(gen===app.generation){app.state=state;app.serviceError=null;authUI();}}catch(err){if(gen===app.generation){app.state=null;app.serviceError=err;}}}
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;presenceTicket++;presence?.dispose();presence=null;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
   if(!initializing&&old!==next){
-   const privatePage=['lesson','lab','quiz','dashboard','instructor','course'].includes(page);
+   const privatePage=['lesson','lab','quiz','dashboard','instructor','course','review'].includes(page);
    if(old&&privatePage)$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';
    if(manualSignOut)return;
    if(old&&next){location.reload();return;}
@@ -147,7 +147,7 @@ if(typeof document!=="undefined"){
     fetch(new URL('auth-config.json',assets),{cache:'no-cache',credentials:'same-origin'}).then(response=>{if(!response.ok)throw Error('CONFIG_UNAVAILABLE');return response.json();}),
     loadScript(assetURL('vendor/supabase/supabase.js').href)
    ]);
-   accountUI=mountAccountUI({urls:{account:url('account/'),dashboard:url('dashboard/'),teacher:url('instructor/')},onSignIn:async target=>{
+   accountUI=mountAccountUI({urls:{account:url('account/'),dashboard:url('dashboard/'),review:url('review/'),teacher:url('instructor/')},onSignIn:async target=>{
     if(!authReady||authBusy||!app.client||app.user)return;
     authBusy='in';authUI();notify('در حال رفتن به Google…');
     try{const destination=target?.matches('[data-login-link]')?new URL(target.getAttribute('href'),base).searchParams.get('next'):page==='account'?next:['home','about'].includes(page)?url('dashboard/'):location.href;
@@ -164,7 +164,7 @@ if(typeof document!=="undefined"){
      confirm:result=>accountUI.confirmUnsaved(result),isCurrent,
      signOut:()=>{manualSignOut=true;return app.client.auth.signOut({scope:'local'});}
     });
-     if(done){onUser(null);notify('از حساب خارج شدی.');if(['lesson','lab','quiz','dashboard','instructor','course'].includes(page)){try{sessionStorage.setItem('class-notes-signout:'+base.pathname,'1');}catch{}location.replace(url('index.html'));}}
+     if(done){onUser(null);notify('از حساب خارج شدی.');if(['lesson','lab','quiz','dashboard','instructor','course','review'].includes(page)){try{sessionStorage.setItem('class-notes-signout:'+base.pathname,'1');}catch{}location.replace(url('index.html'));}}
     }catch{notify('خروج از حساب انجام نشد؛ اتصال را بررسی کن و دوباره تلاش کن.',true);}
     finally{manualSignOut=false;authBusy=false;if(main?.isConnected)main.inert=!!wasInert;authUI();accountUI?.focusAccount();}
    }});
@@ -192,12 +192,27 @@ if(typeof document!=="undefined"){
  }
  async function mount(){
   if(page==='dashboard')await dashboard();
+  if(page==='review')await reviewNotebook();
   if(page==='course')course();
   if(page==='instructor')await teacher();
   if(page==='lesson')await loadLesson();
   if(page==='lab')await loadCodingLab();
   if(page==='quiz')await loadQuiz();
   void mountClassroomPresence();
+ }
+ async function reviewNotebook(){
+  const root=$('[data-review-root]'),gen=app.generation,ticket=++reviewGeneration;
+  reviewUI?.dispose();reviewUI=null;beforeSignOut=null;
+  const active=catalog.filter(c=>member(c.id));
+  if(!app.user||app.serviceError||!active.length){renderGate(root,catalog[0].id);return;}
+  const owner=app.user.id,alive=()=>gen===app.generation&&ticket===reviewGeneration&&app.user?.id===owner;
+  try{
+   const {mountReview}=await import(assetURL('review.mjs').href);if(!alive())return;
+   let storage;try{storage=localStorage}catch{}
+   const ui=await mountReview(root,{rpc,url,userId:owner,lessons:active.flatMap(c=>c.lessons),storage,isCurrent:alive});
+   if(!alive()){ui.dispose();return;}
+   reviewUI=ui;beforeSignOut=()=>ui.prepareSignOut();
+  }catch{if(alive()){root.innerHTML='<section class="gate-card"><h1>دفتر مرور دریافت نشد.</h1><button class="button-outline" data-review-retry>تلاش دوباره</button></section>';root.querySelector('button').onclick=reviewNotebook;}}
  }
  async function mountClassroomPresence(){
   const ticket=++presenceTicket,gen=app.generation;presence?.dispose();presence=null;
@@ -305,6 +320,9 @@ if(typeof document!=="undefined"){
    if(!alive()||!root.isConnected)return;
    let storage;try{storage=localStorage}catch{}
    module.mountDashboard(root,{user:owner,courses:active,results,study,states:Object.fromEntries(labs.map((l,i)=>[l.id,snapshots[i]])),url,assetURL:path=>assetURL(path).href,storage,isCurrent:alive,onRetry:dashboard});
+   const reviewCard=document.createElement('section');reviewCard.className='dash-personal-review';
+   reviewCard.innerHTML='<div><h2>دفتر مرور شخصی</h2><p data-review-count>موضوعات و یادداشت‌هایت را در یک جای مستقل مرور کن.</p></div><a href="'+E(url('review/'))+'">رفتن به دفتر مرور ←</a>';root.querySelector('.dash-continuation')?.after(reviewCard);
+   if(reviewCard.isConnected)void rpc('classroom_review_state').then(value=>{if(alive()&&reviewCard.isConnected){const count=(value?.entries||[]).filter(e=>e.due).length;reviewCard.querySelector('p').textContent=count?fa(count)+' موضوع برای مرور آماده است.':'موضوع تازه‌ای اضافه کن یا یادداشت‌های خودت را ببین.';}}).catch(()=>{});
    if(other.length){const section=document.createElement('section');section.className='membership-section';section.innerHTML='<div class="section-heading"><h2>عضویت و درخواست دسترسی</h2></div>';
     for(const c of other){const item=document.createElement('article');item.innerHTML=`<h3 dir="auto">${E(c.display_title||c.title)}</h3><div data-course-gate></div>`;section.append(item);renderGate($('[data-course-gate]',item),c.id);}root.append(section);
    }
@@ -389,7 +407,7 @@ if(typeof document!=="undefined"){
     `${response?'<p>پاسخ ثبت‌شده: <bdi dir="auto">'+portalInline(response)+'</bdi></p>':'<p>پاسخی ثبت نشده بود.</p>'}${q?.options?.find(o=>o[0]===item.key)?'<p>پاسخ درست: '+portalInline(q.options.find(o=>o[0]===item.key)[1])+'</p>':''}`;
    return `<article class="result-item" data-outcome="${item.correct?'correct':'review'}"><div class="question-meta"><span>سؤال ${num(i+1)} · ${E(outcome)}</span><span>${score(item.score,item.maximum)}</span></div><h3>${E(item.skill)}</h3>${q?'<p>'+portalInline(q.stem)+'</p>'+portalQuizCode(q,item.parts):''}${answer}<p>${portalInline(item.explanation)}</p>${item.selected_feedback?'<p>'+portalInline(item.selected_feedback)+'</p>':''}<a href="${E(url(info.id+'/#'+item.review))}">مرور بخش مرتبط در یادداشت ←</a></article>`;
   }).join('');
-  return `<section class="quiz-result" tabindex="-1"><p class="eyebrow">نتیجهٔ ثبت‌شده · تلاش ${num(record.attempt_no)}</p><h2>${score(r.score,r.maximum)}</h2>${record.created_at?'<p>'+E(date(record.created_at))+'</p>':''}<p>این نتیجه مربوط به همین تلاش است. برای مرور، پاسخ هر سؤال و توضیح آن را ببین.</p>${summaryHTML(summary,r.maximum)}<p class="small-note">${r.practice_checks||r.hints_used?'تا زمان این ثبت: '+num(r.practice_checks||0)+' بررسی تمرینی و '+num(r.hints_used||0)+' دریافت راهنما برای این نسخه انجام شده است.':'برای این نسخه، استفاده‌ای از بررسی تمرینی یا راهنما تا زمان این ثبت گزارش نشده است.'} این شمارش تجمعی است؛ نمره به‌تنهایی نشان‌دهندهٔ تسلط مستقل نیست.</p><div class="result-items">${items}</div></section>`;
+  return `<section class="quiz-result" tabindex="-1"><p class="eyebrow">نتیجهٔ ثبت‌شده · تلاش ${num(record.attempt_no)}</p><h2>${score(r.score,r.maximum)}</h2>${record.created_at?'<p>'+E(date(record.created_at))+'</p>':''}<p>این نتیجه مربوط به همین تلاش است. برای مرور، پاسخ هر سؤال و توضیح آن را ببین.</p>${summaryHTML(summary,r.maximum)}<p class="small-note">${r.practice_checks||r.hints_used?'تا زمان این ثبت: '+num(r.practice_checks||0)+' بررسی تمرینی و '+num(r.hints_used||0)+' دریافت راهنما برای این نسخه انجام شده است.':'برای این نسخه، استفاده‌ای از بررسی تمرینی یا راهنما تا زمان این ثبت گزارش نشده است.'} این شمارش تجمعی است؛ نمره به‌تنهایی نشان‌دهندهٔ تسلط مستقل نیست.</p><div class="result-items">${items}</div><a class="button-outline" href="${E(url('review/?lesson='+encodeURIComponent(info.id)))}">مرور موضوعات این یادداشت ←</a></section>`;
  }
  async function loadQuiz(){
   const root=$('[data-quiz-root]'),notice=$('[data-page-status]'),info=lesson(lid),gen=app.generation;beforeSignOut=null;

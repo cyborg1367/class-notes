@@ -166,3 +166,8 @@ body[data-page="dashboard"] :is(a,button):focus-visible { outline:2px solid #365
  .dash-primary { padding-inline:9px; font-size:12px; }
  .dash-skills ul { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+/* Personal notebook entry, deliberately independent of trusted XP. */
+.dash-personal-review{display:flex;justify-content:space-between;align-items:center;gap:25px;margin:28px 0;padding:20px 24px;border:1px solid #9d9f8d;background:#fffdf54d;color:#253e35;}
+.dash-personal-review h2{font-size:21px;margin:0 0 5px;}.dash-personal-review p{font-size:14px;margin:0;}.dash-personal-review a{font-size:14px;color:#21665d;text-decoration:none;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;}
+@media(max-width:760px){.dash-personal-review{align-items:flex-start;padding:18px;gap:15px;flex-wrap:wrap;}.dash-personal-review h2{font-size:19px;}}
