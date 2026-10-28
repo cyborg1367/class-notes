@@ -8,8 +8,11 @@ icons and quiet information surfaces. Learning state remains server-owned.
 
 - `web/assets/paper-kit.css` is the final stylesheet in every page shell.
   It contains the shared tokens, components, page adaptations and breakpoints.
+- `web/assets/dashboard.css` owns the dashboard composition; its old oversized
+  layout and the duplicate dashboard override block have been consolidated.
 - `web/assets/paper-icons.mjs` is a pure SVG renderer. Icons have fixed geometry,
-  no image downloads, filters, fonts or external dependencies. They are
+  no bitmap downloads, fonts or external dependencies. Shallow CSS shadows
+  reinforce the layered paper edges without animation. Icons are
   decorative; links and controls retain their existing accessible names.
 - Static navigation icons are emitted directly in the HTML. Account menus,
   dashboard, notebook, notices and lab tools reuse the same icon renderer.
@@ -22,8 +25,9 @@ URL query to the shared icon module. Do not introduce independent asset versions
 | Element | Rule |
 | --- | --- |
 | Utility icons | 18–24 px; clear solid silhouettes |
-| Section marks | At most 28 px |
-| Achievement icons | 36 px with separate real text labels |
+| Section heading marks | 20–24 px |
+| Lab / notebook mini illustrations | 32–48 px; folds and paper layers retained |
+| Achievement icons | 56 px with separate real text labels |
 | Main surfaces | `#fffaf0`, thin `#d3cbb6` rules, 3–4 px corners |
 | Main action | `#18564e`; off-white text; shallow shadow |
 | Text | `#24241f`; secondary `#596253` |
@@ -40,6 +44,14 @@ three-point strip, active table of contents, copyable code, mathematical content
 and end-of-lesson resources. Reading prose remains 17 px (16 px on small screens).
 Lab code, highlighted overlay, line numbers and console remain 12 px; task prose
 remains 16 px. Editor line metrics and scroll ownership are not redefined.
+The code surfaces explicitly share one monospace family. A general form rule
+must never override the editor's invisible input layer or quiz code inputs.
+
+Bookmark state is indicated by both a coloured paper face and a visible tick;
+do not rely on setting the SVG root fill when child shapes have explicit fills.
+Both `aria-current="page"` and `aria-current="location"` receive active navigation
+styling. Course primary links paint their foreground and background together at
+the component scope so legacy transparent-button rules cannot hide the label.
 
 ## Responsive behavior
 
@@ -61,6 +73,14 @@ integration verification also exercises real modules through Linkedom with mocke
 RPCs: account lifecycle, all three lab stories/imports/tutor tabs/splitters,
 notebook recovery and notices. Static layout inspection uses WeasyPrint with
 emulated media widths; it is not a native browser screenshot or production test.
+The correction also evaluates 28 CSS cascade cases across 375, 768, 1100 and
+1440 px, including button states, editor font alignment, bookmarks and navigation.
+The earlier version reproduces a font-family failure under these checks.
+
+The release ZIP includes `preview/dashboard.html`, a self-contained visual
+preview rendered from the real component and CSS. Fonts and artwork are embedded.
+It uses explicitly fictional data and makes no authentication or server calls.
+Keep the preview outside the public repository when applying the update.
 
 Deployment follows the existing GitHub Pages pipeline. Merge the update's `web`
 and `docs` directories into the existing checkout without deleting other files.

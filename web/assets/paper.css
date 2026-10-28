@@ -90,7 +90,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .paper-course { padding-top: 28px; }
 .paper-course-hero { display: grid; grid-template-areas: "figure copy"; direction: ltr; grid-template-columns: minmax(0,1fr) minmax(0,1.45fr); gap: 60px; align-items: center; padding-block: 5px 65px; }
 .paper-course-copy { min-width: 0; grid-area: copy; direction: rtl; }
-.paper-course-copy h1.course-title { margin: 0 0 24px; font-size: clamp(30px,5.2vw,75px)!important; font-weight: 700; letter-spacing: -.035em; line-height: 1.25; direction: ltr; text-align: right; }
+.paper-course-copy h1.course-title { margin: 0 0 24px; font-size: clamp(30px,5.2vw,75px); font-weight: 700; letter-spacing: -.035em; line-height: 1.25; direction: ltr; text-align: right; }
 .paper-course-lead { font-size: clamp(25px,2.8vw,39px); font-weight: 700; line-height: 1.8; margin-bottom: 20px; }
 .paper-course-description { font-size: 18px; line-height: 2; max-width: 60ch; color: var(--ink-soft); }
 .paper-instructor { display: flex; align-items: center; gap: 13px; margin-top: 25px; font-size: 12px; color: var(--muted); }

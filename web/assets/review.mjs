@@ -1,4 +1,4 @@
-const {paperIcon}=await import(new URL('./paper-icons.mjs'+new URL(import.meta.url).search,import.meta.url));
+const {paperIcon,paperMark}=await import(new URL('./paper-icons.mjs'+new URL(import.meta.url).search,import.meta.url));
 // Private notebook data is supplied by authenticated RPCs; no answer bank ships here.
 const E=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Isolate array literals and Python identifiers inside Persian sentences.
@@ -26,7 +26,7 @@ export function reviewOutcome(result){
 export function latestReviewWriting(entries){
  return entries.flatMap(e=>[...(e.note?[e]:[]),...(e.last_reflection?.text?[{...e,note:e.last_reflection.text,updated_at:e.last_reflection.at,isReflection:true}]:[])]).sort((a,b)=>(Date.parse(b.updated_at)||0)-(Date.parse(a.updated_at)||0))[0];
 }
-const art=paperIcon('review','rv-cards');
+const art=paperMark('review','rv-cards');
 export async function mountReview(root,{rpc,url,userId,lessons=[],isCurrent=()=>true,storage,initialURL,win=root.ownerDocument.defaultView}){
  const doc=root.ownerDocument;
  let state={entries:[],concepts:[]},tab='due',search='',lesson='',busy=false,disposed=false,editor=null,run=null,queue=[],practiceEntry=null,context=null,reflection=null,prepared=false,pending=Promise.resolve();
