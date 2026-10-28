@@ -7,7 +7,7 @@ async function mount(root,options){
  if(!userId||!isCurrent())return;
  const assetURL=path=>{const u=new URL(path,assets);u.search=options.assetVersion||'?v=build';return u;};
  if(!options.lab?.model||!options.lab?.mission)throw Error('LAB_CATALOG_REQUIRED');
- const [model,{mountLayout},{mountExperience}]=await Promise.all([import(assetURL(options.lab.model)),import(assetURL('coding-lab-layout.mjs')),import(assetURL('coding-lab-experience.mjs'))]);
+ const [model,{mountLayout},{mountExperience},{paperIcon}]=await Promise.all([import(assetURL(options.lab.model)),import(assetURL('coding-lab-layout.mjs')),import(assetURL('coding-lab-experience.mjs')),import(assetURL('paper-icons.mjs'))]);
  if(!isCurrent())return;
  const {stages,dataset,bootstrap,normalize,available,highlight,missionId}=model;
  if(missionId!==options.lab.mission||options.snapshot?.mission&&options.snapshot.mission!==missionId)throw Error('LAB_CATALOG_MISMATCH');
@@ -42,7 +42,7 @@ async function mount(root,options){
    <p class="mission-action" data-action></p>
    <dl class="mission-io"><div><dt data-input-title></dt><dd data-input></dd></div><div><dt data-result-title></dt><dd data-result></dd></div></dl>
    <details class="mission-contract"><summary>یک مثال کوچک</summary><div class="mission-task-text" data-task></div><pre data-example dir="ltr" tabindex="0"></pre></details>
-   <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg>Hint</button>${options.tutorRequest?'<button type="button" class="lab-help-button" data-tutor-open>کمک آموزشی</button>':''}<span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
+   <div class="mission-task-actions"><button type="button" class="lab-hint-button" data-show-hints lang="en" dir="ltr">${paperIcon('hint')}Hint</button>${options.tutorRequest?'<button type="button" class="lab-help-button" data-tutor-open>کمک آموزشی</button>':''}<span class="mission-task-reward" data-task-reward lang="en" dir="ltr"></span></div>
    <div data-reflection hidden><label for="lab-explanation">پیش‌بینی و نتیجهٔ آزمایش تو</label><textarea id="lab-explanation" maxlength="3000" rows="3" placeholder="پیش از اجرا چه حدسی داشتی؟ پس از اجرا چه چیزی فهمیدی؟"></textarea></div>
    <div class="lab-feedback" data-feedback role="status" aria-live="polite" hidden></div>
    <button type="button" class="button-forest lab-next" data-next disabled>مرحلهٔ بعد ←</button>
@@ -60,7 +60,7 @@ async function mount(root,options){
   ${model.previewCode?'<section class="lab-evaluation-preview" data-evaluation-preview aria-label="خروجی تصویری ارزیابی" hidden></section>':''}
   <section class="mission-guide" id="lab-panel-guide" role="tabpanel" aria-labelledby="lab-tab-guide" tabindex="0" hidden>
    <p class="lab-panel-kicker">وقتی به کمک نیاز داری</p><h2>قدم بعدی را پیدا کن</h2>
-   <div class="mission-hints"><button type="button" data-hint class="lab-hint-button" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 13c0-2-2-2.5-2-5a5 5 0 0 1 10 0c0 2.5-2 3-2 5M7 13h6M8 16h4M10 1V0M3 3 2 2M17 3l1-1M1 8H0m20 0h-1"/></svg><span data-hint-label>Hint</span></button><span class="mission-hint-count" data-hint-count lang="en" dir="ltr"></span><div data-hints></div></div>
+   <div class="mission-hints"><button type="button" data-hint class="lab-hint-button" lang="en" dir="ltr">${paperIcon('hint')}<span data-hint-label>Hint</span></button><span class="mission-hint-count" data-hint-count lang="en" dir="ltr"></span><div data-hints></div></div>
    <details class="mission-story"><summary>${E(meta.storyTitle)}</summary>${meta.story}</details>
    <details class="mission-contract"><summary>چطور با این محیط کار کنم؟</summary><ol class="mission-guide-steps"><li>در تابع خواسته‌شده، <code>pass</code> را با راه‌حل خودت جایگزین کن.</li><li>تابع باید جواب را با <code>return</code> برگرداند. خط <code>print(...)</code> زیر آن، جواب را در خروجی نشان می‌دهد.</li><li>«اجرای کد» را بزن و خروجی یا خطا را ببین. می‌توانی چند بار کدت را تغییر بدهی و امتحان کنی.</li><li>وقتی آماده بودی، «بررسی پاسخ» را بزن تا مرحله ارزیابی شود و XP بگیری.</li></ol></details>
    <a class="quiet-link" href="${E(lessonURL)}">مرور جزوه ←</a>
@@ -70,9 +70,9 @@ async function mount(root,options){
  </aside>
  <div class="lab-panel-resizer" data-panel-resizer role="separator" aria-label="تغییر عرض پنل راهنما و دستیار" aria-orientation="vertical" tabindex="0"></div>
  <section class="lab-editor-panel" aria-label="ویرایشگر و خروجی">
-  <div class="lab-editor-toolbar"><span class="lab-file" lang="en" dir="ltr"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2h6l4 4v12H5ZM11 2v5h4M8 10h4m-4 3h4"/></svg>${E(meta.filename)}<span class="lab-file-dot" aria-hidden="true"></span></span>
+  <div class="lab-editor-toolbar"><span class="lab-file" lang="en" dir="ltr">${paperIcon('note')}${E(meta.filename)}<span class="lab-file-dot" aria-hidden="true"></span></span>
 
-   <div class="lab-actions"><button class="lab-run-button" data-run type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6Z"/></svg>اجرای کد</button><button class="lab-run-button" data-stop type="button" hidden disabled>توقف</button><button class="button-forest" data-check type="button">بررسی پاسخ</button></div>
+   <div class="lab-actions"><button class="lab-run-button" data-run type="button">${paperIcon('play')}اجرای کد</button><button class="lab-run-button" data-stop type="button" hidden disabled>توقف</button><button class="button-forest" data-check type="button">${paperIcon('check')}بررسی پاسخ</button></div>
    <button class="lab-last-feedback" data-last-feedback type="button" hidden>آخرین بازخورد</button>
    <details class="lab-tools" data-tools><summary aria-label="ابزارها و وضعیت ذخیره" title="ابزارها و وضعیت ذخیره"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="lab-save-alert" data-save-alert hidden aria-label="ذخیره نیاز به بررسی دارد">!</span></summary><div class="lab-tools-menu"><p data-save role="status" aria-live="polite"></p><button data-download type="button">دانلود کد</button><button data-imports type="button">افزودن importهای لازم</button><button data-reset type="button">بازنشانی این مرحله</button><button data-cloud-load type="button">دریافت نسخهٔ حساب</button><button data-refresh type="button">همگام‌سازی پیشرفت</button><button data-activate type="button">راه‌اندازی Python</button><a href="${E(new URL('account/',new URL('../',assets)).href)}">حساب کاربری</a><a href="${E(new URL('dashboard/',new URL('../',assets)).href)}">داشبورد</a><a data-lab-teacher-link hidden href="${E(new URL('instructor/',new URL('../',assets)).href)}">پنل مدرس</a></div></details>   <button class="lab-tool-button lab-focus-button" data-focus type="button" aria-pressed="false" title="فضای بیشتر برای کدنویسی"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg><span data-focus-label>تمرکز</span></button>
   </div>

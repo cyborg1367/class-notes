@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140" viewBox="0 0 220 140" fill="none">
- <g stroke="#b8b29b" stroke-width=".7" stroke-dasharray="4 5" opacity=".6"><path d="M20 25H207M20 51H207M20 77H207M20 103H207M45 19V120M82 19V120M119 19V120M156 19V120M193 19V120"/></g>
- <g stroke="#6b6e59" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12v109h192M15 19l4-7 4 7m181 98 7 4-7 4"/></g>
- <path d="M20 114Q37 95 49 84T80 62T112 45T147 34T180 28L201 26" stroke="#21665d" stroke-width="1.8" stroke-linecap="round"/>
- <g fill="#f6f3e9" stroke="#21665d" stroke-width="1.4"><circle cx="49" cy="84" r="2.7"/><circle cx="80" cy="62" r="2.7"/><circle cx="112" cy="45" r="2.7"/><circle cx="147" cy="34" r="2.7"/><circle cx="180" cy="28" r="2.7"/><circle cx="201" cy="26" r="2.7"/></g>
- <path d="M20 115Q39 105 52 97T83 84T116 73T149 66T181 62L202 61" stroke="#858b75" stroke-width="1.5" stroke-dasharray="6 4" stroke-linecap="round"/>
- <g fill="#f6f3e9" stroke="#858b75" stroke-width="1.2"><path d="M49 94h5v5h-5zM80 81h5v5h-5zM113 70h5v5h-5zM146 63h5v5h-5zM178 59h5v5h-5zM199 58h5v5h-5z"/></g>
- <path d="m20 117 32-8 31-7 33-5 33-4 32-3 21-2" stroke="#c8ac36" stroke-width="1.5" stroke-dasharray="2 4" stroke-linecap="round"/>
- <g fill="#f6f3e9" stroke="#c8ac36" stroke-width="1.1"><path d="m52 106 3 5h-6zM83 99l3 5h-6zM116 94l3 5h-6zM149 90l3 5h-6zM181 87l3 5h-6zM202 85l3 5h-6z"/></g>
-</svg>
+<svg class="paper-icon " data-paper-icon="courses" viewBox="0 0 24 24" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path fill="#bdb59e" d="M3 5h19v16H3Z"/><path fill="#c9a058" d="M2 3h7l2 3h11v13H2Z"/><path fill="#f8f3e5" d="M4 8h16v8H4Z"/><path fill="#18564e" d="M5 10h10v2H5Zm0 4h6v1H5Z"/></svg>

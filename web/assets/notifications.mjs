@@ -1,10 +1,10 @@
+const {paperIcon}=await import(new URL('./paper-icons.mjs'+new URL(import.meta.url).search,import.meta.url));
 // In-site notices only. This module never awards XP, submits coursework or
 // requests browser notification permission. No inbox payload is stored locally.
 const E = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fa = n => Number(n).toLocaleString('fa-IR');
 const digits = s => String(s).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
-const svg = path => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
-const icons = { bell: svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/>'), lab: svg('<rect x="2" y="4" width="20" height="16" rx="1"/><path d="m6 8 4 4-4 4m7 0h5"/>'), review: svg('<rect x="4" y="4" width="16" height="18" rx="1"/><path d="M8 2v5m8-5v5M7 11h10M7 15h10M7 19h6"/>'), content: svg('<path d="M3 5c4-2 6-1 9 1 3-2 5-3 9-1v15c-4-2-6-1-9 1-3-2-5-3-9-1ZM12 6v15"/>'), access: svg('<circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/>'), gear: svg('<path d="m10 3 4 0 1 3 3-1 2 4-2 2 2 2-2 4-3-1-1 3h-4l-1-3-3 1-2-4 2-2-2-2 2-4 3 1Z"/><circle cx="12" cy="11" r="3"/>'), clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>'), check: svg('<path d="m5 12 4 4L20 5"/>'), close: svg('<path d="m6 6 12 12M6 18 18 6"/>') };
+const icons = Object.fromEntries(Object.entries({bell:'bell',lab:'lab',review:'review',content:'book',access:'check',gear:'gear',clock:'clock',check:'check',close:'close'}).map(([name,key])=>[name,paperIcon(key)]));
 export function noticeURL(path, baseURL) {
     if (typeof path !== 'string' || !/^(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)+$/.test(path))
         return null;

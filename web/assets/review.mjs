@@ -1,10 +1,10 @@
+const {paperIcon}=await import(new URL('./paper-icons.mjs'+new URL(import.meta.url).search,import.meta.url));
 // Private notebook data is supplied by authenticated RPCs; no answer bank ships here.
 const E=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Isolate array literals and Python identifiers inside Persian sentences.
 const teachingText=value=>String(value??'').split(/(\[\s*(?:\[[\d\s,.]+\]\s*,?\s*)+\]|\[[\d\s,.]+\]|\([\d\s,.]+\)|[A-Za-z][A-Za-z0-9_]*(?:\s*=\s*[\d.]+)?)/g).map((part,i)=>i%2?'<bdi dir="ltr">'+E(part)+'</bdi>':E(part)).join('');
 const fa=value=>Number(value).toLocaleString('fa-IR');
-const paths={arrow:'M20 12H4m6-6-6 6 6 6',plus:'M12 5v14M5 12h14',search:'M20 20l-5-5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0',bookmark:'M6 3h12v18l-6-4-6 4Z',clock:'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',pencil:'m15 4 5 5M4 20l1-6L16 3l5 5-11 11Z',lock:'M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5ZM12 14v3',close:'m6 6 12 12M6 18 18 6'};
-const icon=name=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]||paths.arrow}"/></svg>`;
+const icon=name=>paperIcon(name);
 export const normalizeSearch=value=>String(value??'').replace(/ي/g,'ی').replace(/ك/g,'ک').replace(/[\u064b-\u065f\u200c]/g,'').toLocaleLowerCase().trim();
 export function reviewEntries(state,{tab='due',search='',lesson=''}={}){
  const concepts=new Map((state.concepts||[]).map(c=>[c.id,c]));
@@ -26,7 +26,7 @@ export function reviewOutcome(result){
 export function latestReviewWriting(entries){
  return entries.flatMap(e=>[...(e.note?[e]:[]),...(e.last_reflection?.text?[{...e,note:e.last_reflection.text,updated_at:e.last_reflection.at,isReflection:true}]:[])]).sort((a,b)=>(Date.parse(b.updated_at)||0)-(Date.parse(a.updated_at)||0))[0];
 }
-const art=`<svg class="rv-cards" viewBox="0 0 390 150" aria-hidden="true"><g fill="none" stroke="#657064" stroke-width="1"><path d="M8 131h370M24 135h330M58 25l-7-9m30 6 1-12m21 17 6-11"/><path fill="#faf5e8" d="m49 48 106-6 8 87-107 2Z"/><path d="m49 48-5 79 12 4m9-58h72M65 87h75m-74 13h75m-74 14h75"/><path fill="#faf5e8" d="m170 65 90-3 5 66h-91Z"/><path d="m170 65-5 61 9 2m11-42h63m-63 13h64m-63 13h63"/><path fill="#faf5e8" d="m281 80 68-2 5 49-69 1Z"/><path d="m281 80-4 46 8 2m10-30h43m-42 13h44"/></g><g fill="#3e4438" font-family="Georgia,serif" font-size="14"><text x="65" y="66">01</text><text x="184" y="82">02</text><text x="295" y="96">03</text></g></svg>`;
+const art=paperIcon('review','rv-cards');
 export async function mountReview(root,{rpc,url,userId,lessons=[],isCurrent=()=>true,storage,initialURL,win=root.ownerDocument.defaultView}){
  const doc=root.ownerDocument;
  let state={entries:[],concepts:[]},tab='due',search='',lesson='',busy=false,disposed=false,editor=null,run=null,queue=[],practiceEntry=null,context=null,reflection=null,prepared=false,pending=Promise.resolve();
