@@ -15,6 +15,30 @@ body[data-lesson-id="machine-learning/thresholds-and-roc"] .code-block pre code{
 .threshold-dataset>p{font-size:12px;color:var(--muted)}
 .lesson-resources{margin-block:40px 64px}.resource-links{display:flex;flex-wrap:wrap;gap:10px}
 body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-note{border-inline-start:3px solid var(--teal);padding:16px 20px;background:var(--highlight-soft);font-size:15px;line-height:2;margin-block:24px}
-body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-formula{overflow-x:auto;overflow-y:hidden;max-width:100%;padding-block:6px;scrollbar-width:thin}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-formula{overflow-x:auto;overflow-y:hidden;max-width:100%;scrollbar-width:thin}
 @media(max-width:600px){.threshold-figure{padding:7px}.threshold-table-scroll table{font-size:12px}.threshold-table-scroll th,.threshold-table-scroll td{padding:8px}.lesson-formula{font-size:13px}}
 @media print{.threshold-five-rows{max-height:none!important;overflow:visible}.copy-code{display:none}}
+
+/* Revision 2 uses the existing hero, reading rail, code blocks and end resources. */
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .threshold-dataset .table-scroll{max-height:241px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;overscroll-behavior:contain}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .threshold-dataset th{position:sticky;top:0;background:var(--highlight-soft);z-index:1}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .threshold-dataset td,body[data-lesson-id="machine-learning/thresholds-and-roc"] .threshold-dataset th{height:40px;box-sizing:border-box;padding-block:7px;line-height:24px}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .dataset-table{min-width:0}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .dataset-table td{white-space:normal}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .dataset-table th{white-space:nowrap}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .metric-matrix td:not(:first-child){direction:ltr;unicode-bidi:isolate;font-family:var(--font-mono)}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .teaching-figure img{display:block;width:100%;height:auto}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .teaching-figure figcaption{color:var(--muted);font-size:12px;line-height:1.9;margin-top:12px}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-rail{max-height:calc(100vh - 120px);overflow:auto;scrollbar-width:thin}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .rail-fact strong{font-size:17px;line-height:1.8}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-prose>h3{font-size:23px;line-height:1.8;color:var(--ink);margin:30px 0 14px}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-section{scroll-margin-top:110px}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .threshold-explorer{background:var(--white);border:1px solid var(--line-strong);border-radius:3px;padding:20px;box-shadow:none}
+.threshold-explorer label{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:14px}.threshold-explorer output{font-family:var(--font-mono);color:var(--teal-deep)}
+.threshold-explorer input[type="range"]{width:100%;accent-color:var(--teal-deep);margin-block:12px;min-height:28px}
+.threshold-explorer svg{display:block;width:100%;height:auto;direction:ltr;unicode-bidi:isolate}.threshold-explorer svg text{direction:ltr;unicode-bidi:isolate}
+.threshold-explorer .mini-lab-grid{grid-template-columns:1fr 1fr;gap:18px}
+.threshold-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-block:18px;direction:ltr}.threshold-values>div{padding:9px;border-block:1px solid var(--line);text-align:center}.threshold-values dt{font-family:var(--font-mono);font-size:11px;color:var(--muted)}.threshold-values dd{font-family:var(--font-mono);font-size:16px;margin:6px 0 0;color:var(--ink)}
+.threshold-explorer .threshold-example-matrix{border-collapse:collapse;width:100%;font-size:12px;direction:ltr}.threshold-example-matrix caption{font-size:11px;margin-bottom:8px}.threshold-example-matrix td,.threshold-example-matrix th{padding:8px;border-bottom:1px solid var(--line);text-align:center}.threshold-example-matrix th{background:var(--highlight-soft)}
+@media(max-width:760px){.threshold-explorer .mini-lab-grid{grid-template-columns:1fr}.threshold-explorer{padding:14px}.threshold-values{gap:6px}}
+@media print{.threshold-explorer{display:none}.threshold-dataset .table-scroll{max-height:none!important;overflow:visible}}

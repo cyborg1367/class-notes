@@ -203,7 +203,7 @@
         "title": "از شمارش خطا تا انتخاب آستانه",
         "subtitle": "Precision، Recall، F-score و ROC-AUC؛ یک مدل، تصمیم‌های متفاوت",
         "number": "04",
-        "description": "معنای Precision و Recall، F-score، نقش آستانه، انتخاب با Validation و ساخت گام‌به‌گام ROC-AUC.",
+        "description": "از همان ماتریس خطای مثال قبلی تا Precision، Recall و F-score؛ سپس امتیاز، آستانه، ROC-AUC و انتخاب با Validation.",
         "tags": [
           "Precision / Recall",
           "Threshold",
@@ -211,13 +211,13 @@
         ],
         "hero_kind": null,
         "quiz_version": 1,
-        "notebook": "thresholds-and-roc/thresholds-and-roc-explained.ipynb",
+        "notebook": "thresholds-and-roc/revision-2/thresholds-and-roc-explained.ipynb",
         "lab": {
           "mission": "threshold-knn-v1",
           "title": "پیش از مسدودسازی",
           "path": "lab/machine-learning/thresholds-and-roc/",
           "model": "coding-lab-thresholds.mjs",
-          "bridge": "در یادداشت، معیارهای خطا و آستانه را شناختیم. اینجا همان مدل kNN را روی پیامک‌های تازه بررسی می‌کنیم و یک سیاست تصمیم را با Validation می‌سازیم."
+          "bridge": "در یادداشت، معیارها را از همان مثال قبلی شناختیم و انتخاب آستانه را با دادهٔ اعتبارسنجی تمرین کردیم. در این لابراتور، همین مفاهیم را برای تصمیم‌گیری دربارهٔ پیامک‌های تازه به کار می‌بریم."
         },
         "dashboard_art": "evaluation",
         "lab_steps": [
