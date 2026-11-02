@@ -42,3 +42,8 @@ body[data-lesson-id="machine-learning/thresholds-and-roc"] .threshold-explorer{b
 .threshold-explorer .threshold-example-matrix{border-collapse:collapse;width:100%;font-size:12px;direction:ltr}.threshold-example-matrix caption{font-size:11px;margin-bottom:8px}.threshold-example-matrix td,.threshold-example-matrix th{padding:8px;border-bottom:1px solid var(--line);text-align:center}.threshold-example-matrix th{background:var(--highlight-soft)}
 @media(max-width:760px){.threshold-explorer .mini-lab-grid{grid-template-columns:1fr}.threshold-explorer{padding:14px}.threshold-values{gap:6px}}
 @media print{.threshold-explorer{display:none}.threshold-dataset .table-scroll{max-height:none!important;overflow:visible}}
+
+/* Match the existing Lesson 03 download and quiz footer. */
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .portal-quiz-link .button-outline,
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .portal-quiz-link .button-forest { margin-block:6px; }
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .portal-quiz-link .lesson-lab-link { color:var(--teal-deep); white-space:nowrap; text-underline-offset:4px; }
