@@ -19,6 +19,7 @@ async function mount(root,options){
  let worker=null,phase='idle',checking=false,hasRun=false,disposed=false,epoch=0,request=0,activeRequest=0,timer,autosave,pollTimer,controller,outputSize=0,localSaveTimer=null,paintFrame=null;
  let pending=cached?.pending||null;
  state.active=Math.min(state.active,available(trusted));
+ root.classList.toggle('lab-thresholds',missionId==='threshold-knn-v1');
  if(missionId==='evaluation-knn-v1')root.classList.add('lab-evaluation');else root.classList.remove('lab-evaluation');
  root.innerHTML=`<header class="lab-top mission-top">
  <div class="lab-identity"><a class="lab-wordmark" href="${E(new URL('../index.html',assets).href)}"><strong>دفتر کلاس</strong><small lang="en" dir="ltr">CLASS NOTES</small></a><div data-lab-account></div></div>
@@ -52,7 +53,7 @@ async function mount(root,options){
    <p class="lab-panel-kicker">داده‌های آمادهٔ این تمرین</p><h2>${E(meta.dataTitle)}</h2>
    ${meta.dataIntro}
    ${model.csvAsset?`<a class="button-outline" href="${E(assetURL(model.csvAsset).href)}" download>Download CSV ↓</a>`:''}
-   <div class="mission-query"><span>${E(meta.queryLabel)}${model.csvAsset?'':' · <code>query</code>'}</span>${dataset.queryText?`<blockquote class="lab-message-text">${E(dataset.queryText)}</blockquote>`:''}<strong dir="ltr">${model.csvAsset?'test_size=0.25 · seed=42 · k=3':E(JSON.stringify(dataset.query))}</strong><p>${E(meta.queryHelp)}</p></div>
+   <div class="mission-query"><span>${E(meta.queryLabel)}${model.csvAsset?'':' · <code>query</code>'}</span>${dataset.queryText?`<blockquote class="lab-message-text">${E(dataset.queryText)}</blockquote>`:''}<strong dir="ltr">${model.csvAsset?E(meta.queryText||'test_size=0.25 · seed=42 · k=3'):E(JSON.stringify(dataset.query))}</strong><p>${E(meta.queryHelp)}</p></div>
    <div class="mission-query" data-second-query hidden><span>وضعیت دوم · <code>query_new</code></span><strong dir="ltr">${E(JSON.stringify(dataset.query_new))}</strong><p>${E(meta.secondHelp||'')}</p></div>
    <div class="mission-table" tabindex="0" aria-label="${E(meta.tableTitle)}"><table><caption>${E(meta.tableTitle)} · اندیس‌ها از صفر شروع می‌شوند</caption><thead><tr><th>اندیس</th><th>شناسه</th>${dataset.columns.map(c=>`<th>${c.label}<small lang="en">${c.name}</small></th>`).join('')}${dataset.texts?'<th>متن پیامک</th>':''}${dataset.y?'<th>برچسب <small lang="en">y</small></th>':''}</tr></thead><tbody>${dataset.X.map((row,i)=>`<tr><th dir="ltr">${i}</th><td dir="ltr">${dataset.names[i]}</td>${row.map(v=>`<td>${v}</td>`).join('')}${dataset.texts?`<td class="lab-message-cell">${E(dataset.texts[i])}</td>`:''}${dataset.y?`<td>${dataset.y[i]}${dataset.texts?` · ${dataset.y[i]?'تبلیغاتی':'عادی'}`:''}</td>`:''}</tr>`).join('')}</tbody></table></div>
    <details class="mission-contract"><summary>آرایه‌های آماده در Python</summary><p>${meta.variables}</p><pre dir="ltr" tabindex="0">${E(bootstrap)}</pre></details>
@@ -98,7 +99,7 @@ async function mount(root,options){
  const alive=()=>!disposed&&isCurrent();
  const previewHost=$('[data-evaluation-preview]');if(previewHost)$('#lab-panel-data h2').after(previewHost);
  let previewRenderer=null;
- async function preview(value,runRequest){const stage=state.active;if(!previewHost||!alive())return;if(!previewRenderer){const module=await import(assetURL('coding-lab-evaluation-view.mjs'));if(!alive())return;previewRenderer=module.renderEvaluationPreview;}if(!alive()||state.active!==stage||activeRequest!==runRequest)return;previewRenderer(previewHost,value,dataset);layout.selectTab('data',false);}
+ async function preview(value,runRequest){const stage=state.active;if(!previewHost||!alive())return;if(!previewRenderer){const module=await import(assetURL(model.previewModule||'coding-lab-evaluation-view.mjs'));if(!alive())return;previewRenderer=module.renderEvaluationPreview;}if(!alive()||state.active!==stage||activeRequest!==runRequest)return;previewRenderer(previewHost,value,dataset);layout.selectTab('data',false);}
  const layout=mountLayout(root,{onTabChange(name){if(name==='assistant')void openTutor()}});
  const experience=mountExperience(root,{userId,missionId,meta,dataset,stages,hasProgress:!!(trusted.draft||trusted.attempts||trusted.completed?.length||cached?.dirty)});
  let tutor=null,tutorLoading=false;
@@ -223,7 +224,7 @@ async function mount(root,options){
    };activeRequest=++request;worker.postMessage({type:'init',request:activeRequest,packages:model.packages||['numpy']})
   }catch{fail('محیط محلی باز نشد؛ مرورگر و اتصال را بررسی کن.')}
  };
- function run(type,code=editor.value){if(!alive()||phase!=='ready'||checking||!code.trim())return;layout.openConsole();if(type==='console')append('>>> '+code+'\n');else{output.textContent='';outputSize=0}phase='running';controls('در حال اجرا…');activeRequest=++request;timer=setTimeout(()=>{append('\n[Stopped: time limit]\n');fail('اجرا پس از ۱۵ ثانیه متوقف شد. کدت را بررسی و محیط را دوباره فعال کن.')},15000);worker.postMessage({type,code,bootstrap:type==='console'?undefined:bootstrap,previewCode:type==='run'&&state.active>=4?model.previewCode:undefined,request:activeRequest})}
+ function run(type,code=editor.value){if(!alive()||phase!=='ready'||checking||!code.trim())return;layout.openConsole();if(type==='console')append('>>> '+code+'\n');else{output.textContent='';outputSize=0}phase='running';controls('در حال اجرا…');activeRequest=++request;timer=setTimeout(()=>{append('\n[Stopped: time limit]\n');fail('اجرا پس از ۱۵ ثانیه متوقف شد. کدت را بررسی و محیط را دوباره فعال کن.')},15000);worker.postMessage({type,code,bootstrap:type==='console'?undefined:bootstrap,previewCode:type==='run'&&state.active>=(model.previewFromStage??4)?model.previewCode:undefined,request:activeRequest})}
  $('[data-run]').onclick=()=>{if(!alive()||checking||['loading','running'].includes(phase))return;layout.openConsole();if(phase==='idle'){runWhenReady=true;$('[data-activate]').onclick()}else run('run')};$('[data-stop]').onclick=()=>{terminate();append('\n[Stopped]\n');controls()};
  $('.lab-console-form').onsubmit=e=>{e.preventDefault();if(hasRun){const code=command.value;command.value='';run('console',code)}};
  $('[data-clear]').onclick=()=>{output.textContent='';outputSize=0};editor.addEventListener('scroll',sync);

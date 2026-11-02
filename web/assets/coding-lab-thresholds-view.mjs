@@ -1,0 +1,15 @@
+// Visualization of learner output only; no XP, expected answers or account writes.
+const finite=n=>typeof n==='number'&&Number.isFinite(n),ratio=n=>finite(n)&&n>=0&&n<=1,count=n=>Number.isInteger(n)&&n>=0;
+export function validRows(value){return value?.kind==='thresholds'&&Array.isArray(value.rows)&&value.rows.length>0&&value.rows.length<=1000&&value.rows.every(r=>r&&['threshold','precision','recall','f1','tpr','fpr'].every(k=>ratio(r[k]))&&['tn','fp','fn','tp','n_flagged'].every(k=>count(r[k])))}
+export function rocSVG(roc,row){
+ if(!roc||!Array.isArray(roc.fpr)||!Array.isArray(roc.tpr)||roc.fpr.length!==roc.tpr.length||roc.fpr.length<2||roc.fpr.length>1000||!roc.fpr.every(ratio)||!roc.tpr.every(ratio)||!ratio(roc.auc))return '';
+ const x=n=>44+260*n,y=n=>292-260*n,path=roc.fpr.map((f,i)=>(i?'L':'M')+x(f)+' '+y(roc.tpr[i])).join(' ');
+ return `<svg viewBox="0 0 350 340" role="img" aria-label="ROC؛ نقطهٔ قرمز، آستانهٔ انتخابی در خروجی کد توست"><rect x="44" y="32" width="260" height="260" fill="#fcfaf4"/><path d="M44 32V292H304" fill="none" stroke="#7c7b6c"/><path d="M44 292L304 32" stroke="#b9b39f" stroke-dasharray="5 5"/><path d="${path}" stroke="#18564e" stroke-width="3" fill="none"/><circle cx="${x(row.fpr)}" cy="${y(row.tpr)}" r="6" fill="#b75242" stroke="#fcfaf4" stroke-width="2"/><g font-size="12" fill="#3a443c" text-anchor="middle"><text x="174" y="329">FPR</text><text x="44" y="308">0</text><text x="304" y="308">1</text><text x="26" y="295">0</text><text x="26" y="36">1</text><text transform="translate(12 162) rotate(-90)">TPR</text><text x="174" y="20">AUC = ${roc.auc.toFixed(3)}</text></g></svg>`;
+}
+export function renderEvaluationPreview(host,value){
+ host.hidden=false;if(!validRows(value)){host.textContent='خروجی تصویری هنوز با قرارداد هماهنگ نیست؛ نتیجهٔ تابع را در کنسول بررسی کن.';return}
+ const rows=value.rows;host.innerHTML='<h3>تصمیم روی Validation · اجرای آزمایشی</h3><p>آستانه را بین گزینه‌های خروجی کدت جابه‌جا کن؛ مدل ثابت است.</p><label class="threshold-slider-label">Threshold <output data-threshold-value></output><input type="range" min="0" max="'+(rows.length-1)+'" step="1" value="0" aria-label="آستانهٔ خروجی آزمایشی"></label><div data-threshold-details></div>';
+ const slider=host.querySelector('input'),details=host.querySelector('[data-threshold-details]'),output=host.querySelector('output');
+ function paint(){const r=rows[Number(slider.value)];output.textContent=r.threshold.toFixed(3);details.innerHTML=`<dl class="lab-evaluation-report"><div><dt>Precision</dt><dd>${r.precision.toFixed(3)}</dd></div><div><dt>Recall</dt><dd>${r.recall.toFixed(3)}</dd></div><div><dt>F1</dt><dd>${r.f1.toFixed(3)}</dd></div></dl><p dir="ltr">Flagged: ${r.n_flagged} · TP ${r.tp} · FP ${r.fp} · FN ${r.fn} · TN ${r.tn}</p><table class="lab-evaluation-matrix" dir="ltr"><caption>Actual rows / Predicted columns</caption><thead><tr><th></th><th>0</th><th>1</th></tr></thead><tbody><tr><th>0</th><td>${r.tn}</td><td>${r.fp}</td></tr><tr><th>1</th><td>${r.fn}</td><td>${r.tp}</td></tr></tbody></table>${rocSVG(value.roc,r)}`}
+ slider.addEventListener('input',paint);paint();
+}

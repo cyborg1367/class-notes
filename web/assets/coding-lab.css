@@ -671,3 +671,8 @@ body.lab-notebook-ready .portal-main{padding:0;}
 .lab-evaluation-report dt{font-size:11px;color:#555c4c}.lab-evaluation-report dd{margin:6px 0 0;font-size:19px;direction:ltr}
 .lab-evaluation-matrix{width:100%;border-collapse:collapse;font-size:12px}.lab-evaluation-matrix td,.lab-evaluation-matrix th{padding:10px;border:1px solid #c8bea5;text-align:center}.lab-evaluation-matrix td{background:#e5ddef;color:#282037}
 .lab-evaluation .mission-query{line-height:1.9}.lab-evaluation .mission-query strong{font-size:13px}
+
+/* Fourth lab: compact local threshold control, using existing paper tokens. */
+.threshold-slider-label{display:grid;gap:8px;font:12px var(--font-mono);direction:ltr;margin-block:16px}.threshold-slider-label output{color:var(--teal-deep)}.threshold-slider-label input{width:100%;accent-color:var(--teal-deep)}.lab-evaluation-preview [data-threshold-details]>svg{display:block;width:100%;max-width:350px;margin:16px auto}
+
+.lab-thresholds .mission-query strong{font-size:13px;overflow-wrap:anywhere}

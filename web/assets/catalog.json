@@ -196,6 +196,74 @@
             "label": "ارزیابی مدل"
           }
         ]
+      },
+      {
+        "id": "machine-learning/thresholds-and-roc",
+        "slug": "thresholds-and-roc",
+        "title": "از شمارش خطا تا انتخاب آستانه",
+        "subtitle": "Precision، Recall، F-score و ROC-AUC؛ یک مدل، تصمیم‌های متفاوت",
+        "number": "04",
+        "description": "معنای Precision و Recall، F-score، نقش آستانه، انتخاب با Validation و ساخت گام‌به‌گام ROC-AUC.",
+        "tags": [
+          "Precision / Recall",
+          "Threshold",
+          "ROC-AUC"
+        ],
+        "hero_kind": null,
+        "quiz_version": 1,
+        "notebook": "thresholds-and-roc/thresholds-and-roc-explained.ipynb",
+        "lab": {
+          "mission": "threshold-knn-v1",
+          "title": "پیش از مسدودسازی",
+          "path": "lab/machine-learning/thresholds-and-roc/",
+          "model": "coding-lab-thresholds.mjs",
+          "bridge": "در یادداشت، معیارهای خطا و آستانه را شناختیم. اینجا همان مدل kNN را روی پیامک‌های تازه بررسی می‌کنیم و یک سیاست تصمیم را با Validation می‌سازیم."
+        },
+        "dashboard_art": "evaluation",
+        "lab_steps": [
+          {
+            "id": "positive-scores",
+            "title": "امتیاز کلاس مثبت را پیدا کن"
+          },
+          {
+            "id": "threshold",
+            "title": "از امتیاز به تصمیم برس"
+          },
+          {
+            "id": "metrics",
+            "title": "معنای خطاها را گزارش کن"
+          },
+          {
+            "id": "threshold-report",
+            "title": "چند تصمیم را کنار هم بگذار"
+          },
+          {
+            "id": "roc",
+            "title": "منحنی را از امتیازها بساز"
+          },
+          {
+            "id": "choose-threshold",
+            "title": "یک سیاست قابل دفاع انتخاب کن"
+          }
+        ],
+        "practice_skills": [
+          {
+            "task": "metrics",
+            "label": "Precision و Recall"
+          },
+          {
+            "task": "threshold",
+            "label": "تصمیم با آستانه"
+          },
+          {
+            "task": "roc",
+            "label": "رتبه‌بندی و ROC"
+          },
+          {
+            "task": "choose-threshold",
+            "label": "سیاست تصمیم"
+          }
+        ]
       }
     ],
     "home_description": "از فهم داده تا ساختن و ارزیابی مدل"

@@ -1,0 +1,20 @@
+/* Lesson-scoped additions; the shared paper template remains canonical. */
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .hero-figure svg{display:block;width:100%;height:auto}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .hero-strip{list-style:none}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] :not(pre)>code{direction:ltr;unicode-bidi:isolate;display:inline-block}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .code-block pre code{display:block;padding:0;background:none;color:inherit;font:inherit;border:0;border-radius:0;white-space:inherit;overflow-wrap:normal;max-width:none}
+.threshold-figure{margin:28px 0;padding:16px;border:1px solid var(--line);background:#fcfaf4;border-radius:3px}
+.threshold-figure svg{display:block;width:100%;height:auto;max-height:510px}
+.threshold-figure figcaption{font-size:12px;line-height:1.9;color:var(--muted);text-align:center;margin-top:12px}
+.threshold-table-scroll{overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;margin-block:22px;overscroll-behavior:contain}
+.threshold-table-scroll table{width:100%;border-collapse:collapse;font-size:14px;white-space:nowrap;text-align:center}
+.threshold-table-scroll th,.threshold-table-scroll td{padding:8px 12px;border-bottom:1px solid var(--line);height:40px;box-sizing:border-box;line-height:24px}
+.threshold-table-scroll th{background:var(--highlight-soft)}
+.threshold-five-rows{max-height:241px}
+.threshold-five-rows th{position:sticky;top:0;z-index:1}
+.threshold-dataset>p{font-size:12px;color:var(--muted)}
+.lesson-resources{margin-block:40px 64px}.resource-links{display:flex;flex-wrap:wrap;gap:10px}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-note{border-inline-start:3px solid var(--teal);padding:16px 20px;background:var(--highlight-soft);font-size:15px;line-height:2;margin-block:24px}
+body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-formula{overflow-x:auto;overflow-y:hidden;max-width:100%;padding-block:6px;scrollbar-width:thin}
+@media(max-width:600px){.threshold-figure{padding:7px}.threshold-table-scroll table{font-size:12px}.threshold-table-scroll th,.threshold-table-scroll td{padding:8px}.lesson-formula{font-size:13px}}
+@media print{.threshold-five-rows{max-height:none!important;overflow:visible}.copy-code{display:none}}

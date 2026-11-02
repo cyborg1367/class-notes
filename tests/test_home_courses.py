@@ -103,14 +103,14 @@ class HomepageCourseTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError,'different course'):
             render_home_courses([data])
 
-    def test_current_release_shows_real_three_notes_and_third_note_preview(self):
+    def test_current_release_shows_four_notes_and_fourth_note_preview(self):
         catalog=json.loads((ROOT/'web/assets/catalog.json').read_text())
         parsed=Summary(render_home_courses(catalog))
         self.assertEqual(len(parsed.cards),1)
-        self.assertEqual(parsed.cards[0]['data-latest-lesson'],'machine-learning/evaluating-knn')
+        self.assertEqual(parsed.cards[0]['data-latest-lesson'],'machine-learning/thresholds-and-roc')
         for key in ['data-note-count','data-lab-count','data-quiz-count']:
-            self.assertEqual(parsed.cards[0][key],'3')
-        self.assertEqual(parsed.links[-1]['href'],'machine-learning/evaluating-knn/')
+            self.assertEqual(parsed.cards[0][key],'4')
+        self.assertEqual(parsed.links[-1]['href'],'machine-learning/thresholds-and-roc/')
 
     def test_summary_html_is_deterministic_and_has_no_runtime_fetch_or_user_state(self):
         catalog=[course(10)]

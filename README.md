@@ -23,6 +23,7 @@ Students can read course material, practice code in their browser, submit lab mi
 | Greenhouse Detective | Dataset shapes, vector distances, nearest neighbors, and comparing queries | 6 | 300 |
 | SMS Detective | Labeled examples, neighbor voting, majority decisions, and k-nearest-neighbor classification | 6 | 300 |
 | Before Release | Independent train/test splits, prediction, evaluation metrics, confusion matrices, and decision regions | 6 | 300 |
+| Before Blocking | Positive-class scores, Precision/Recall/F-beta, thresholds, ROC-AUC, and validation-only policy selection | 6 | 300 |
 
 The SMS lab uses synthetic messages and prepared numeric features. Students work with those features rather than implementing a text-processing pipeline.
 
