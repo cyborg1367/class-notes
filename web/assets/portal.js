@@ -125,6 +125,7 @@ if(typeof document!=="undefined"){
  const catalog=JSON.parse($('#catalog-data').textContent),fa=n=>Number(n).toLocaleString('fa-IR'),url=p=>new URL(p,base).href;
  const num=n=>Number(n).toLocaleString('en-US',{useGrouping:false}),score=(n,m)=>'<bdi dir="ltr">'+num(n)+' / '+num(m)+'</bdi>',blankLabel=i=>String.fromCharCode(65+i);
  const app={client:null,user:null,state:null,generation:0,serviceError:null};window.Classroom=app;
+ let instructorUI=null,instructorTicket=0;
  let noticeUI=null,noticeTicket=0,reviewUI=null,reviewGeneration=0,presence=null,presenceTicket=0,accountUI=null,authReady=false,authFailed=false,authBusy=false,manualSignOut=false,beforeSignOut=null,toastTimer;
  const objectURLs=new Set(),privateDownloads=new Map();let lastUser=null,initializing=true;
  function status(el,text,error=false){if(el){el.textContent=text;el.dataset.error=String(error);}}
@@ -163,7 +164,7 @@ if(typeof document!=="undefined"){
    if(gen===app.generation&&ticket===stateTicket){bootData=bundle;app.state=state;app.serviceError=null;authUI();}
   }catch(err){if(gen===app.generation&&ticket===stateTicket){bootData=null;app.state=null;app.serviceError=err;}}}
 
- function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;reads.reset();stateTicket++;bootData=null;noticeTicket++;noticeUI?.dispose();noticeUI=null;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
+ function onUser(user){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;instructorTicket++;instructorUI?.dispose();instructorUI=null;reads.reset();stateTicket++;bootData=null;noticeTicket++;noticeUI?.dispose();noticeUI=null;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;app.state=null;beforeSignOut=null;clearObjects();window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
   if(!initializing&&old!==next){
    const privatePage=['lesson','lab','quiz','dashboard','instructor','course','review','notifications'].includes(page);
@@ -407,13 +408,6 @@ if(typeof document!=="undefined"){
    if(new URL(location.href).hash==='#results'&&results.length){$('details',resultsRoot).open=true;resultsRoot.focus();resultsRoot.scrollIntoView({block:'start'});}
   }catch{if(alive()){root.innerHTML='<section class="gate-card"><h2>داشبورد دریافت نشد.</h2><p>برای دریافت مسیر یادگیری دوباره تلاش کن.</p><button class="button-outline" type="button" data-dashboard-retry>تلاش دوباره</button></section>';$('[data-dashboard-retry]',root).onclick=dashboard;}}
  }
- async function labGrowthReport(root,courseId,gen){
-  const section=document.createElement('section');section.className='panel-card';root.append(section);section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>در حال دریافت…</p>';
-  try{const rows=await rpc('classroom_lab_teacher_report',{p_course:courseId});if(gen!==app.generation||!section.isConnected)return;
-   section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p class="small-note">همهٔ لابراتورها · XP ثبت‌شده با بررسی مستقل. تعداد تلاش به‌تنهایی معیار ضعف نیست.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو</th><th>XP</th><th>تسک کامل</th><th>تلاش بررسی</th><th>آخرین فعالیت</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${E(r.name||'')}<br><bdi>${E(r.email||'')}</bdi></td><td>${fa(r.xp)} / ${fa(r.maximum||900)}</td><td>${fa(r.completed)} / ${fa(r.task_count||18)}</td><td>${fa(r.attempts)}</td><td>${r.last_at?E(date(r.last_at)):'—'}</td></tr>`).join('')+'</tbody></table></div>';
-  }catch{if(gen===app.generation&&section.isConnected)section.innerHTML='<h2>رشد دانشجوها در لابراتور</h2><p>گزارش لابراتور دریافت نشد؛ کمی بعد گزارش را به‌روزرسانی کن.</p>';}
- }
-
  async function privateBlob(path){
   const gen=app.generation,key=`${gen}:${path}`;if(privateDownloads.has(key))return privateDownloads.get(key);
   const task=(async()=>{const{data,error}=await app.client.storage.from('class-materials').download(path);if(error)throw error;
@@ -592,18 +586,18 @@ if(typeof document!=="undefined"){
  }
 
  async function teacher(){
-  const root=$('[data-teacher]'),notice=$('[data-page-status]');status(notice,'');
+  const root=$('[data-teacher]'),notice=$('[data-page-status]'),gen=app.generation,ticket=++instructorTicket;
+  instructorUI?.dispose();instructorUI=null;status(notice,'');
+  if(!root)return;
   if(!app.user||app.serviceError){renderGate(root,catalog[0].id);return;}
   const courses=(app.state?.memberships||[]).filter(m=>m.role==='teacher'&&m.status==='active');
-  if(!courses.length){root.innerHTML='<div class="gate-card"><h2>دسترسی مدرس لازم است.</h2><p>این حساب برای مدیریت کلاس فعال نشده است.</p><a class="button-outline" href="'+E(url('dashboard/'))+'">داشبورد ←</a></div>';return;}
-  root.innerHTML=`<div class="teacher-controls"><label for="teacher-course">کلاس</label><select id="teacher-course">${courses.map(c=>`<option value="${E(c.course_id)}">${E(c.title)}</option>`).join('')}</select><button class="button-outline" type="button" data-report-refresh>به‌روزرسانی گزارش</button></div><div data-report></div><div data-teacher-review></div>`;
-  const select=$('#teacher-course',root),out=$('[data-report]',root);
-  async function report(){const gen=app.generation,selectedCourse=select.value;status(notice,'در حال دریافت گزارش…');try{const data=await rpc('classroom_report',{p_course:selectedCourse});if(gen!==app.generation||selectedCourse!==select.value)return;status(notice,'');out.innerHTML=`<div class="stats-row"><div class="stat-tile"><strong>${fa(data.members.filter(m=>m.status==='pending').length)}</strong><span>درخواست در انتظار</span></div><div class="stat-tile"><strong>${fa(data.members.filter(m=>m.role==='student'&&m.status==='active').length)}</strong><span>دانشجوی فعال</span></div><div class="stat-tile"><strong>${fa(data.total_attempts)}</strong><span>تلاش ثبت‌شده</span></div></div><section class="panel-card"><h2>عضویت‌های کلاس</h2><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو / ایمیل</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>${data.members.map(m=>`<tr><td>${E(m.name)}<br><bdi>${E(m.email)}</bdi></td><td>${m.role==='teacher'?'مدرس':m.status==='active'?'فعال':m.status==='pending'?'در انتظار تأیید':'غیرفعال'}</td><td>${m.role==='student'?`<button type="button" data-member="${E(m.user_id)}" data-status="${m.status==='active'?'suspended':'active'}">${m.status==='active'?'غیرفعال‌کردن':'تأیید دسترسی'}</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></section><section class="panel-card"><h2>تلاش‌های ثبت‌شده</h2><p class="small-note">${fa(data.total_attempts)} تلاش در مجموع؛ حداکثر ۲۰۰ تلاش آخر نمایش داده می‌شود. تلاش اول و تلاش‌های بعدی جدا مشخص‌اند.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>دانشجو</th><th>یادداشت / نسخه</th><th>تلاش</th><th>نمره</th><th>زمان</th><th>پاسخ‌ها</th></tr></thead><tbody>${data.attempts.map(a=>`<tr><td><bdi>${E(a.email)}</bdi></td><td>${E(lesson(a.lesson_id)?.title||a.lesson_id)} · ${fa(a.version)}</td><td>${num(a.attempt_no)}</td><td>${score(a.score,a.maximum)}</td><td>${E(date(a.created_at))}</td><td><button type="button" data-attempt="${E(a.id)}">بررسی</button></td></tr>`).join('')||'<tr><td colspan="6">هنوز آزمونی ثبت نشده است.</td></tr>'}</tbody></table></div></section><section class="panel-card"><h2>کدام مفهوم‌ها به مرور نیاز دارند؟</h2><p class="small-note">این آمار از اولین ثبت نهاییِ هر دانشجو در هر نسخه است؛ تمرین و تعداد نمونه‌ها را در تفسیر آن در نظر بگیر. نرخ خطا می‌تواند نشانهٔ ابهام خودِ سؤال هم باشد.</p><div class="portal-table-scroll"><table class="portal-table"><thead><tr><th>سؤال / مهارت</th><th>تعداد پاسخ</th><th>پاسخ کاملِ درست</th><th>گزینه‌های انتخاب‌شده</th></tr></thead><tbody>${data.questions.map(q=>`<tr><td><bdi>${E(q.question_id)}</bdi> · ${E(q.skill)} · نسخهٔ ${fa(q.version)}${q.stem?'<br>'+portalInline(q.stem):''}</td><td>${fa(q.responses)}</td><td>${fa(q.correct)} (${fa(Math.round(q.correct/q.responses*100))}٪)</td><td>${q.choices.length?E(Object.entries(q.choices.reduce((r,v)=>(r[v]=(r[v]||0)+1,r),{})).map(([k,v])=>(q.options?.find(o=>o[0]===k)?.[1]||k)+': '+fa(v)).join(' · ')):'—'}</td></tr>`).join('')||'<tr><td colspan="4">هنوز داده‌ای برای تحلیل وجود ندارد.</td></tr>'}</tbody></table></div></section>`;
-    $$('[data-member]',out).forEach(b=>b.onclick=async()=>{if(!confirm(b.dataset.status==='active'?'دسترسی این دانشجو به محتوای کلاس فعال شود؟':'دسترسی این دانشجو غیرفعال شود؟'))return;b.disabled=true;try{await rpc('classroom_membership',{p_course:select.value,p_user:b.dataset.member,p_status:b.dataset.status});await report();}catch(err){status(notice,friendly(err),true);b.disabled=false;}});
-    $$('[data-attempt]',out).forEach(b=>b.onclick=async()=>{b.disabled=true;try{const a=await rpc('classroom_attempt',{p_id:b.dataset.attempt});if(gen!==app.generation)return;const info=lesson(a.lesson_id);$('[data-teacher-review]',root).innerHTML=resultHTML(a,info,a.prompts||[]);const result=$('.quiz-result',root);result.focus();result.scrollIntoView({behavior:'smooth'});}catch(err){status(notice,friendly(err),true);}finally{b.disabled=false;}});
-    if(selectedCourse==='machine-learning')void labGrowthReport(out,selectedCourse,gen);
-   }catch(err){status(notice,friendly(err),true);}}
-  select.onchange=report;$('[data-report-refresh]',root).onclick=report;await report();
+  if(!courses.length){root.innerHTML='<div class="gate-card"><h1>دسترسی مدرس لازم است.</h1><p>این حساب برای مدیریت کلاس فعال نشده است.</p><a class="button-outline" href="'+E(url('dashboard/'))+'">داشبورد ←</a></div>';return;}
+  const owner=app.user.id,alive=()=>gen===app.generation&&ticket===instructorTicket&&app.user?.id===owner;
+  try{
+   const {mountInstructor}=await import(assetURL('instructor.mjs').href);if(!alive())return;
+   const ui=mountInstructor(root,{rpc,courses,catalog,url,isCurrent:alive,renderFigure:portalFigure});
+   if(!alive()){ui.dispose();return;}instructorUI=ui;
+  }catch{if(alive()){root.innerHTML='<section class="gate-card"><h1>پنل مدرس دریافت نشد.</h1><button type="button" class="button-outline" data-instructor-retry>تلاش دوباره</button></section>';root.querySelector('button').onclick=teacher;}}
  }
  window.ClassroomReady=boot();
 }
