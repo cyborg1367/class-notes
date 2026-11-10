@@ -467,8 +467,18 @@ var C = /* @__PURE__ */ new Map(), w, T = new Promise((e) => {
 });
 function E(e) {
 	if (C.has(e)) return;
-	let t = JSON.parse(document.querySelector("#catalog-data")?.textContent || "[]").find((e) => e.id === document.body.dataset.lessonId);
-	if (!t) return;
+	let t;
+	try {
+		let e = JSON.parse(document.querySelector("#catalog-data")?.textContent || "[]");
+		t = Array.isArray(e) ? e.find((e) => e.id === document.body.dataset.lessonId) : void 0;
+	} catch (e) {
+		console.warn("Course page:", e), w();
+		return;
+	}
+	if (!t) {
+		w();
+		return;
+	}
 	let n = s(e, x), r = (0, l.hydrateRoot)(e, /* @__PURE__ */ (0, m.jsx)(S, {
 		course: t,
 		channel: n,

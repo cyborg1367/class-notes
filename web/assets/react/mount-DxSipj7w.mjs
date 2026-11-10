@@ -217,18 +217,10 @@ var C = {
 			children: [/* @__PURE__ */ (0, x.jsx)("p", {
 				role: "status",
 				children: "نتیجه ثبت شد، اما نمایش آن کامل نشد."
-			}), /* @__PURE__ */ (0, x.jsxs)("div", {
-				className: "portal-actions",
-				children: [/* @__PURE__ */ (0, x.jsx)("button", {
-					type: "button",
-					className: "button-outline",
-					onClick: () => this.setState({ failed: !1 }),
-					children: "نمایش دوبارهٔ نتیجه"
-				}), this.props.receiptURL && /* @__PURE__ */ (0, x.jsx)("a", {
-					className: "quiet-link",
-					href: this.props.receiptURL,
-					children: "باز کردن رسید ثبت‌شده ←"
-				})]
+			}), this.props.receiptURL && /* @__PURE__ */ (0, x.jsx)("a", {
+				className: "quiet-link",
+				href: this.props.receiptURL,
+				children: "باز کردن رسید ثبت‌شده ←"
 			})]
 		});
 	}

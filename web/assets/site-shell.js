@@ -261,91 +261,107 @@ function x({ model: e }) {
 	});
 }
 // frontend/site-shell.tsx
-var S = [], C = !1, w, T = new Promise((e) => {
-	w = e;
+var S = [], C = !1, w = !1, T, E, D = new Promise((e, t) => {
+	T = e, E = t;
 });
-function E() {
-	if (C) return;
-	C = !0;
-	let e = document.querySelector("#site-shell-data"), t = document.querySelector("script[data-site-ui]");
-	if (!e || !t) {
-		w();
-		return;
-	}
-	let n = p(f(JSON.parse(e.textContent || "null")), new URL(t.src).searchParams.get("v") || "build"), r = c(document, n.accountLinks), i = document.querySelector("[data-site-header-root]"), a = document.querySelector("[data-site-footer-root]");
-	function o(e, t) {
-		e.dataset.reactRecovery = "true", console.warn("Site shell hydration:", t);
-	}
-	a && S.push((0, u.hydrateRoot)(a, /* @__PURE__ */ (0, m.jsx)(x, { model: n }), {
-		identifierPrefix: "site-footer-",
-		onRecoverableError: (e) => o(a, e)
-	})), i ? S.push((0, u.hydrateRoot)(i, /* @__PURE__ */ (0, m.jsx)(b, {
-		model: n,
-		account: r.port,
-		container: document.body,
-		onReady: () => {
-			i.dataset.shellMounted = "true", w();
-		}
-	}), {
-		identifierPrefix: "site-header-",
-		onRecoverableError: (e) => o(i, e)
-	})) : w();
+function O() {
+	w || (w = !0, T());
 }
-function D() {
+function k(e) {
+	console.warn("Site shell:", e), w || (w = !0, C = !1, E(Error("SITE_UI_UNAVAILABLE")));
+}
+function A() {
+	if (!C) {
+		C = !0;
+		try {
+			let e = document.querySelector("#site-shell-data"), t = document.querySelector("script[data-site-ui]");
+			if (!e || !t) {
+				O();
+				return;
+			}
+			let n = p(f(JSON.parse(e.textContent || "null")), new URL(t.src).searchParams.get("v") || "build"), r = c(document, n.accountLinks), i = document.querySelector("[data-site-header-root]"), a = document.querySelector("[data-site-footer-root]");
+			function o(e, t) {
+				e.dataset.reactRecovery = "true", console.warn("Site shell hydration:", t);
+			}
+			a && S.push((0, u.hydrateRoot)(a, /* @__PURE__ */ (0, m.jsx)(x, { model: n }), {
+				identifierPrefix: "site-footer-",
+				onRecoverableError: (e) => o(a, e)
+			})), i ? S.push((0, u.hydrateRoot)(i, /* @__PURE__ */ (0, m.jsx)(b, {
+				model: n,
+				account: r.port,
+				container: document.body,
+				onReady: () => {
+					i.dataset.shellMounted = "true", O();
+				}
+			}), {
+				identifierPrefix: "site-header-",
+				onRecoverableError: (e) => o(i, e)
+			})) : O();
+		} catch (e) {
+			k(e);
+		}
+	}
+}
+function j() {
+	C = !1;
 	let e = document.querySelector("#site-shell-data");
-	e && c(document, p(f(JSON.parse(e.textContent || "null"))).accountLinks).dispose();
+	try {
+		e && c(document, p(f(JSON.parse(e.textContent || "null"))).accountLinks).dispose();
+	} catch (e) {
+		console.warn("Site shell dispose:", e);
+	}
 	for (let e of S) e.unmount();
 	S.length = 0;
 }
-function O(e) {
+function M(e) {
 	return c(e.doc || document, e.urls).mount(e);
 }
 window.ClassNotesSiteUI = {
-	ready: T,
-	mountShell: E,
-	dispose: D,
-	mountAccountUI: O
-}, document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", E, { once: !0 }) : E();
-function k() {
+	ready: D,
+	mountShell: A,
+	dispose: j,
+	mountAccountUI: M
+}, document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", A, { once: !0 }) : A();
+function N() {
 	return import("./react/mount-dwmjY4NK.mjs");
 }
-function A() {
+function P() {
 	return import("./react/mount-BuY-A8GA.mjs");
 }
-function j() {
+function F() {
 	return import("./react/mount-C0YH1InO.mjs");
 }
-function M() {
-	return import("./react/mount-DEHj4az-.mjs");
-}
-function N() {
-	return import("./react/mount-DnbhajIK.mjs");
-}
-function P() {
-	return import("./react/mount-eZv4x-V_.mjs");
-}
-function F() {
-	return import("./react/mount-BAg8hL8X.mjs");
-}
 function I() {
-	return import("./react/mount-CUciKT-0.mjs");
+	return import("./react/mount-DxSipj7w.mjs");
 }
 function L() {
-	return import("./react/mount-D_v_9toj.mjs");
+	return import("./react/mount-DnbhajIK.mjs");
 }
 function R() {
-	return import("./react/mount-G8Dg4BHU.mjs");
+	return import("./react/mount-eZv4x-V_.mjs");
 }
 function z() {
-	return import("./react/mount-DqxTzlzD.mjs");
+	return import("./react/mount-BAg8hL8X.mjs");
 }
 function B() {
-	return import("./react/mount-CoTK0AHh.mjs");
+	return import("./react/mount-CUciKT-0.mjs");
 }
 function V() {
-	return import("./react/mount-CHPFYm21.mjs");
+	return import("./react/mount-D_v_9toj.mjs");
 }
 function H() {
+	return import("./react/mount-G8Dg4BHU.mjs");
+}
+function U() {
+	return import("./react/mount-DqxTzlzD.mjs");
+}
+function W() {
+	return import("./react/mount-CoTK0AHh.mjs");
+}
+function G() {
+	return import("./react/mount-CHPFYm21.mjs");
+}
+function K() {
 	return import("./react/mount-Cx93Ssck.mjs");
 }
-export { D as dispose, H as loadGate, N as loadInstructor, z as loadLabFrame, F as loadLabMission, P as loadLabPresentation, L as loadLabTutor, I as loadLabWorkspace, R as loadLabXp, A as loadLessonReader, B as loadNotifications, V as loadPresence, M as loadQuizForm, j as loadQuizResult, k as loadReviewNotebook, O as mountAccountUI, E as mountShell, T as ready };
+export { j as dispose, K as loadGate, L as loadInstructor, U as loadLabFrame, z as loadLabMission, R as loadLabPresentation, V as loadLabTutor, B as loadLabWorkspace, H as loadLabXp, P as loadLessonReader, W as loadNotifications, G as loadPresence, I as loadQuizForm, F as loadQuizResult, N as loadReviewNotebook, M as mountAccountUI, A as mountShell, D as ready };

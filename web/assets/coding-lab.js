@@ -19,7 +19,9 @@ async function mount(root,options){
  const meta={...model.meta,filename:model.meta?.filename||'exercise.py',lessonId:options.lessonId,title:options.lab.title,lessonBridge:options.lab.bridge};
  const key=`classroom-mission:${userId}:${missionId}`;
  let cached;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
- let trusted=options.snapshot,revision=Number(trusted.revision||0);
+ const maximum=stages.reduce((sum,stage)=>sum+Number(stage.xp||0),0)||300;
+ let trusted=options.snapshot&&typeof options.snapshot==='object'?options.snapshot:{mission:missionId,revision:0,draft:null,completed:[],xp:0,maximum,attempts:0,badge:false};
+ let revision=Number(trusted.revision||0);
  const restoredDraft=cached?.dirty?cached.state:trusted.draft;
  let state=normalize(restoredDraft);
  // Locally distinguish an intentionally empty draft from an unopened stage.

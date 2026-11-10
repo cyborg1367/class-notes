@@ -6,34 +6,46 @@ import { SiteFooter } from './shell/SiteFooter';
 import { getAccountRuntime } from './account/runtime';
 import type { AccountMountOptions } from './account/runtime';
 const roots: Root[] = [];
-let mounted = false, resolveReady: () => void;
-export const ready = new Promise<void>(resolve => { resolveReady = resolve; });
+let mounted = false, settled = false, resolveReady: () => void, rejectReady: (error: unknown) => void;
+export const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
+function succeed() { if (!settled) { settled = true; resolveReady(); } }
+function fail(error: unknown) {
+    console.warn('Site shell:', error);
+    if (settled) return;
+    settled = true; mounted = false; rejectReady(Error('SITE_UI_UNAVAILABLE'));
+}
 export function mountShell() {
     if (mounted)
         return;
     mounted = true;
-    const data = document.querySelector('#site-shell-data'), entry = document.querySelector<HTMLScriptElement>('script[data-site-ui]');
-    if (!data || !entry) {
-        resolveReady();
-        return;
-    }
-    const page = parseShellPage(JSON.parse(data.textContent || 'null'));
-    const model = shellModel(page, new URL(entry.src).searchParams.get('v') || 'build');
-    const runtime = getAccountRuntime(document, model.accountLinks);
-    const header = document.querySelector<HTMLElement>('[data-site-header-root]'), footer = document.querySelector<HTMLElement>('[data-site-footer-root]');
-    function recovery(host: HTMLElement, error: unknown) { host.dataset.reactRecovery = 'true'; console.warn('Site shell hydration:', error); }
-    if (footer)
-        roots.push(hydrateRoot(footer, <SiteFooter model={model}/>, { identifierPrefix: 'site-footer-', onRecoverableError: error => recovery(footer, error) }));
-    if (header)
-        roots.push(hydrateRoot(header, <SiteHeader model={model} account={runtime.port} container={document.body} onReady={() => { header.dataset.shellMounted = 'true'; resolveReady(); }}/>, { identifierPrefix: 'site-header-', onRecoverableError: error => recovery(header, error) }));
-    else
-        resolveReady();
+    try {
+        const data = document.querySelector('#site-shell-data'), entry = document.querySelector<HTMLScriptElement>('script[data-site-ui]');
+        if (!data || !entry) {
+            succeed();
+            return;
+        }
+        const page = parseShellPage(JSON.parse(data.textContent || 'null'));
+        const model = shellModel(page, new URL(entry.src).searchParams.get('v') || 'build');
+        const runtime = getAccountRuntime(document, model.accountLinks);
+        const header = document.querySelector<HTMLElement>('[data-site-header-root]'), footer = document.querySelector<HTMLElement>('[data-site-footer-root]');
+        function recovery(host: HTMLElement, error: unknown) { host.dataset.reactRecovery = 'true'; console.warn('Site shell hydration:', error); }
+        if (footer)
+            roots.push(hydrateRoot(footer, <SiteFooter model={model}/>, { identifierPrefix: 'site-footer-', onRecoverableError: error => recovery(footer, error) }));
+        if (header)
+            roots.push(hydrateRoot(header, <SiteHeader model={model} account={runtime.port} container={document.body} onReady={() => { header.dataset.shellMounted = 'true'; succeed(); }}/>, { identifierPrefix: 'site-header-', onRecoverableError: error => recovery(header, error) }));
+        else
+            succeed();
+    } catch (error) { fail(error); }
 }
 export function dispose() {
+    mounted = false;
     const data = document.querySelector('#site-shell-data');
-    if (data) getAccountRuntime(document, shellModel(parseShellPage(JSON.parse(data.textContent || 'null'))).accountLinks).dispose();
+    try { if (data) getAccountRuntime(document, shellModel(parseShellPage(JSON.parse(data.textContent || 'null'))).accountLinks).dispose(); }
+    catch (error) { console.warn('Site shell dispose:', error); }
     for (const root of roots)
-    root.unmount(); roots.length = 0; }
+        root.unmount();
+    roots.length = 0;
+}
 export function mountAccountUI(options: AccountMountOptions) {
     return getAccountRuntime(options.doc || document, options.urls).mount(options);
 }

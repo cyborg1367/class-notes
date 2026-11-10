@@ -25,11 +25,15 @@ for p,q in pages.items():
   assert not u.path.startswith('/'),value
   target=(p.parent/unquote(u.path)).resolve() if u.path else p
   if target.is_dir():target=target/'index.html'
+  assert target.is_relative_to(DIST),(p,value)
   assert target.exists(),(p,value)
   if u.fragment and target.suffix=='.html':assert u.fragment in pages[target].ids,(p,value)
 for p in DIST.rglob('*.css'):
  for v in re.findall(r'url\([\'\"]?([^\)\'\"]+)',p.read_text(encoding="utf-8")):
-  if not v.startswith(('data:','http:','https:')):assert (p.parent/urlsplit(v).path).exists(),(p,v)
+  if not v.startswith(('data:','http:','https:')):
+   css_target=(p.parent/urlsplit(unquote(v)).path).resolve()
+   assert css_target.is_relative_to(DIST),(p,v)
+   assert css_target.exists(),(p,v)
 assert not list(DIST.rglob('*.pdf')),'Private PDFs cannot be in the public build'
 assert not list(DIST.rglob('*.ipynb')),'Private notebooks cannot be in the public build'
 for p in DIST.rglob('*'):

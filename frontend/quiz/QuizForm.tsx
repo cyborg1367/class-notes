@@ -17,10 +17,7 @@ class ReceiptBoundary extends Component<{ view: QuizResultProps; receiptURL?: st
     if (!this.state.failed && Array.isArray(this.props.view.record.result?.items)) return <QuizResult {...this.props.view} />;
     return <section className="panel-card">
       <p role="status">نتیجه ثبت شد، اما نمایش آن کامل نشد.</p>
-      <div className="portal-actions">
-        <button type="button" className="button-outline" onClick={() => this.setState({ failed: false })}>نمایش دوبارهٔ نتیجه</button>
-        {this.props.receiptURL && <a className="quiet-link" href={this.props.receiptURL}>باز کردن رسید ثبت‌شده ←</a>}
-      </div>
+      {this.props.receiptURL && <a className="quiet-link" href={this.props.receiptURL}>باز کردن رسید ثبت‌شده ←</a>}
     </section>;
   }
 }

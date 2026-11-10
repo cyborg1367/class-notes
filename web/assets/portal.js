@@ -458,6 +458,13 @@ if(typeof document!=="undefined"){
    void getEndpoint().catch(()=>{});
    if(gen!==app.generation)return;
    const owner=app.user.id;
+   async function readServiceBody(response){
+    try{
+     if(typeof response?.text==='function'){const text=await response.text();return text?JSON.parse(text):null;}
+     if(typeof response?.json==='function')return await response.json();
+    }catch{return null;}
+    return null;
+   }
    async function submit(body,signal){
     let endpoint;
     try{endpoint=await portalAbortable(getEndpoint(),signal);}
@@ -465,8 +472,8 @@ if(typeof document!=="undefined"){
     const {data,error}=await app.client.auth.getSession();
     if(error||gen!==app.generation||data.session?.user?.id!==owner)throw Error('حساب ورود تغییر کرده است؛ صفحه را بازخوانی کن.');
     const result=await fetch(endpoint.href,{method:'POST',headers:{'Content-Type':'application/json','apikey':app.config.publishableKey,'Authorization':'Bearer '+data.session.access_token},body:JSON.stringify(body),credentials:'omit',signal});
-    const value=await result.json();
-    if(!result.ok){const text={CLASS_ACCESS_REQUIRED:'عضویت کلاس فعال نیست؛ وضعیت دسترسی را بررسی کن.',TASK_LOCKED:'ابتدا تسک قبلی را انجام بده.',LAB_RATE_LIMIT:'چند لحظه صبر کن و دوباره تلاش کن؛ تعداد بررسی‌های اخیر به حد مجاز رسیده است.',LAB_BUDGET_EXHAUSTED:'سهمیهٔ بررسی فعلاً تمام شده است؛ با مدرس در میان بگذار. کدت ذخیره می‌شود و اجرای محلی در دسترس است.',LAB_PAUSED:'بررسی نهایی موقتاً توسط مدرس متوقف شده است؛ کدت را محلی آزمایش و ذخیره کن.',REQUEST_CONFLICT:'این درخواست با کد دیگری ثبت شده است؛ صفحه را بازخوانی کن.',SIGN_IN_REQUIRED:'دوباره وارد حساب خودت شو.'}[value.error];const error=Error(text||'سرویس بررسی پاسخ نداد؛ کدت حفظ شده است. دوباره تلاش کن.');if(text)error.code=value.error;throw error;}
+    const value=await readServiceBody(result);
+    if(!result.ok){const code=typeof value?.error==='string'?value.error:'';const text={CLASS_ACCESS_REQUIRED:'عضویت کلاس فعال نیست؛ وضعیت دسترسی را بررسی کن.',TASK_LOCKED:'ابتدا تسک قبلی را انجام بده.',LAB_RATE_LIMIT:'چند لحظه صبر کن و دوباره تلاش کن؛ تعداد بررسی‌های اخیر به حد مجاز رسیده است.',LAB_BUDGET_EXHAUSTED:'سهمیهٔ بررسی فعلاً تمام شده است؛ با مدرس در میان بگذار. کدت ذخیره می‌شود و اجرای محلی در دسترس است.',LAB_PAUSED:'بررسی نهایی موقتاً توسط مدرس متوقف شده است؛ کدت را محلی آزمایش و ذخیره کن.',REQUEST_CONFLICT:'این درخواست با کد دیگری ثبت شده است؛ صفحه را بازخوانی کن.',SIGN_IN_REQUIRED:'دوباره وارد حساب خودت شو.'}[code];const error=Error(text||'سرویس بررسی پاسخ نداد؛ کدت حفظ شده است. دوباره تلاش کن.');if(text)error.code=code;throw error;}
     return value;
    }
    async function tutorRequest(body,signal){
@@ -474,9 +481,9 @@ if(typeof document!=="undefined"){
     if(error||gen!==app.generation||data.session?.user?.id!==owner){const err=Error('SIGN_IN_REQUIRED');err.code='SIGN_IN_REQUIRED';throw err;}
     const endpoint=new URL('/functions/v1/classroom-tutor/help',app.config.supabaseUrl);
     const response=await fetch(endpoint.href,{method:'POST',headers:{'Content-Type':'application/json','apikey':app.config.publishableKey,'Authorization':'Bearer '+data.session.access_token},body:JSON.stringify(body),credentials:'omit',signal});
-    const value=await response.json();
+    const value=await readServiceBody(response);
     if(gen!==app.generation)throw Error('ACCOUNT_CHANGED');
-    if(!response.ok){const err=Error('TUTOR_REQUEST_FAILED');err.code=value.error;throw err;}
+    if(!response.ok||!value||typeof value!=='object'){const err=Error('TUTOR_REQUEST_FAILED');if(typeof value?.error==='string')err.code=value.error;throw err;}
     return value;
    }
    await window.ClassNotesCodingLab.mount(host,{userId:owner,lessonId:lid,lab:info.lab,assetVersion:new URL(entry.src).search,assets:assets.href,lessonURL:url(lid+'/'),snapshot,
@@ -588,9 +595,7 @@ if(typeof document!=="undefined"){
    const panel=document.createElement('section');panel.className='panel-card';
    const message=document.createElement('p');message.setAttribute('role','status');
    message.textContent=view.focus?'نتیجه ثبت شد، اما نمایش آن کامل نشد.':'نمایش نتیجه کامل نشد.';
-   const retry=document.createElement('button');retry.type='button';retry.className='button-outline';retry.textContent='نمایش دوبارهٔ نتیجه';
-   retry.onclick=()=>{retry.disabled=true;void paintQuizResult(host,view,alive,receiptURL);};
-   panel.append(message,retry);
+   panel.append(message);
    if(receiptURL){const link=document.createElement('a');link.className='quiet-link';link.href=receiptURL;link.textContent='باز کردن رسید ثبت‌شده ←';panel.append(link);}
    host.replaceChildren(panel);
   }

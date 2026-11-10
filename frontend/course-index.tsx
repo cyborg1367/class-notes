@@ -9,9 +9,12 @@ let resolveReady:()=>void;
 export const ready=new Promise<void>(resolve=>{resolveReady=resolve});
 export function mountCoursePage(host:HTMLElement){
   if(roots.has(host))return;
-  const catalog=JSON.parse(document.querySelector('#catalog-data')?.textContent||'[]');
-  const course=catalog.find((item:Course)=>item.id===document.body.dataset.lessonId);
-  if(!course)return;
+  let course:Course|undefined;
+  try{
+    const catalog=JSON.parse(document.querySelector('#catalog-data')?.textContent||'[]');
+    course=Array.isArray(catalog)?catalog.find((item:Course)=>item.id===document.body.dataset.lessonId):undefined;
+  }catch(error){console.warn('Course page:',error);resolveReady();return;}
+  if(!course){resolveReady();return;}
   const channel=getViewChannel(host,INITIAL_COURSE_VIEW);
   const onReady=()=>{host.dataset.courseMounted='true';resolveReady()};
   const root=hydrateRoot(host,<CourseApplication course={course} channel={channel} onReady={onReady}/>,{

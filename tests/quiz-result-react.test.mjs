@@ -138,8 +138,7 @@ test('A display failure after commit offers the saved receipt without another su
   await wait(() => context.$('[data-result] .quiet-link'));
   assert.equal(context.$('[data-result] .quiet-link').href, base + route + '?attempt=' + record.id);
   assert.match(context.$('[data-result] .panel-card [role=status]').textContent, /نتیجه ثبت شد/);
-  context.$('[data-result] button').click();
-  await wait(() => context.$('[data-result] button:not(:disabled)'));
+  assert.equal(context.$('[data-result] button'), null);
   assert.equal(context.submissions.length, 1);
 });
 
