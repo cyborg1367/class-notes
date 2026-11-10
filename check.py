@@ -103,6 +103,7 @@ for p,q in pages.items():
 assert not (DIST/'assets/lab-checks.py').exists(),'Legacy browser grader must not ship'
 assert not (DIST/'assets/dashboard-ui.mjs').exists(),'Legacy dashboard renderer must not ship'
 assert not (DIST/'assets/coding-lab-layout.mjs').exists(),'Legacy lab layout must not ship'
+assert not (DIST/'assets/instructor.mjs').exists(),'Legacy instructor renderer must not ship'
 assert (DIST/'assets/dashboard-page.js').is_file(),'Missing compiled React dashboard'
 print('Checked shared asset fingerprint, canonical catalog and obsolete-file exclusion.')
 print('Checked generated homepage course counts and latest-note links.')

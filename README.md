@@ -65,12 +65,12 @@ GitHub Pages hosts the frontend; it does not run Python grading or provide a tru
 
 ### Requirements
 
-- Python 3 to build and check the public website.
+- Node.js 24 and Python 3 to build and check the public website.
 - A modern browser to use the portal and coding labs.
 - A configured Supabase project for authenticated classroom features.
 - The matching instructor backend package and E2B configuration for trusted lab grading.
 
-The frontend build uses Python's standard library; no npm install is required.
+Install locked frontend dependencies with `npm ci` before the first build.
 
 ### 1. Get the source
 

@@ -136,17 +136,15 @@ Stop the server with Ctrl+C before replacing project files.
 
 | Area | Status |
 | --- | --- |
-| Course main content, cards, access states and public controls | React, step 2 |
-| Header, mobile navigation and footer | React, step 3 |
-| Account page, header account menu and compact lab account | React, step 5; existing portal owns OAuth and draft-aware sign-out |
-| Presence and notifications UI | Existing service UI, connected through explicit empty boundaries |
-| Homepage main content, illustration and account CTA | React, step 4 |
-| Student dashboard | React, step 6; existing server and storage contracts |
-| Personal review notebook | Existing implementation; next route |
-| Lesson reading and resources | Existing protected content; preserve template and private delivery |
-| Quizzes | Existing implementation; preserve drafts, versions and submit lifecycle |
-| Coding labs and tutor panels | Existing implementation; dedicated mobile layout and state-preservation work |
-| Instructor panel | Existing implementation; migrate table/drawer workflows after shared components |
+| Course, homepage, account, dashboard, shell | React |
+| Notifications inbox | React island; portal owns RPC |
+| Presence widget and visibility setting | React island; portal owns RPC and realtime |
+| Membership/login/error cards | Shared React `GateCard`; portal decides when to show them |
+| About page | React prerender; authored copy |
+| Lesson reader, quizzes, review notebook, instructor panel | React |
+| Coding lab chrome (frame, workspace, mission, tutor, XP) | React islands; `coding-lab.js` remains the vanilla orchestrator |
+| Lesson widgets (`python-lab.js`, `space3d.js`, thresholds) | Authored vanilla; not a route migration |
+| `portal.js` auth/RPC | Stays a service; not a UI renderer |
 | Installable/offline PWA | Separate design; not implied by adopting React |
 
 Reuse the component/service contracts and shared ESM runtime when migrating each
