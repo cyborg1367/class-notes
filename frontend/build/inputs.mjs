@@ -11,4 +11,5 @@ export const PUBLIC_RENDER_INPUTS = Object.freeze([
   'web/assets/home-view-model.mjs',
   'web/assets/paper-icons.mjs',
   'web/assets/notifications.mjs',
+  'web/assets/classroom-presence.mjs',
 ]);
