@@ -5,6 +5,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import path from 'node:path';
 import {prerenderHome} from './build/prerender-home.mjs';
 import {prerenderAccount} from './build/prerender-account.mjs';
+import {prerenderAbout} from './build/prerender-about.mjs';
 import {prerenderCourse} from './build/prerender-course.mjs';
 import {PUBLIC_RENDER_INPUTS} from './build/inputs.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
@@ -34,6 +35,7 @@ await writeFile(path.join(root,'frontend/generated/course-pages.json'),JSON.stri
 console.log(`Prerendered ${Object.keys(pages).length} course page(s) from the canonical public catalog.`);
 await prerenderHome(root,renderer,catalog,bytes);
 await prerenderAccount(root,renderer);
+await prerenderAbout(root,renderer);
 
 const shells={};
 for(const file of (await readdir(path.join(root,'web'),{recursive:true})).filter(file=>file.endsWith('.html')).sort()){
