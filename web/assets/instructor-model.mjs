@@ -79,6 +79,11 @@ export function exportRows(view,rows,mission='all'){
  return [['name','email','access_status','lab_xp','lab_xp_maximum','completed_tasks','task_count','last_registered_at'],
   ...rows.map(p=>[p.name,p.email,p.status,p.lab.xp,p.lab.maximum,p.lab.completed,p.lab.task_count,p.last_registered_at])];
 }
+/**
+ * @param {(args: Record<string, any>) => Promise<unknown>} load
+ * @param {Record<string, any>} initialArgs
+ * @param {{alive?: () => boolean, onProgress?: (count: number, total: number) => void}} [options]
+ */
 export async function collectPages(load,initialArgs,{alive=()=>true,onProgress=()=>{}}={}){
  const rows=[],ids=new Set(),cursors=new Set();let args={...initialArgs,p_after:null,p_limit:100},expected=null;
  while(true){

@@ -225,3 +225,258 @@ body[data-page="instructor"] [data-teacher] h1,body[data-page="instructor"] [dat
 body[data-page="instructor"] [data-teacher] .count{font-family:inherit}
 @media(max-width:720px){body[data-page="instructor"] #top{width:calc(100% - 36px)}body[data-page="instructor"] [data-teacher] .instructor-app{padding:12px 0 32px}body[data-page="instructor"] [data-teacher] .heading-actions{flex-wrap:wrap}}
 
+
+/* React instructor workspace. Extend the paper kit inside this route only. */
+body[data-page="instructor"] [data-teacher]:has(.instructor-react) {
+  background: transparent;
+}
+
+body[data-page="instructor"] .instructor-react .instructor-app {
+  grid-template-columns: 184px minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+}
+
+body[data-page="instructor"] .instructor-react .sidebar {
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  box-shadow: var(--shadow);
+}
+
+body[data-page="instructor"] .teacher-side-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px 13px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--forest);
+  font-weight: 700;
+}
+
+body[data-page="instructor"] .instructor-react .side-nav button {
+  min-height: 44px;
+  border-inline-start-width: 3px;
+  padding-inline: 8px;
+}
+
+body[data-page="instructor"] .instructor-react .side-nav button[aria-current="page"] {
+  border-inline-start-color: var(--forest);
+}
+
+body[data-page="instructor"] .teacher-header {
+  padding-block-end: 20px;
+  margin-block-end: 22px;
+  border-block-end: 1px solid var(--rule);
+}
+
+body[data-page="instructor"] .teacher-context,
+body[data-page="instructor"] .teacher-course {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+body[data-page="instructor"] .teacher-context {
+  justify-content: space-between;
+  margin-block-end: 8px;
+}
+
+body[data-page="instructor"] .teacher-course {
+  color: var(--forest);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+body[data-page="instructor"] .teacher-course label,
+body[data-page="instructor"] .teacher-course-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+body[data-page="instructor"] .teacher-course select {
+  min-height: 44px;
+  max-width: 100%;
+  padding-inline: 10px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--surface);
+}
+
+body[data-page="instructor"] .teacher-refresh-time {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+body[data-page="instructor"] .instructor-react .page-heading { margin: 0; }
+body[data-page="instructor"] .instructor-react h1 {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  line-height: 1.5;
+}
+body[data-page="instructor"] .instructor-react h1:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 4px;
+}
+body[data-page="instructor"] .instructor-react .heading-actions { flex-wrap: wrap; }
+body[data-page="instructor"] .instructor-react .btn,
+body[data-page="instructor"] .instructor-react .icon-btn,
+body[data-page="instructor"] .instructor-react .search input,
+body[data-page="instructor"] .instructor-react .filter { min-height: 44px; }
+
+body[data-page="instructor"] .teacher-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+body[data-page="instructor"] .instructor-react .teacher-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--surface);
+  text-align: start;
+  box-shadow: var(--shadow);
+}
+
+body[data-page="instructor"] .instructor-react .teacher-metric:hover { border-color: var(--forest); }
+body[data-page="instructor"] .instructor-react .teacher-metric[data-tone="attention"] {
+  border-color: #c6a877;
+  background: var(--ochre-soft);
+}
+body[data-page="instructor"] .teacher-metric-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+body[data-page="instructor"] .teacher-metric strong {
+  color: var(--forest);
+  font-size: clamp(1.6rem, 2.7vw, 2.2rem);
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+body[data-page="instructor"] .teacher-metric small { color: var(--forest); font-size: 11px; }
+
+body[data-page="instructor"] .teacher-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  gap: 18px;
+  align-items: start;
+}
+body[data-page="instructor"] .instructor-react .card-head { flex-wrap: wrap; gap: 8px 14px; }
+body[data-page="instructor"] .instructor-react .card-head p { font-size: 12px; }
+body[data-page="instructor"] .instructor-react .quiet { min-height: 38px; }
+body[data-page="instructor"] .instructor-react .teacher-inbox { border-block-start: 3px solid var(--ochre); }
+body[data-page="instructor"] .instructor-react .pending-person > div { min-width: 0; overflow-wrap: anywhere; }
+body[data-page="instructor"] .instructor-react .pending-person strong { font-weight: 600; }
+body[data-page="instructor"] .instructor-react .teacher-card-link { margin-block-start: 6px; }
+body[data-page="instructor"] .instructor-react .table-foot { min-height: 58px; }
+body[data-page="instructor"] .instructor-react .teacher-mobile-label { display: none; }
+
+body[data-page="instructor"] .instructor-react .teacher-report-table td:first-child strong { font-weight: 650; }
+body[data-page="instructor"] .instructor-react .teacher-report-table td { overflow-wrap: anywhere; }
+body[data-page="instructor"] .instructor-react .sheet-head { padding-block: 10px; }
+body[data-page="instructor"] .instructor-react .sheet-head .icon-btn { width: 44px; }
+body[data-page="instructor"] .instructor-react .sheet-body { overflow-wrap: anywhere; }
+body[data-page="instructor"] .instructor-react .confirm-actions { flex-wrap: wrap; }
+body[data-page="instructor"] .instructor-react .confirm bdi { overflow-wrap: anywhere; }
+body[data-page="instructor"] .instructor-react .answer header { flex-wrap: wrap; }
+body[data-page="instructor"] .instructor-react .sheet-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
+body[data-page="instructor"] .instructor-react .toast { inset-block-end: max(16px, env(safe-area-inset-bottom)); }
+
+@media (max-width: 1000px) {
+  body[data-page="instructor"] .instructor-react .instructor-app { grid-template-columns: 156px minmax(0, 1fr); }
+  body[data-page="instructor"] .teacher-overview-grid { grid-template-columns: minmax(0, 1fr); }
+  body[data-page="instructor"] .instructor-react .page-heading { flex-wrap: wrap; gap: 10px 18px; }
+  body[data-page="instructor"] .instructor-react .teacher-report-scroll { overflow: visible; padding: 12px; }
+  body[data-page="instructor"] .instructor-react .teacher-report-table { display: block; min-width: 0; }
+  body[data-page="instructor"] .instructor-react .teacher-report-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+  body[data-page="instructor"] .instructor-react .teacher-report-table tbody { display: grid; gap: 10px; }
+  body[data-page="instructor"] .instructor-react .teacher-report-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    padding: 12px;
+    gap: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  body[data-page="instructor"] .instructor-react .teacher-report-table td { display: block; min-width: 0; padding: 0; border: 0; }
+  body[data-page="instructor"] .instructor-react .teacher-report-table td:first-child,
+  body[data-page="instructor"] .instructor-react .teacher-report-table td:last-child { grid-column: 1 / -1; }
+  body[data-page="instructor"] .instructor-react .teacher-report-table td:first-child { border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  body[data-page="instructor"] .instructor-react .teacher-report-table td:last-child { padding-top: 4px; }
+  body[data-page="instructor"] .instructor-react .teacher-mobile-label { display: block; font-size: 11px; color: var(--muted); }
+}
+
+@media (max-width: 720px) {
+  body[data-page="instructor"] .instructor-react .sidebar { padding: 7px; margin-bottom: 16px; }
+  body[data-page="instructor"] .teacher-side-brand { display: none; }
+  body[data-page="instructor"] .instructor-react .side-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+  }
+  body[data-page="instructor"] .instructor-react .side-nav button {
+    flex: 1 1 calc((100% - 16px) / 3);
+    justify-content: center;
+    width: auto;
+    padding-inline: 4px;
+    gap: 4px;
+  }
+  body[data-page="instructor"] .instructor-react .side-nav .count { margin-inline-start: 0; }
+  body[data-page="instructor"] .teacher-header { margin-block-end: 14px; padding-block-end: 14px; }
+  body[data-page="instructor"] .teacher-metrics { gap: 6px; margin-bottom: 12px; }
+  body[data-page="instructor"] .instructor-react .teacher-metric { padding: 9px; }
+  body[data-page="instructor"] .teacher-metric-label { display: block; font-size: 11px; }
+  body[data-page="instructor"] .teacher-metric-label .paper-icon { display: none; }
+  body[data-page="instructor"] .teacher-metric small { font-size: 10px; }
+  body[data-page="instructor"] .teacher-overview-grid { gap: 12px; }
+  body[data-page="instructor"] .instructor-react .question-line { gap: 8px; grid-template-columns: minmax(0,1fr) auto; }
+  body[data-page="instructor"] .instructor-react .question-line .small { white-space: normal; max-width: 10ch; }
+  body[data-page="instructor"] .instructor-react .request-actions { padding: 0; justify-content: flex-end; flex-wrap: wrap; }
+  body[data-page="instructor"] .instructor-react .instructor-detail { border: 0; }
+  body[data-page="instructor"] .instructor-react .sheet-head {
+    padding-block-start: max(10px, env(safe-area-inset-top));
+  }
+  body[data-page="instructor"] .instructor-react .sheet-body { padding-block-end: max(20px, env(safe-area-inset-bottom)); }
+  body[data-page="instructor"] .instructor-react .confirm { padding: 18px; }
+}
+
+body[data-page="instructor"] .instructor-preview-banner {
+  margin-block: 12px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--kit-rule, #d3cbb6);
+  border-inline-start: 3px solid #c9a058;
+  background: #f5edcf;
+  color: #584820;
+  font-size: 12px;
+}
+body[data-page="instructor"] .instructor-preview-banner p { margin: 0; }
+body[data-page="instructor"] .instructor-react .instructor-code mark {
+  padding-inline: 4px;
+  border-radius: 2px;
+  background: var(--ochre-soft);
+  color: var(--forest);
+}

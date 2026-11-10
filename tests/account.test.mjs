@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { accountIdentity, accountMarkup, saveBeforeSignOut } from '../web/assets/account-menu.mjs';
+import { accountIdentity, saveBeforeSignOut } from '../web/assets/account-menu.mjs';
 import { createRequire } from 'node:module';
 const { portalReturn } = createRequire(import.meta.url)('../web/assets/portal.js');
+const {renderAccountControls:accountMarkup}=await import('../.cache/react/course-render.mjs');
 const urls = { account: 'https://class.test/notes/account/', dashboard: 'https://class.test/notes/dashboard/', teacher: 'https://class.test/notes/instructor/' };
 const user = { id: 'student', email: 'student@example.com', user_metadata: { full_name: 'سارا احمدی', avatar_url: 'https://example.com/avatar.jpg' } };
 test('unresolved sessions stay neutral, resolved guests see Google and members see dashboard and logout', () => {
@@ -37,7 +38,7 @@ test('signed-in compact lab accounts can reach the independent review notebook',
 });
 test('OAuth return targets stay inside the site and account callbacks fall back to dashboard', () => {
     const base = new URL('https://class.test/notes/');
-    for (const target of ['https://evil.test/', '/other/', 'https://class.test/notes/account/', 'https://class.test/notes/%2e%2e/private'])
+    for (const target of ['https://evil.test/', '/other/', '/notes/account', '/notes/%61ccount?next=%2Freview%2F', '/notes/account/', 'https://class.test/notes/%2e%2e/private'])
         assert.equal(portalReturn(target, base), urls.dashboard);
     const lesson = 'https://class.test/notes/lab/machine-learning/evaluating-knn/';
     assert.equal(portalReturn(lesson, base), lesson);

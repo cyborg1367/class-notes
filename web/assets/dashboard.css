@@ -137,3 +137,40 @@ body[data-page="dashboard"] .sr-only{position:absolute;width:1px;height:1px;padd
  .dash-lesson-table{min-width:0}
  .dash-next-actions,.dash-review-toggle,.dash-bookmark{display:none}
 }
+
+/* One accessible learning path: table on desktop, stacked rows on phones. */
+.dash-glyph{display:contents}
+.dash-mobile-label{display:none}
+.dash-lesson-table [hidden]{display:none}
+body[data-page="dashboard"] #results:focus-visible{outline:2px solid var(--kit-forest);outline-offset:4px}
+@media screen and (max-width: 1090px) {
+ .dash-table-wrap{overflow:visible}
+ .dash-lesson-table,.dash-lesson-table tbody{display:block;min-width:0}
+ .dash-lesson-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .dash-lesson-table tbody tr:not([hidden]){
+  display:grid;grid-template-columns:2.25rem minmax(0,1fr);
+  height:auto;padding:12px 14px;gap:0 8px;border-block-end:1px solid var(--kit-rule)
+ }
+ .dash-lesson-table tbody tr:last-child{border-block-end:0}
+ .dash-lesson-table tbody :is(th,td){min-width:0;padding:0;border:0}
+ .dash-lesson-table tbody tr[data-current="true"]>td:last-child{box-shadow:none}
+ .dash-lesson-table .dash-chapter{align-self:center;font-size:13px;color:var(--kit-muted)}
+ .dash-lesson-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
+ .dash-lesson-title a{min-width:0;overflow-wrap:anywhere}
+ .dash-lesson-table .dash-lesson-note{display:none}
+ .dash-lesson-fact{grid-column:2;display:grid;grid-template-columns:4.5rem minmax(0,1fr);align-items:center;gap:8px}
+ .dash-lesson-fact .dash-cell-link{min-height:44px;flex-wrap:wrap}
+ .dash-mobile-label{display:block;color:var(--kit-muted);font-size:12px}
+ .dash-lab-metric{white-space:normal;flex-wrap:wrap}
+}
+
+.dash-xp .dash-retry-link{padding:0 4px;border:0;background:none;color:var(--kit-forest);font:inherit;min-height:36px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.dash-xp .dash-retry-link:disabled{cursor:wait;color:var(--kit-muted)}
+@media (max-width:760px){.dash-xp .dash-retry-link{min-height:44px}}
+
+.dash-path-tools{display:flex;justify-content:flex-end;margin-top:20px}
+.dash-path-tools + .dash-course{margin-top:8px}
+.dash-path-tools .dash-review-toggle{
+ margin:0;padding:4px 10px;min-height:44px;border:1px solid var(--kit-rule);border-radius:4px;background:var(--kit-surface)
+}
+.dash-path-tools .dash-review-toggle[aria-pressed="true"]{background:var(--kit-sage);border-color:var(--kit-forest)}

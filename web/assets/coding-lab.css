@@ -676,3 +676,361 @@ body.lab-notebook-ready .portal-main{padding:0;}
 .threshold-slider-label{display:grid;gap:8px;font:12px var(--font-mono);direction:ltr;margin-block:16px}.threshold-slider-label output{color:var(--teal-deep)}.threshold-slider-label input{width:100%;accent-color:var(--teal-deep)}.lab-evaluation-preview [data-threshold-details]>svg{display:block;width:100%;max-width:350px;margin:16px auto}
 
 .lab-thresholds .mission-query strong{font-size:13px;overflow-wrap:anywhere}
+
+/* React owns the story and feedback content; the existing workspace keeps its layout. */
+.lab-open-notebook .lab-story-review[hidden] { display: none; }
+.lab-intro[data-react-lab-story] > .lab-intro-copy .lab-intro-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.lab-intro[data-react-lab-story] .lab-intro-kicker .paper-icon { flex: 0 0 18px; width: 18px; height: 18px; }
+.lab-intro[data-react-lab-story] .lab-intro-table { max-inline-size: 100%; }
+.lab-intro[data-react-lab-story] .lab-intro-query strong { overflow-wrap: anywhere; }
+.lab-feedback-dialog[data-react-lab-feedback] { max-block-size: calc(100vh - 32px); max-block-size: calc(100dvh - 32px); }
+.lab-feedback-dialog[data-react-lab-feedback] .lab-feedback-step { padding-inline-end: 44px; overflow-wrap: anywhere; }
+.lab-feedback-dialog[data-react-lab-feedback] .lab-feedback-close { inset-inline-end: 10px; width: 44px; height: 44px; }
+.lab-intro[data-react-lab-story] .lab-intro-footer .button-forest,
+.lab-feedback-dialog[data-react-lab-feedback] .button-forest { min-block-size: 44px; }
+@media (max-width: 700px) {
+  .lab-intro[data-react-lab-story] .lab-intro-footer .button-forest { inline-size: 100%; }
+  .lab-intro[data-react-lab-story] .lab-intro-query strong { font-size: 14px; }
+}
+
+/* lab-mission-header:start */
+.lab-open-notebook .lab-top.lab-mission-header {
+  --lab-header-height: 84px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto;
+  align-items: center;
+  gap: 16px 28px;
+  box-sizing: border-box;
+  height: auto;
+  min-height: var(--lab-header-height);
+  padding: 12px clamp(16px, 2.25vw, 42px);
+  direction: rtl;
+}
+.lab-open-notebook .lab-mission-header .lab-mission-heading {
+  grid-area: auto;
+  min-width: 0;
+  width: auto;
+  height: auto;
+  border: 0;
+  padding: 0;
+  gap: clamp(14px, 2vw, 32px);
+  direction: rtl;
+  flex-wrap: wrap;
+}
+.lab-mission-header .lab-heading-copy {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.lab-open-notebook .lab-mission-header h1 { margin: 0; min-width: 0; white-space: normal; overflow-wrap: anywhere; font-size: clamp(17px, 1.6vw, 23px); }
+.lab-open-notebook .lab-mission-header .lab-story-review { min-height: 36px; margin: 0; padding-inline: 6px; }
+.lab-mission-header .lab-story-review[hidden],
+.lab-open-notebook.is-lab-intro .lab-mission-header .mission-navigation { display: none; }
+.lab-open-notebook .lab-mission-header .mission-navigation {
+  direction: rtl;
+  flex: 0 1 auto;
+  margin: 0;
+  max-width: 100%;
+}
+.lab-open-notebook .lab-mission-header .mission-path {
+  display: flex;
+  flex-wrap: wrap;
+  direction: rtl;
+  gap: 5px;
+  flex: 0 1 auto;
+  justify-content: start;
+}
+.lab-open-notebook .lab-mission-header .mission-path li { flex: 0 0 auto; }
+.lab-open-notebook .lab-mission-header .mission-path li::before { display: none; }
+.lab-open-notebook .lab-mission-header .mission-path button {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border: 1px solid #a39a80;
+  border-radius: 4px;
+  background: #f8f3e5;
+  color: #263c32;
+  font: 600 13px/1 var(--font-body), sans-serif;
+}
+.lab-open-notebook .lab-mission-header .mission-path button[data-done="true"] {
+  background: #e0e9df;
+  border-color: #638575;
+  color: #164a40;
+}
+.lab-open-notebook .lab-mission-header .mission-path button[data-locked="true"] {
+  background: transparent;
+  border-style: dashed;
+  color: #5d594c;
+}
+.lab-open-notebook .lab-mission-header .mission-path button[aria-current="step"] {
+  background: #18564e;
+  border-color: #18564e;
+  color: #fffdf3;
+  outline: 2px solid #879c83;
+  outline-offset: 2px;
+}
+.lab-open-notebook .lab-mission-header .mission-path button:focus-visible,
+.lab-mission-header a:focus-visible, .lab-mission-header button:focus-visible {
+  outline: 2px solid #18564e;
+  outline-offset: 3px;
+}
+.lab-header-utilities {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.25vw, 24px);
+  min-width: 0;
+}
+.lab-open-notebook .lab-mission-header .mission-xp { padding: 0; gap: 8px; }
+.lab-open-notebook .lab-mission-header .mission-xp-orbit { width: 48px; height: 48px; flex-basis: 48px; }
+.lab-open-notebook .lab-mission-header .mission-xp-core { inset: 8px; }
+.lab-open-notebook .lab-mission-header .mission-xp-value { font-size: 16px; }
+.lab-open-notebook .lab-mission-header .mission-xp-limit { font-size: 11px; }
+.lab-open-notebook .lab-mission-header .mission-xp-count { font-size: 10px; }
+.lab-mission-header .lab-site-links { gap: 5px 12px; justify-content: flex-start; flex-wrap: wrap; }
+.lab-mission-header .lab-site-links a { display: inline-flex; align-items: center; min-height: 36px; font-size: 12px; }
+.lab-mission-header .lab-identity { padding: 0; border: 0; gap: 12px; direction: ltr; }
+.lab-mission-header .lab-identity .lab-wordmark strong { font-size: 18px; }
+.lab-mission-header .lab-identity .lab-wordmark small { font-size: 7px; }
+[data-lab-fixture] :is([data-run],[data-activate],[data-check],[data-cloud-load],[data-refresh]) { display: none !important; }
+.lab-mission-header .lab-site-links .classroom-presence { margin-inline-start: 2px; }
+.lab-open-notebook:has(.lab-mission-header) .lab-workspace { height: max(640px, calc(100dvh - var(--lab-measured-header, 84px))); }
+[data-react-mission-brief] .mission-brief-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+[data-react-mission-brief] .mission-brief-meta .lab-task-number { margin: 0; }
+.mission-brief-xp { color: #18564e; background: #f5edd6; border: 1px solid #c9b78a; border-radius: 3px; padding: 1px 7px; white-space: nowrap; font-size: 12px; }
+.lab-open-notebook [data-react-mission-brief] .mission-lock-note {
+  border-inline-start: 2px solid #b18c49;
+  padding-inline-start: 9px;
+  margin: 12px 0;
+  color: #554d3d;
+  font-size: 12px;
+}
+@media (max-width: 1260px) {
+  .lab-open-notebook .lab-top.lab-mission-header { grid-template-columns: minmax(0,1fr); gap: 8px; min-height: 0; }
+  .lab-mission-header .lab-header-utilities { justify-content: space-between; border-block-start: 1px solid #c9c1ac; padding-block-start: 8px; }
+  .lab-open-notebook:has(.lab-mission-header) .lab-workspace { height: max(640px, calc(100dvh - var(--lab-measured-header, 132px))); }
+}
+@media (max-width: 860px) {
+  .lab-open-notebook:has(.lab-mission-header) .lab-workspace { height: auto; }
+}
+@media (max-width: 600px) {
+  .lab-open-notebook .lab-top.lab-mission-header { grid-template-rows: auto auto; padding: 10px 12px; }
+  .lab-open-notebook .lab-mission-header .lab-mission-heading { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; }
+  .lab-open-notebook .lab-mission-header .mission-path { gap: 4px; }
+  .lab-open-notebook .lab-mission-header .mission-path button { width: 44px; height: 44px; min-width: 44px; }
+  .lab-mission-header .lab-header-utilities { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 10px; }
+  .lab-mission-header .lab-identity { grid-column: 1; grid-row: 1; justify-content: start; min-width: 0; }
+  .lab-open-notebook .lab-mission-header .mission-xp { grid-column: 2; grid-row: 1; }
+  .lab-mission-header .lab-site-links { grid-column: 1 / -1; grid-row: 2; gap: 3px 11px; }
+}
+@media (forced-colors: active) {
+  .lab-open-notebook .lab-mission-header .mission-path button[aria-current="step"] { outline-color: Highlight; }
+}
+/* lab-mission-header:end */
+
+/* react-lab-workspace-rtl:start */
+.lab-open-notebook [data-react-lab-workspace] {
+  --lab-console-bar: 52px;
+  min-inline-size: 0;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-editor-toolbar {
+  direction: rtl;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-file {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  margin: 0;
+  margin-inline-end: auto;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-filename {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-file > :is(svg,.lab-file-dot) {
+  flex-shrink: 0;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-toolbar-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-actions {
+  direction: rtl;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lab-open-notebook [data-react-lab-workspace] :is(.lab-code-wrap,.lab-code pre,.lab-code textarea,.lab-lines,.lab-output,.lab-console-form) {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+.lab-open-notebook [data-react-lab-workspace] :is(.lab-code pre,.lab-code textarea,.lab-output) {
+  text-align: left;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-lines { text-align: right; }
+.lab-open-notebook [data-react-lab-workspace] .lab-console-head {
+  position: relative;
+  direction: rtl;
+  box-sizing: border-box;
+  min-block-size: var(--lab-console-bar);
+  margin-inline: 16px;
+  padding-block: 6px;
+  gap: 8px;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-console-title { margin: 0; }
+.lab-open-notebook [data-react-lab-workspace] .lab-console-actions { gap: 6px; }
+.lab-open-notebook [data-react-lab-workspace] :is(.lab-console-actions > button,.lab-console-tools > summary) {
+  box-sizing: border-box;
+  inline-size: 38px;
+  block-size: 38px;
+}
+.lab-open-notebook [data-react-lab-workspace] :is(.lab-repl-toggle,.lab-console-toggle) svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-repl-toggle[aria-expanded="true"] { background: #ffffff17; }
+.lab-open-notebook [data-react-lab-workspace] :is(.lab-tools,.lab-console-tools) { position: static; }
+.lab-open-notebook [data-react-lab-workspace] :is(.lab-tools-menu,.lab-console-menu) {
+  inset: auto;
+  inset-block-start: 100%;
+  inset-inline-end: 8px;
+  box-sizing: border-box;
+  inline-size: min(250px, calc(100% - 16px));
+  max-block-size: min(65vh, 340px);
+  overflow: auto;
+  direction: rtl;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-console-menu { inline-size: min(190px, calc(100% - 16px)); }
+.lab-open-notebook [data-react-lab-workspace] :is(.lab-tools:not([open]) > .lab-tools-menu,.lab-console-tools:not([open]) > .lab-console-menu) {
+  display: none;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-console-form button { white-space: nowrap; }
+.lab-open-notebook [data-react-lab-workspace] .lab-split-area {
+  grid-template-columns: minmax(0,1fr);
+  min-inline-size: 0;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-split-area > :is(.lab-code-wrap,.lab-resizer,.lab-console) {
+  grid-column: 1;
+  min-inline-size: 0;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-split-area.is-console-collapsed {
+  grid-template-rows: minmax(0,1fr) 0 var(--lab-console-bar);
+}
+.lab-open-notebook [data-react-lab-workspace] .is-console-collapsed :is([data-repl-toggle],.lab-console-tools) { display: none; }
+.lab-open-notebook [data-react-lab-workspace] .lab-console-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.lab-open-notebook [data-react-lab-workspace] .lab-console-actions :is(button,summary):focus-visible {
+  outline: 2px solid #ead28a;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .lab-open-notebook [data-react-lab-workspace] { --lab-console-bar: 58px; }
+  .lab-open-notebook [data-react-lab-workspace] :is(.lab-console-actions > button,.lab-console-tools > summary) {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+  .lab-open-notebook [data-react-lab-workspace] :is(.lab-actions button,.lab-tools > summary,[data-focus],[data-last-feedback]) {
+    min-block-size: 44px;
+  }
+  .lab-open-notebook [data-react-lab-workspace] :is(.lab-console-head,.lab-editor-toolbar) { gap: 6px; }
+  .lab-open-notebook [data-react-lab-workspace] .lab-editor-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+  }
+  .lab-open-notebook [data-react-lab-workspace] .lab-file { justify-self: start; }
+}
+/* react-lab-workspace-rtl:end */
+
+/* lab-toolbar-order:start */
+.lab-open-notebook [data-react-lab-workspace] .lab-editor-toolbar {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-file {
+  flex-direction: row-reverse;
+  margin: 0;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-toolbar-controls {
+  flex-direction: row-reverse;
+  margin-inline-end: auto;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-actions {
+  flex-direction: row-reverse;
+}
+.lab-open-notebook [data-react-lab-workspace] .lab-editor-toolbar .lab-tools-menu {
+  inset-inline-start: 8px;
+  inset-inline-end: auto;
+}
+@media (max-width: 600px) {
+  .lab-open-notebook [data-react-lab-workspace] .lab-editor-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .lab-open-notebook [data-react-lab-workspace] .lab-file { align-self: flex-end; }
+  .lab-open-notebook [data-react-lab-workspace] .lab-toolbar-controls {
+    margin: 0;
+    justify-content: flex-end;
+  }
+}
+/* lab-toolbar-order:end */
+
+/* react-lab-tutor:start */
+.lab-open-notebook #lab-panel-assistant [data-react-lab-tutor] { min-inline-size: 0; }
+.lab-open-notebook [data-react-lab-tutor] :is(.lab-tutor-head,.lab-tutor-stage-row,.lab-tutor-composer) { min-inline-size: 0; }
+.lab-open-notebook [data-react-lab-tutor] .lab-tutor-stage { overflow-wrap: anywhere; }
+.lab-open-notebook [data-react-lab-tutor] .lab-tutor-message {
+  max-inline-size: 94%;
+  border-radius: 4px;
+}
+.lab-open-notebook [data-react-lab-tutor] .lab-tutor-message[data-role="student"] {
+  justify-self: start;
+  background: #f8f1dc;
+}
+.lab-open-notebook [data-react-lab-tutor] .lab-tutor-message[data-role="assistant"] {
+  justify-self: end;
+  background: #f6f2e8;
+}
+.lab-open-notebook [data-react-lab-tutor] .lab-tutor-message-text {
+  text-align: start;
+  unicode-bidi: plaintext;
+}
+.lab-open-notebook [data-react-lab-tutor] textarea { text-align: start; }
+.lab-open-notebook [data-react-lab-tutor] .lab-tutor-close {
+  width: 36px;
+  height: 36px;
+}
+.lab-open-notebook [data-react-lab-tutor] .lab-tutor-status[data-kind="error"] {
+  color: #813e32;
+}
+.lab-open-notebook [data-react-lab-tutor] :is(textarea,input,summary,button,.lab-tutor-transcript):focus-visible {
+  outline: 2px solid #18564e;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .lab-open-notebook [data-react-lab-tutor] :is(.lab-tutor-head,.lab-tutor-transcript,.lab-tutor-composer) { padding-inline: 12px; }
+  .lab-open-notebook [data-react-lab-tutor] .lab-tutor-stage-row { margin-inline: 12px; }
+  .lab-open-notebook [data-react-lab-tutor] .lab-tutor-close { width: 44px; height: 44px; }
+  .lab-open-notebook [data-react-lab-tutor] .lab-tutor-send { min-height: 44px; }
+  .lab-open-notebook [data-react-lab-tutor] .lab-tutor-message { max-inline-size: 100%; }
+}
+@media (forced-colors: active) {
+  .lab-open-notebook [data-react-lab-tutor] :is(textarea,input,summary,button,.lab-tutor-transcript):focus-visible { outline-color: Highlight; }
+}
+/* react-lab-tutor:end */

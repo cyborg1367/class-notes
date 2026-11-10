@@ -1,0 +1,19 @@
+/* Form-only layout. Surfaces, typography and buttons inherit the paper kit. */
+.react-quiz-form .react-quiz-work { min-inline-size: 0; }
+.react-quiz-form :is(.question-card, .submission-review) { scroll-margin-block-start: clamp(28px, 7vw, 100px); }
+.react-quiz-form .quiz-code { max-inline-size: 100%; overflow-x: auto; }
+.react-quiz-form .question-map { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.react-quiz-form .question-map a { min-block-size: 44px; }
+.react-quiz-form :is(.blank-help, .blank-error, .question-feedback) { overflow-wrap: anywhere; }
+.react-quiz-form [data-quiz-experience][hidden], .react-quiz-form [data-review][hidden] { display: none; }
+.react-quiz-form :is(.question-card, .submission-review):focus-visible {
+  outline: 2px solid var(--kit-forest);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .react-quiz-form .question-map { grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); }
+  .react-quiz-form .quiz-submit .portal-actions { flex-wrap: wrap; }
+}
+@media print {
+  .react-quiz-form .question-map { display: none; }
+}

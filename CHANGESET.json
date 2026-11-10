@@ -1,0 +1,48 @@
+{
+  "source": "https://skills.wheresryan.sh/anatomy/collection/gradient-descent",
+  "dependency": "anatomy-figures@0.1.0",
+  "license": "MIT",
+  "updates": {
+    "package.json": "0d51dd2185a497be883063702f731bbcbfb9e79da625a12ee59a891a3e2a1149",
+    "package-lock.json": "21df44a3d8d93b44edb58967c3951f3c2e6faa85febb7d4816669104db120168",
+    "frontend/home/HomeHero.tsx": "63ede97779c430b0cf8d4db41a18a1f65ccb9aa4d4f4f596038a38c539fae2f1",
+    "frontend/home/HomePage.tsx": "b2c6de99851dfc61f1d2776d692aefc0055da56389aaebfa13b5ae7d2c798d17",
+    "frontend/home/HomeAccountLink.tsx": "de199ee1030e7d19ff096ea763f86e8d018b53147a68b41f9bd7410dc8427174",
+    "frontend/home/GradientHero.tsx": "0cbc5dd8e47603a78f3f44035bd2b6c3f391f6f130d26425f33d9199f45e89af",
+    "web/assets/homepage.css": "f73e69209efc676505d4628fed29109bbd2286805bffb5acbf5f9221c1db4730",
+    "web/assets/third-party/anatomy-figures-MIT.txt": "d6035e7ff2d8a21589ed44b35f309b0f2c652f9d7c0e3c781c05f1097427c85b",
+    "tests/homepage.test.mjs": "8af11d344cdfcd255e8457bb52beebcd5d58912d4ca7baf24e817fa84b61dbca",
+    "tests/helpers/built-module.mjs": "667bc304d8028b13f9c2d9f5c1f189260b42cf4ba1dd6ea5befdc9d8d8ca98c0"
+  },
+  "obsolete_lens": {
+    "frontend/home/lens/LensHero.tsx": {
+      "text": true,
+      "sha256": "66b730140c1b0db6673dbedb4b2f67273390d3bdbefd8368cad70cbeab670dec"
+    },
+    "frontend/home/lens/model.ts": {
+      "text": true,
+      "sha256": "f4f20a0d4c49ef8670e221430eebb2bf2fe8fdb89bcf0d914333d0795932ed76"
+    },
+    "frontend/home/lens/scene.ts": {
+      "text": true,
+      "sha256": "d8a11cd83a65fda486dca454f77d88426eabee573084b44f8661848dbd197904"
+    },
+    "web/assets/ai-lens-poster.webp": {
+      "text": false,
+      "sha256": "5bf59929b5d8ed3dc2d157e0243f4f25a51840c86deab63dbb13fecc28b06652"
+    },
+    "web/assets/third-party/three-MIT.txt": {
+      "text": true,
+      "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
+    },
+    "tests/ai-lens-model.test.mjs": {
+      "text": true,
+      "sha256": "29220ea7e7bab70d4930246c9e1a852cf14b92415ae0de344864b6d1baf0ba6a"
+    }
+  },
+  "validation": {
+    "python_tests": 43,
+    "node_tests": 122,
+    "routes": 20
+  }
+}

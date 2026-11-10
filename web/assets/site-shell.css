@@ -1,0 +1,12 @@
+/* Existing paper-kit layout, with explicit boundaries for legacy service DOM. */
+.shell-service-slot{display:contents}
+.shell-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.shell-icon>.paper-icon{width:18px;height:18px}
+body[data-ui] .portal-nav>[data-shell-account-slot]>.account-controls{order:4;flex:0 0 auto;margin:0}
+body[data-ui] .portal-nav>[data-shell-account-slot]>.nav-account{order:4;min-height:44px;display:inline-flex;align-items:center;white-space:nowrap}
+body[data-ui] .portal-nav>[data-shell-presence-slot]>.classroom-presence{order:2;flex:0 1 auto;margin:0;padding:0;border:0;min-width:0}
+body[data-ui] .portal-nav>[data-shell-presence-slot]>.classroom-presence>summary{border:0;background:transparent;min-height:44px;padding:0;font-size:11px}
+@media(max-width:760px){
+ body[data-ui] .portal-nav>[data-shell-presence-slot]>.classroom-presence{order:5;flex:1 0 100%;margin:0;padding:0}
+ body[data-ui] .portal-nav>[data-shell-presence-slot]>.classroom-presence>summary{min-height:26px;font-size:11px}
+}

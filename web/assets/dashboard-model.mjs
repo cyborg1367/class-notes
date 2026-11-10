@@ -1,4 +1,8 @@
 // Read-only view model. XP and completion are accepted only from server snapshots.
+/** @param {import('../../frontend/dashboard/contracts').DashboardLesson} lesson
+ * @param {import('../../frontend/dashboard/contracts').LabResult | undefined} result
+ * @returns {import('../../frontend/dashboard/contracts').LabProgress | null}
+ */
 function labView(lesson,result){
  if(!lesson.lab)return null;
  const s=result?.status==='fulfilled'?result.value:null;
@@ -8,6 +12,9 @@ function labView(lesson,result){
  const next=tasks.find(t=>!completed.has(t.id));
  return {status:'ready',xp:Math.max(0,Math.min(s.maximum,s.xp)),maximum:s.maximum,tasks,completed,done:completed.size,count:tasks.length,finished:s.badge===true&&completed.size===tasks.length,nextTitle:(lesson.lab_steps||[]).find(t=>t.id===next?.id)?.title||'مأموریت بعدی',attempts:Number(s.attempts)||0};
 }
+/** @param {import('../../frontend/dashboard/contracts').DashboardInput} input
+ * @returns {import('../../frontend/dashboard/contracts').DashboardModel}
+ */
 export function dashboardModel({courses,results=[],study={},states={}}){
  const lessons=courses.flatMap(course=>course.lessons.map(lesson=>{
   const read=study[course.id]||{},opened=Array.isArray(read.opened)&&read.opened.includes(lesson.id),last=read.last===lesson.id;

@@ -102,11 +102,11 @@ For an existing classroom installation, preserve its configuration when applying
 ### 3. Build and validate
 
 ```bash
-python3 build.py
-python3 check.py
+npm ci
+npm run check
 ```
 
-The builder creates `dist/`. The checker validates the generated site, including relative links, page requirements, and checks against accidental exposure of private classroom content or known secret-key patterns.
+The checker compiles the React sources, validates the generated routes and public assets, and runs the Python and JavaScript tests. Build commands share a lock within a checkout; failed validation keeps the previous `dist/` available. Use `npm.cmd` in PowerShell if its script policy blocks `npm.ps1`.
 
 ### 4. Preview
 
@@ -120,7 +120,7 @@ Open <http://localhost:8000>. Serve **`dist/`**, rather than opening HTML files 
 
 1. In the repository's **Settings → Pages**, select **GitHub Actions** as the build source.
 2. Commit your public source changes and push them to `main`.
-3. The Pages workflow runs `build.py` and `check.py`, uploads `dist/`, and deploys the generated site.
+3. The Pages workflow runs `npm run check`, uploads `dist/`, and deploys the generated site.
 4. Confirm that the workflow succeeds before checking the deployed classroom.
 
 The workflow can also be started manually from the **Actions** tab. Backend deployment is separate: publishing the static site does not apply SQL migrations or deploy a Supabase Edge Function.
@@ -147,7 +147,7 @@ The frontend uses PKCE authentication and constrains the configured grading endp
 
 ## Maintenance and updates
 
-- Make public website changes in `web/`, then rebuild and run the checks.
+- Edit migrated React UI in `frontend/` and remaining public UI in `web/`, then rebuild and run the checks. Do not hand-edit generated bundles or prerendered fragments.
 - Keep the existing paper-inspired, Persian RTL interface and keyboard accessibility intact when changing the UI.
 - Review changes to Python execution, grading, and XP separately from presentation changes.
 - Follow the instructor instructions supplied with each release. Some updates change only frontend files; others also require backend deployment or a migration.
@@ -159,3 +159,18 @@ This project is designed for an instructor-managed classroom. The public reposit
 
 Third-party assets retain their respective licenses and notices; see the bundled dependency directories for details.
 
+
+
+## Local React migration workspace
+
+The migration is being reviewed locally before publication. With Node.js 24 and
+Python 3 available, run `npm ci` and `npm run dev` (PowerShell: `npm.cmd`).
+Open `http://127.0.0.1:5173/__preview__/dashboard/` to review the student
+dashboard with sample data, or `http://127.0.0.1:5173/dashboard/` with an
+existing local session. Open `http://127.0.0.1:5173/` for the React homepage, or
+`http://127.0.0.1:5173/machine-learning/` for the course. A separate local-only UI-state
+preview is available at `http://127.0.0.1:5173/__preview__/course/?state=guest`.
+Use `npm run check` for the build, TypeScript and existing test suites.
+See [migration status](docs/react-migration.md) for scope and remaining routes.
+See [frontend architecture](docs/frontend-architecture.md) for ownership boundaries,
+service adapters and the shared React runtime.
