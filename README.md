@@ -62,7 +62,6 @@ GitHub Pages hosts the frontend; it does not run Python grading or provide a tru
 `dist/` is generated output and is not committed. Instructor-only server code, migrations, reference solutions, and private test packages are intentionally excluded from the public repository.
 
 ## Local setup
-
 ### Requirements
 
 - Node.js 24 and Python 3 to build and check the public website.
@@ -156,7 +155,6 @@ The frontend uses PKCE authentication and constrains the configured grading endp
 ## Scope
 
 This project is designed for an instructor-managed classroom. The public repository provides the website, not a complete one-command backend installation. A working production classroom also needs its private materials, membership policies, database functions, storage rules, grading service, and provider credentials configured by the instructor.
-
 Third-party assets retain their respective licenses and notices; see the bundled dependency directories for details.
 
 
