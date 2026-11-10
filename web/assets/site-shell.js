@@ -342,4 +342,10 @@ function z() {
 function B() {
 	return import("./react/mount-CoTK0AHh.mjs");
 }
-export { D as dispose, N as loadInstructor, z as loadLabFrame, F as loadLabMission, P as loadLabPresentation, L as loadLabTutor, I as loadLabWorkspace, R as loadLabXp, A as loadLessonReader, B as loadNotifications, M as loadQuizForm, j as loadQuizResult, k as loadReviewNotebook, O as mountAccountUI, E as mountShell, T as ready };
+function V() {
+	return import("./react/mount-CHPFYm21.mjs");
+}
+function H() {
+	return import("./react/mount-Cx93Ssck.mjs");
+}
+export { D as dispose, H as loadGate, N as loadInstructor, z as loadLabFrame, F as loadLabMission, P as loadLabPresentation, L as loadLabTutor, I as loadLabWorkspace, R as loadLabXp, A as loadLessonReader, B as loadNotifications, V as loadPresence, M as loadQuizForm, j as loadQuizResult, k as loadReviewNotebook, O as mountAccountUI, E as mountShell, T as ready };

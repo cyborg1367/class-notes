@@ -92,3 +92,11 @@ export function loadLabFrame() {
 export function loadNotifications() {
     return import('./notifications/mount');
 }
+
+export function loadPresence() {
+    return import('./presence/mount');
+}
+
+export function loadGate() {
+    return import('./gate/mount');
+}

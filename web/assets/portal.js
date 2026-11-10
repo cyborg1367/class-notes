@@ -121,6 +121,31 @@ if(typeof document!=="undefined"){
  let quizUI=null,quizResultUI=null,quizTicket=0;
  let accountNotice={text:'در حال بررسی ورود…',error:false};
  let noticeUI=null,noticeTicket=0,reviewUI=null,reviewGeneration=0,presence=null,presenceTicket=0,accountUI=null,authReady=false,authFailed=false,authBusy=false,localSignOut=null,beforeSignOut=null,toastTimer;
+ let gateModule=null,routeFrame=null;const gateUIs=new Set();
+ async function gates(){
+  if(!document?.defaultView)throw Error('DOCUMENT_CLOSED');
+  if(!gateModule)gateModule=await import(assetURL('site-shell.js').href).then(module=>module.loadGate());
+  return gateModule;
+ }
+ function disposeGates(host){for(const ui of [...gateUIs]){if(!host||ui.host===host||host.contains(ui.host)){ui.dispose();gateUIs.delete(ui);}}}
+ async function paintGate(host,view){
+  try{
+   const {mountGate}=await gates();
+   if(!document?.defaultView||!host?.isConnected)return;
+   disposeGates(host);host.replaceChildren();const ui=mountGate(host);ui.host=host;gateUIs.add(ui);ui.render(view);
+  }catch(error){if(document?.defaultView)throw error;}
+ }
+ function accessGate(courseId){
+  if(!app.user)return {title:'برای ادامه وارد شو.',body:'متن یادداشت‌ها و آزمون‌ها فقط برای اعضای تأییدشدهٔ کلاس در دسترس است.',actions:[{label:'ورود با Google ←',href:loginURL(),login:true,primary:true}]};
+  if(app.serviceError)return {title:'اطلاعات کلاس دریافت نشد.',body:'ورود انجام شده، اما اطلاعات کلاس دریافت نشد. با مدرس در میان بگذار یا کمی بعد دوباره امتحان کن.',actions:[{label:'تلاش دوباره',onClick:async()=>{await refreshState();await mount();}}]};
+  const m=app.state?.memberships?.find(row=>row.course_id===courseId);
+  const body=m?.status==='pending'?'درخواستت ثبت شده است؛ پس از تأیید مدرس، دسترسی فعال می‌شود.':m?.status==='suspended'?'دسترسی این کلاس فعلاً غیرفعال است. برای پیگیری با مدرس در ارتباط باش.':'برای این کلاس درخواست عضویت بده؛ دسترسی پس از تأیید مدرس فعال می‌شود.';
+  const actions=[];
+  if(!m)actions.push({label:'درخواست دسترسی به کلاس',primary:true,onClick:async()=>{try{await rpc('classroom_request_access',{p_course:courseId});await refreshState();await mount();}catch(err){throw Error(friendly(err));}}});
+  actions.push({label:'داشبورد ←',href:url('dashboard/')},{label:'به‌روزرسانی وضعیت عضویت',onClick:async()=>{await refreshState();await mount();}});
+  return {title:'عضویت در کلاس',body,actions};
+ }
+ async function renderGate(root,courseId){await paintGate(root,accessGate(courseId));}
  let initializing=true;
  function status(el,text,error=false){if(el?.matches('[data-auth-status]')&&$('[data-account-react-root]')){accountNotice={text,error};accountUI?.setNotice(text,error);return;}if(el){el.textContent=text;el.dataset.error=String(error);}}
  function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
@@ -166,12 +191,12 @@ if(typeof document!=="undefined"){
    if(gen===app.generation&&ticket===stateTicket){bootData=bundle;app.state=state;app.serviceError=null;authUI();}
   }catch(err){if(gen===app.generation&&ticket===stateTicket){bootData=null;app.state=null;app.serviceError=err;}}}
 
- function onUser(user,manualExit=false){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){courseTicket++;courseController?.dispose();courseController=null;app.generation++;readerTicket++;readerUI?.dispose();readerUI=null;quizTicket++;quizUI?.dispose();quizUI=null;quizResultUI?.dispose();quizResultUI=null;dashboardTicket++;dashboardUI?.dispose();dashboardUI=null;instructorTicket++;instructorUI?.dispose();instructorUI=null;reads.reset();stateTicket++;bootData=null;noticeTicket++;noticeUI?.dispose();noticeUI=null;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;app.state=null;beforeSignOut=null;window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
+ function onUser(user,manualExit=false){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){courseTicket++;courseController?.dispose();courseController=null;app.generation++;readerTicket++;readerUI?.dispose();readerUI=null;quizTicket++;quizUI?.dispose();quizUI=null;quizResultUI?.dispose();quizResultUI=null;dashboardTicket++;dashboardUI?.dispose();dashboardUI=null;instructorTicket++;instructorUI?.dispose();instructorUI=null;reads.reset();stateTicket++;bootData=null;noticeTicket++;noticeUI?.dispose();noticeUI=null;presenceTicket++;presence?.dispose();presence=null;reviewUI?.dispose();reviewUI=null;reviewGeneration++;disposeGates();routeFrame?.dispose();routeFrame=null;app.state=null;beforeSignOut=null;window.ClassNotesPython?.dispose();window.ClassNotesCodingLab?.dispose();window.ClassNotesMotion?.clearLesson();}
   authUI();
   if(!initializing&&old!==next){
    const privatePage=['lesson','lab','quiz','dashboard','instructor','course','review','notifications'].includes(page);
    if(old&&page==='course')window.ClassNotesCourseApp?.disposeAll();
-   if(old&&privatePage)$('#main').innerHTML='<section class="shell portal-main"><p class="status-line">در حال تغییر حساب…</p></section>';
+   if(old&&privatePage){const main=$('#main');disposeGates(main);if(main){const text=document.createElement('p');text.className='status-line';text.setAttribute('role','status');text.textContent='در حال تغییر حساب…';main.replaceChildren(text);}}
    if(manualExit)return;
    if(old&&next&&(!localSignOut||privatePage)){location.reload();return;}
    if(old&&!next&&privatePage){location.replace(url('index.html'));return;}
@@ -328,17 +353,8 @@ if(typeof document!=="undefined"){
    status($('[data-page-status]'),message,true);loadingError(message);notify(message,true);
   }
  }
- function renderGate(root,courseId){
-  if(!app.user){root.innerHTML=`<div class="gate-card"><h2>برای ادامه وارد شو.</h2><p>متن یادداشت‌ها و آزمون‌ها فقط برای اعضای تأییدشدهٔ کلاس در دسترس است.</p><div class="portal-actions"><a class="button-forest" data-login-link href="${E(loginURL())}">ورود با Google ←</a></div></div>`;return;}
-  if(app.serviceError){root.innerHTML='<div class="gate-card"><h2>اطلاعات کلاس دریافت نشد.</h2><p>ورود انجام شده، اما اطلاعات کلاس دریافت نشد. با مدرس در میان بگذار یا کمی بعد دوباره امتحان کن.</p><button class="button-outline" data-refresh type="button">تلاش دوباره</button></div>';root.querySelector('[data-refresh]').onclick=async()=>{await refreshState();await mount();};return;}
-  const m=app.state?.memberships?.find(m=>m.course_id===courseId);
-  const text=m?.status==='pending'?'درخواستت ثبت شده است؛ پس از تأیید مدرس، دسترسی فعال می‌شود.':m?.status==='suspended'?'دسترسی این کلاس فعلاً غیرفعال است. برای پیگیری با مدرس در ارتباط باش.':'برای این کلاس درخواست عضویت بده؛ دسترسی پس از تأیید مدرس فعال می‌شود.';
-  root.innerHTML=`<div class="gate-card"><h2>عضویت در کلاس</h2><p>${text}</p><div class="portal-actions">${!m?'<button class="button-forest" data-request type="button">درخواست دسترسی به کلاس</button>':''}<a class="button-outline" href="${E(url('dashboard/'))}">داشبورد ←</a><button class="button-outline" data-refresh type="button">به‌روزرسانی وضعیت عضویت</button></div><p class="status-line" data-gate-status role="status" aria-live="polite"></p></div>`;
-  root.querySelector('[data-request]')?.addEventListener('click',async e=>{e.currentTarget.disabled=true;try{await rpc('classroom_request_access',{p_course:courseId});await refreshState();await mount();}catch(err){status(root.querySelector('[data-gate-status]'),friendly(err),true);e.currentTarget.disabled=false;}});
-  root.querySelector('[data-refresh]').onclick=async()=>{await refreshState();await mount();};
- }
  async function mount(){
-  if(page==='notifications')notificationsPage();
+  if(page==='notifications')await notificationsPage();
   void mountNotices();
   if(page==='dashboard')await dashboard();
   if(page==='review')await reviewNotebook();
@@ -349,23 +365,27 @@ if(typeof document!=="undefined"){
   if(page==='quiz')await loadQuiz();
   void mountClassroomPresence();
  }
- function notificationsPage(){
+ async function notificationsPage(){
   const root=$('[data-notifications-page]');
   if(!root)return;
-  if(!app.user||app.serviceError){noticeTicket++;noticeUI?.dispose();noticeUI=null;renderGate(root,catalog[0].id);return;}
+  if(!app.user||app.serviceError){noticeTicket++;noticeUI?.dispose();noticeUI=null;await renderGate(root,catalog[0].id);return;}
   if(noticeUI)return;
-  root.innerHTML='<p class="notice-empty" role="status">در حال دریافت اعلان‌ها…</p>';
+  disposeGates(root);
+  const loading=document.createElement('p');loading.className='notice-empty';loading.setAttribute('role','status');loading.textContent='در حال دریافت اعلان‌ها…';
+  root.replaceChildren(loading);
  }
  async function mountNotices(){
   if(!app.user||app.serviceError)return;
-  if(noticeUI){$$('[data-notification-anchor]').forEach(anchor=>noticeUI.attach(anchor));noticeUI.attachPage($('[data-notifications-page]'));void noticeUI.refresh();return;}
+  if(noticeUI){$$('[data-notification-anchor]').forEach(anchor=>noticeUI.attach(anchor));const pageRoot=$('[data-notifications-page]');if(pageRoot)disposeGates(pageRoot);noticeUI.attachPage(pageRoot);void noticeUI.refresh();return;}
   const ticket=++noticeTicket,gen=app.generation,owner=app.user.id,alive=()=>gen===app.generation&&ticket===noticeTicket&&app.user?.id===owner;
   try{
    const {mountNotifications}=await import(assetURL('site-shell.js').href).then(module=>module.loadNotifications());if(!alive())return;
    noticeUI=mountNotifications({rpc,userId:owner,baseURL:base.href,isCurrent:alive});
-   $$('[data-notification-anchor]').forEach(anchor=>noticeUI.attach(anchor));noticeUI.attachPage($('[data-notifications-page]'));void noticeUI.refresh(true);
+   $$('[data-notification-anchor]').forEach(anchor=>noticeUI.attach(anchor));
+   const pageRoot=$('[data-notifications-page]');if(pageRoot)disposeGates(pageRoot);noticeUI.attachPage(pageRoot);void noticeUI.refresh(true);
   }catch{if(alive()&&page==='notifications'){
-   const root=$('[data-notifications-page]');root.innerHTML='<section class="gate-card"><h1>اعلان‌ها دریافت نشد.</h1><button class="button-outline" type="button">تلاش دوباره</button></section>';root.querySelector('button').onclick=mountNotices;
+   const root=$('[data-notifications-page]');
+   void paintGate(root,{title:'اعلان‌ها دریافت نشد.',heading:'h1',actions:[{label:'تلاش دوباره',onClick:()=>mountNotices()}]});
   }}
  }
  async function reviewNotebook(){
@@ -373,7 +393,7 @@ if(typeof document!=="undefined"){
   const gen=app.generation,ticket=++reviewGeneration;
   reviewUI?.dispose();reviewUI=null;beforeSignOut=null;
   const active=catalog.filter(c=>member(c.id));
-  if(!app.user||app.serviceError||!active.length){renderGate(root,catalog[0].id);return;}
+  if(!app.user||app.serviceError||!active.length){await renderGate(root,catalog[0].id);return;}
   const owner=app.user.id,alive=()=>gen===app.generation&&ticket===reviewGeneration&&app.user?.id===owner&&root.isConnected;
   try{
    const {mountReviewNotebook}=await portalDeadline(import(assetURL('site-shell.js').href)
@@ -385,8 +405,7 @@ if(typeof document!=="undefined"){
    void ui.load();
   }catch{
    if(!alive())return;
-   root.innerHTML='<section class="gate-card"><h1>دفتر مرور دریافت نشد.</h1><button class="button-outline" data-review-retry>تلاش دوباره</button></section>';
-   root.querySelector('button').onclick=reviewNotebook;
+   void paintGate(root,{title:'دفتر مرور دریافت نشد.',heading:'h1',actions:[{label:'تلاش دوباره',onClick:()=>reviewNotebook()}]});
   }
  }
  async function mountClassroomPresence(){
@@ -394,8 +413,7 @@ if(typeof document!=="undefined"){
   if(!app.user||app.serviceError)return;
   const owner=app.user.id,courses=catalog.filter(c=>member(c.id)).map(c=>({id:c.id,title:c.display_title||c.title}));
   try{
-   const moduleURL=assetURL('classroom-presence.mjs');
-   const {mountPresence}=await import(moduleURL.href);
+   const {mountPresence}=await import(assetURL('site-shell.js').href).then(module=>module.loadPresence());
    if(ticket!==presenceTicket||gen!==app.generation)return;
    if(!document.querySelector('link[data-presence-style]')){const css=document.createElement('link');css.rel='stylesheet';css.href=assetURL('classroom-presence.css').href;css.dataset.presenceStyle='';document.head.append(css);}
    presence=mountPresence({client:app.client,rpc,userId:owner,courses,courseId:lesson(lid)?.course.id||lid,anchor:page==='lab'?($('[data-lab-presence-slot]')||$('.lab-site-links')):($('[data-shell-presence-slot]')||$('.portal-nav')),account:($('[data-account-presence-slot]')||$('[data-account-member]')),isCurrent:()=>gen===app.generation&&app.user?.id===owner});
@@ -415,15 +433,19 @@ if(typeof document!=="undefined"){
   storageSet(`classroom-study:${app.user.id}:${info.course.id}`,state);
   storageSet(`classroom-last:${app.user.id}`,info.id);
  }
- function lessonTrail(info){
-  return `<nav class="shell route-trail" aria-label="مسیر صفحه"><ol><li><a href="${E(url('index.html'))}">صفحهٔ اصلی</a></li><li><a href="${E(url('index.html#classes'))}">کلاس‌ها</a></li><li><a dir="auto" href="${E(url(info.course.id+'/'))}">${E(info.course.display_title||info.course.title)}</a></li><li><span aria-current="page">یادداشت <bdi dir="ltr">${E(info.number)}</bdi> · ${E(info.title)}</span></li></ol></nav>`;
- }
  async function loadCodingLab(){
   const info=lesson(lid),root=$('#main'),gen=app.generation;
   window.ClassNotesCodingLab?.dispose();
-  root.innerHTML=lessonTrail(info)+'<section class="shell portal-main"><div data-lab-host></div></section>';
-  const host=$('[data-lab-host]');
-  if(!app.user||app.serviceError||!member(info.course.id)){renderGate(host,info.course.id);return;}
+  disposeGates(root);routeFrame?.dispose();routeFrame=null;
+  const {mountRouteFrame}=await gates();
+  if(gen!==app.generation)return;
+  routeFrame=mountRouteFrame(root,[
+   {href:url('index.html'),label:'صفحهٔ اصلی'},{href:url('index.html#classes'),label:'کلاس‌ها'},
+   {href:url(info.course.id+'/'),label:info.course.display_title||info.course.title},
+   {label:'یادداشت '+info.number+' · '+info.title,current:true},
+  ]);
+  const host=routeFrame.slot;
+  if(!app.user||app.serviceError||!member(info.course.id)){await renderGate(host,info.course.id);return;}
   status(host,'در حال دریافت داده‌های لابراتور…');
   try{
    if(!info.lab)throw Error('این یادداشت لابراتور فعالی ندارد.');
@@ -463,7 +485,7 @@ if(typeof document!=="undefined"){
     onFrameDispose:frame=>{const account=frame.querySelector('[data-lab-account]');if(account)accountUI?.detach?.(account);},
     isCurrent:()=>gen===app.generation&&!!member(info.course.id)});
    if(gen===app.generation&&$('[data-lab-account]')){accountUI?.attach($('[data-lab-account]'),{compact:true});$$('[data-notification-anchor]').forEach(anchor=>noticeUI?.attach(anchor));}
-  }catch(err){if(gen!==app.generation)return;host.innerHTML='<div class="gate-card"><h1>لابراتور دریافت نشد.</h1><p>'+E(friendly(err))+'</p><button type="button" class="button-outline" data-lab-retry>تلاش دوباره</button></div>';host.querySelector('button').onclick=loadCodingLab;}
+  }catch(err){if(gen!==app.generation)return;void paintGate(host,{title:'لابراتور دریافت نشد.',body:friendly(err),heading:'h1',actions:[{label:'تلاش دوباره',onClick:()=>loadCodingLab()}]});}
  }
  async function courseFailure(message){
   const host=$('[data-course-react-root]'),gen=app.generation;if(!host)return;
@@ -554,10 +576,7 @@ if(typeof document!=="undefined"){
   }catch{
    if(!alive())return;
    if(readerUI){readerUI.render({phase:'error'});return;}
-   const box=document.createElement('section');box.className='shell portal-main';
-   const message=document.createElement('p');message.className='status-line';message.setAttribute('role','status');message.textContent='صفحهٔ مطالعه بارگذاری نشد.';
-   const retry=document.createElement('button');retry.type='button';retry.className='button-outline';retry.textContent='تلاش دوباره';retry.onclick=loadLesson;
-   box.append(message,retry);host.replaceChildren(box);
+   void paintGate(host,{title:'صفحهٔ مطالعه بارگذاری نشد.',actions:[{label:'تلاش دوباره',onClick:()=>loadLesson()}]});
   }
  }
  async function paintQuizResult(host,view,alive,receiptURL){
@@ -590,7 +609,7 @@ if(typeof document!=="undefined"){
   const alive=()=>gen===app.generation&&ticket===quizTicket&&root.isConnected;
   const links={lesson:url(info.id+'/'),review:url('review/?lesson='+encodeURIComponent(info.id)),quiz:url('quiz/'+info.id+'/'),
    course:url(info.course.id+'/'),results:url('dashboard/#results')};
-  status(notice,'');if(!app.user||app.serviceError||!member(info.course.id)){renderGate(root,info.course.id);return;}
+  status(notice,'');if(!app.user||app.serviceError||!member(info.course.id)){await renderGate(root,info.course.id);return;}
   try{
    const prior=new URL(location.href).searchParams.get('attempt');
    if(prior){
@@ -622,10 +641,7 @@ if(typeof document!=="undefined"){
    await quizUI.load();
   }catch(err){if(alive()){
    quizUI?.dispose();quizUI=null;beforeSignOut=null;
-   const card=document.createElement('section');card.className='gate-card';
-   const message=document.createElement('p');message.setAttribute('role','status');message.textContent=friendly(err);
-   const retry=document.createElement('button');retry.type='button';retry.className='button-outline';retry.textContent='تلاش دوباره';retry.onclick=loadQuiz;
-   card.append(message,retry);root.replaceChildren(card);
+   void paintGate(root,{title:'آزمون دریافت نشد.',body:friendly(err),actions:[{label:'تلاش دوباره',onClick:()=>loadQuiz()}]});
   }}
  }
 
@@ -633,15 +649,15 @@ if(typeof document!=="undefined"){
   const root=$('[data-teacher]'),notice=$('[data-page-status]'),gen=app.generation,ticket=++instructorTicket;
   instructorUI?.dispose();instructorUI=null;status(notice,'');
   if(!root)return;
-  if(!app.user||app.serviceError){renderGate(root,catalog[0].id);return;}
+  if(!app.user||app.serviceError){await renderGate(root,catalog[0].id);return;}
   const courses=(app.state?.memberships||[]).filter(m=>m.role==='teacher'&&m.status==='active');
-  if(!courses.length){root.innerHTML='<div class="gate-card"><h1>دسترسی مدرس لازم است.</h1><p>این حساب برای مدیریت کلاس فعال نشده است.</p><a class="button-outline" href="'+E(url('dashboard/'))+'">داشبورد ←</a></div>';return;}
+  if(!courses.length){await paintGate(root,{title:'دسترسی مدرس لازم است.',body:'این حساب برای مدیریت کلاس فعال نشده است.',heading:'h1',actions:[{label:'داشبورد ←',href:url('dashboard/')}]});return;}
   const owner=app.user.id,alive=()=>gen===app.generation&&ticket===instructorTicket&&app.user?.id===owner;
   try{
    const {mountInstructor}=await portalDeadline(import(assetURL('site-shell.js').href).then(module=>module.loadInstructor()),12000,'INSTRUCTOR_UI_TIMEOUT');if(!alive())return;
    const ui=mountInstructor(root,{rpc,courses,catalog,url,isCurrent:alive});
    if(!alive()){ui.dispose();return;}instructorUI=ui;
-  }catch{if(alive()){root.innerHTML='<section class="gate-card"><h1>پنل مدرس دریافت نشد.</h1><button type="button" class="button-outline" data-instructor-retry>تلاش دوباره</button></section>';root.querySelector('button').onclick=teacher;}}
+  }catch{if(alive()){void paintGate(root,{title:'پنل مدرس دریافت نشد.',heading:'h1',actions:[{label:'تلاش دوباره',onClick:()=>teacher()}]});}}
  }
  window.ClassroomReady=boot();
 }
