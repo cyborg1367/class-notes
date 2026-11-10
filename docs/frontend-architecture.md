@@ -1,9 +1,8 @@
 # Frontend architecture during the React migration
 
-The migration is incremental. A route can have a React shell and a legacy main
-application. This is an explicit boundary, not a claim that the entire site is
-already React. Existing authentication, private delivery and trusted grading stay
-behind their current service contracts.
+Student and instructor route UI is React. `portal.js` remains the auth/RPC owner
+and `coding-lab.js` remains the lab orchestrator. Existing authentication, private
+delivery and trusted grading stay behind their current service contracts.
 
 ## Ownership and dependency rules
 
@@ -27,6 +26,10 @@ behind their current service contracts.
 | `frontend/dashboard/dashboard-controller.mjs` | Project authenticated state to dashboard views and discard stale responses | React and DOM mutation |
 | `web/assets/dashboard-model.mjs` | Pure projection of lab snapshots, quiz receipts and study history | Storage access, network, XP awards |
 | `web/assets/portal.js` | Existing auth/RPC composition and private-page routing | Mutations inside React-owned route content |
+| `frontend/presence/` | Online classmates widget and account visibility control | Authorization, XP or storing the Supabase client in components |
+| `web/assets/classroom-presence.mjs` | Pure peer-list sanitization | DOM, realtime or RPC |
+| `frontend/gate/`, `frontend/components/GateCard.tsx` | Shared membership/login/error cards and lab route trail | Auth SDK calls |
+| `frontend/about/` | Authored instructor page copy and prerender | Session or private reads |
 | `frontend/site-shell.tsx`, `course-index.tsx` | Entry-point composition, hydration and disposal | Domain decisions |
 
 Components do not receive Supabase clients or session tokens. UI visibility never
@@ -47,11 +50,12 @@ save/timeout/explicit-confirm/auth sequence in a separate service. Switching use
 invalidates old confirmations and completions. React actions are marked so the
 legacy delegated gate-link bridge cannot also execute the same click.
 
-Only opaque presence and notification slots retain legacy child DOM. React owns
-the wrapper, while the named service owns its contents. Presence uses
-`data-shell-presence-slot` and `data-account-presence-slot`; notifications use
+Presence and notifications portal into empty shell slots. React owns the widget
+markup; the portal still owns RPC, realtime auth and account lifetime.
+`data-shell-presence-slot`, `data-account-presence-slot` and
+`data-lab-presence-slot` stay empty in the shell tree. Notifications use
 `data-notification-anchor`. Do not put React children or changing HTML into these
-slots. Startup waits for both shell and account-page hydration before services
+slots from the shell. Startup waits for both shell and account-page hydration before services
 attach. Notification attachment also runs when a new React account host appears.
 
 Compact lab accounts keep their attachment API, but create isolated React roots
@@ -74,7 +78,7 @@ routes. The dashboard entry is loaded only on the dashboard. There is no React C
 Utility chunks may also be shared. A route loads only its main entry plus the shell.
 
 The same components prerender and hydrate the shell on all 20 current routes and
-the complete homepage and account-page main content. These have no parallel Python HTML
+the homepage, account, and about main content. These have no parallel Python HTML
 renderer. Its catalog snapshot is checked before publication. Bundled public
 models, icons and authored frontend assets participate in stale-output detection.
 Python validates generated source and catalog hashes before building public files.
