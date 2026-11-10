@@ -73,7 +73,7 @@ class LoadingShellTests(unittest.TestCase):
 
     def test_public_course_does_not_show_login_before_access_has_been_checked(self):
         source=(ROOT/'web/machine-learning/index.html').read_text()
-        membership=re.search(r'<div class="course-membership" data-course-membership>(.*?)</div>',source,re.S)[1]
+        membership=re.search(r'<div class="course-membership" data-course-membership[^>]*>(.*?)</div>',source,re.S)[1]
         self.assertNotIn('ورود',membership)
         self.assertNotIn('<a ',membership)
         self.assertIn('بررسی دسترسی',membership)

@@ -4,8 +4,12 @@ import fs from 'node:fs';
 
 const catalog=JSON.parse(fs.readFileSync(new URL('../web/assets/catalog.json',import.meta.url),'utf8'));
 const course=fs.readFileSync(new URL('../web/machine-learning/index.html',import.meta.url),'utf8');
-for(const lesson of catalog[0].lessons){
- const model=await import(new URL('../web/assets/'+lesson.lab.model,import.meta.url));
+// Register all tests together. Top-level import between test definitions
+// can leave the runner waiting on a module after an earlier test finishes.
+const fixtures=await Promise.all(catalog[0].lessons.map(async lesson=>[
+ lesson,await import(new URL('../web/assets/'+lesson.lab.model,import.meta.url)),
+]));
+for(const [lesson,model] of fixtures){
  test(lesson.id+': course card links directly to its own lab',()=>{
   const card=course.split('data-course-lesson="'+lesson.id+'"')[1]?.split('</article>')[0];
   assert.ok(card,'Missing lesson card');

@@ -17,7 +17,7 @@ body[data-lesson-id="machine-learning/thresholds-and-roc"] .code-block pre code{
 body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-note{border-inline-start:3px solid var(--teal);padding:16px 20px;background:var(--highlight-soft);font-size:15px;line-height:2;margin-block:24px}
 body[data-lesson-id="machine-learning/thresholds-and-roc"] .lesson-formula{overflow-x:auto;overflow-y:hidden;max-width:100%;scrollbar-width:thin}
 @media(max-width:600px){.threshold-figure{padding:7px}.threshold-table-scroll table{font-size:12px}.threshold-table-scroll th,.threshold-table-scroll td{padding:8px}.lesson-formula{font-size:13px}}
-@media print{.threshold-five-rows{max-height:none!important;overflow:visible}.copy-code{display:none}}
+@media print{.threshold-five-rows{max-height:none!important;overflow:visible}:is(.copy-code,.reader-copy){display:none}}
 
 /* Revision 2 uses the existing hero, reading rail, code blocks and end resources. */
 body[data-lesson-id="machine-learning/thresholds-and-roc"] .threshold-dataset .table-scroll{max-height:241px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;overscroll-behavior:contain}

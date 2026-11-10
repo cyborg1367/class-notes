@@ -541,12 +541,12 @@ a {
   text-transform: uppercase;
 }
 
-.rail-list {
+:is(.rail-list,.reader-rail-list) {
   margin-top: 14px;
   border-left: 1px solid var(--line);
 }
 
-.rail-list a {
+:is(.rail-list,.reader-rail-list) a {
   display: flex;
   align-items: baseline;
   gap: 11px;
@@ -567,19 +567,19 @@ a {
   transition: color 160ms ease-out;
 }
 
-.rail-list a:hover {
+:is(.rail-list,.reader-rail-list) a:hover {
   color: var(--ink);
   background: rgba(220, 238, 232, 0.38);
 }
 
-.rail-list a.is-current {
+:is(.rail-list,.reader-rail-list) a.is-current {
   border-left-color: var(--teal);
   background: var(--teal-tint);
   color: var(--teal-deep);
   font-weight: 600;
 }
 
-.rail-list a.is-current .rail-num {
+:is(.rail-list,.reader-rail-list) a.is-current .rail-num {
   color: var(--teal-deep);
 }
 
@@ -614,7 +614,7 @@ a {
   font-size: 10.5px;
 }
 
-.mobile-toc {
+:is(.mobile-toc,.reader-mobile-toc) {
   display: none;
 }
 
@@ -2263,14 +2263,14 @@ h3 {
     display: none;
   }
 
-  .mobile-toc {
+  :is(.mobile-toc,.reader-mobile-toc) {
     display: flex;
     flex-wrap: wrap;
     gap: 7px;
     margin-bottom: 42px;
   }
 
-  .mobile-toc a {
+  :is(.mobile-toc,.reader-mobile-toc) a {
     display: inline-flex;
     align-items: center;
     min-height: 34px;
@@ -2286,7 +2286,7 @@ h3 {
     transition: border-color 160ms ease-out, color 160ms ease-out;
   }
 
-  .mobile-toc a:hover {
+  :is(.mobile-toc,.reader-mobile-toc) a:hover {
     border-color: var(--teal);
     color: var(--teal-deep);
   }
@@ -2421,7 +2421,7 @@ h3 {
     padding-top: 34px;
   }
 
-  .mobile-toc {
+  :is(.mobile-toc,.reader-mobile-toc) {
     margin-bottom: 34px;
   }
 

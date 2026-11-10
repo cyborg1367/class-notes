@@ -162,3 +162,17 @@ body[data-page="review"] .portal-footer .shell::after{content:'CLASS NOTES';font
 @media(prefers-reduced-motion:reduce){[data-review-root] *{scroll-behavior:auto!important;transition:none!important;}}
 @media(max-width:760px){.rv-heading{display:grid;grid-template-columns:minmax(0,1fr);}.rv-heading>.rv-outline{justify-self:start;margin-top:0;}.rv-library,.rv-side{width:100%;min-width:0;}.rv-library-head{width:100%;}.rv-filters{width:100%;}.rv-note-paper{width:100%;}.rv-filters [role="group"]{gap:18px;}}
 @media(max-width:760px){.rv-learning-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;}.rv-learning-steps li{font-size:11px;}.rv-note-shortcut{width:32px;flex-basis:32px;}.rv-evidence{padding:10px 12px;}.rv-worked-example{padding:15px;}.rv-practice-tools>.rv-primary{max-width:100%;font-size:14px;}}
+
+.rv-glyph{display:contents}
+.rv-editor-fields{border:0;padding:0;margin:0;min-width:0}
+.rv-editor-fields>label{display:block;font-size:14px;margin-bottom:17px}
+.rv-evidence h3{font-size:16px;margin:7px 0}
+[data-review-root] :is(button,a,summary,select):focus-visible{outline:2px solid var(--kit-forest);outline-offset:3px}
+.rv-dialog :is(input,textarea,select),.rv-reflection textarea{box-sizing:border-box}
+@media(max-width:760px){
+ .rv-bookmark,.rv-note-shortcut{min-width:44px;flex-basis:44px}
+ .rv-filters [role="group"]{flex-wrap:wrap;column-gap:12px;row-gap:0}
+ .rv-practice,.rv-dialog{box-sizing:border-box}
+ .rv-practice :is(h1,h2,p),.rv-entry-description{overflow-wrap:anywhere}
+ .rv-practice-tools .rv-text-link{min-height:44px}
+}

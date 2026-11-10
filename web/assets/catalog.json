@@ -209,7 +209,7 @@
           "Threshold",
           "ROC-AUC"
         ],
-        "hero_kind": null,
+        "hero_kind": "threshold-scores",
         "quiz_version": 1,
         "notebook": "thresholds-and-roc/revision-2/thresholds-and-roc-explained.ipynb",
         "lab": {

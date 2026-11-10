@@ -1,0 +1,148 @@
+/* Existing page classes retain the paper design and responsive breakpoints. */
+.home-account-link>.account-google-mark{width:19px;height:19px;flex:0 0 19px}
+.home-auth-error{flex-basis:100%}
+.gradient-hero{
+  grid-area:visual;min-width:0;margin:0;direction:rtl;
+  padding:0;border:0;background:none;box-shadow:none
+}
+.gradient-hero-art{min-width:0}
+.gradient-hero-art [data-anatomy-figure]{width:100%;min-width:0}
+.gradient-hero-placeholder{
+  display:grid;place-items:center;aspect-ratio:600 / 420;padding:16px;
+  color:var(--kit-muted);font-size:14px;text-align:center
+}
+.gradient-hero-placeholder a,.gradient-hero-no-script a{color:var(--kit-forest);text-underline-offset:3px}
+.gradient-hero-no-script{margin:0;padding:0 16px 16px;text-align:center}
+
+/* Editorial landing composition; the separate paint layer never captures input. */
+body[data-ui] .landing-hero--editorial {
+  padding-block: clamp(36px, 6.1vw, 88px) 28px;
+}
+body[data-ui] .landing-hero--editorial > .shell {
+  width: min(87%, 1288px);
+}
+.landing-hero--editorial .landing-grid {
+  grid-template-areas: "visual copy";
+  grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr);
+  gap: clamp(30px, 4.4vw, 66px);
+  min-height: 0;
+}
+.landing-hero--editorial .landing-copy { min-width: 0; }
+.landing-hero--editorial .landing-copy .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--kit-ink);
+  font-size: clamp(14px, 1.45vw, 20px);
+  font-weight: 700;
+  letter-spacing: normal;
+  margin-block: 0 14px;
+}
+.landing-hero--editorial .landing-copy .eyebrow::after {
+  content: "";
+  width: clamp(38px, 6vw, 82px);
+  height: 1px;
+  background: var(--kit-ochre);
+}
+body[data-ui] .landing-hero--editorial .landing-copy h1 {
+  margin-block: 0 18px;
+  color: var(--kit-ink);
+  font-size: clamp(35px, 4.65vw, 70px);
+  line-height: 1.45;
+  letter-spacing: normal;
+}
+.landing-hero--editorial .landing-copy h1 > span { display: block; }
+.landing-hero--editorial .landing-copy h1 em {
+  color: inherit;
+  font-style: normal;
+  padding-inline: .07em;
+  background: linear-gradient(to bottom, transparent 66%, #e7bf67 66% 89%, transparent 89%);
+}
+body[data-ui] .landing-hero--editorial .landing-copy .intro {
+  max-width: 33ch;
+  color: var(--kit-ink);
+  font-size: clamp(16px, 1.56vw, 22px);
+  line-height: 1.95;
+}
+.landing-hero--editorial .landing-copy .portal-actions {
+  gap: 12px;
+  margin-block-start: clamp(18px, 3vw, 34px);
+}
+.landing-hero--editorial .hero-signature {
+  margin-block-start: 18px;
+  font-size: 14px;
+}
+.gradient-hero-art {
+  position: relative;
+  isolation: isolate;
+}
+.gradient-hero-art::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -14% -4% -5%;
+  background: url("gradient-descent-wash.webp") center / contain no-repeat;
+  opacity: .88;
+  pointer-events: none;
+}
+.gradient-hero-placeholder { aspect-ratio: 460 / 300; }
+.gradient-hero-caption {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-block-start: 12px;
+  padding-inline-end: clamp(4px, 2.2vw, 30px);
+  color: var(--kit-ink);
+  font-size: clamp(12px, 1.25vw, 16px);
+  line-height: 1.8;
+}
+.gradient-hero-caption::after {
+  content: "";
+  flex: 0 0 clamp(24px, 4.8vw, 66px);
+  height: 6px;
+  background: radial-gradient(circle at 3px center, #aa7729 0 2.5px, transparent 3px)
+    no-repeat, linear-gradient(#aa7729, #aa7729) right center / calc(100% - 13px) 1px no-repeat;
+}
+body[data-ui] .landing-hero--editorial .landing-band {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-block: clamp(32px, 5.8vw, 82px) 0;
+  padding-block: clamp(12px, 2vw, 23px);
+}
+.landing-hero--editorial .landing-band > div {
+  justify-content: center;
+  gap: clamp(6px, 1.05vw, 15px);
+  text-align: center;
+}
+.landing-hero--editorial .landing-band > div + div { border-inline-start: 1px solid var(--kit-rule); }
+body[data-ui] .landing-hero--editorial .landing-band strong {
+  background: none;
+  color: #906321;
+  font-size: clamp(15px, 1.75vw, 24px);
+  font-weight: 700;
+}
+body[data-ui] .landing-hero--editorial .landing-band span {
+  color: var(--kit-ink);
+  font-size: clamp(13px, 1.55vw, 21px);
+}
+
+@media (max-width: 850px) {
+  body[data-ui] .landing-hero--editorial {
+    padding-block: 32px 20px;
+  }
+  body[data-ui] .landing-hero--editorial > .shell { width: calc(100% - 36px); }
+  .landing-hero--editorial .landing-grid {
+    grid-template-areas: "copy" "visual";
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .landing-hero--editorial .gradient-hero { width: min(100%, 600px); margin-inline: auto; }
+  body[data-ui] .landing-hero--editorial .landing-copy h1 { font-size: clamp(32px, 7.6vw, 52px); }
+  .gradient-hero-art::before { inset: -8% 0 -3%; }
+  .gradient-hero-caption { margin-block-start: 7px; }
+}
+@media (max-width: 440px) {
+  .landing-hero--editorial .landing-band > div { flex-direction: column; gap: 0; }
+}

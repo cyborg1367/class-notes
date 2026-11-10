@@ -20,7 +20,7 @@ body[data-lesson-id="machine-learning/evaluating-knn"] .code-block pre code { di
 body[data-lesson-id="machine-learning/evaluating-knn"] .hero-figure svg { display:block; width:100%; height:auto; }
 body[data-lesson-id="machine-learning/evaluating-knn"] .hero-strip { list-style:none; }
 .lesson-resources { margin-block:32px 64px; }
-@media print { .evaluation-dataset-scroll { max-height:none!important; overflow:visible; } .copy-code { display:none!important; } }
+@media print { .evaluation-dataset-scroll { max-height:none!important; overflow:visible; } :is(.copy-code,.reader-copy) { display:none!important; } }
 
 body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-topic { margin-top:36px; scroll-margin-top:96px; }
 body[data-lesson-id="machine-learning/evaluating-knn"] .lesson-topic>h3 { font-size:23px; line-height:1.8; margin-bottom:18px; color:var(--ink); }
