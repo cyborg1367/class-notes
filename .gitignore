@@ -19,3 +19,13 @@ __pycache__/
 
 # Editor metadata and generated asset output stay local.
 /.idea/
+
+# Frontend dependencies are restored from package-lock.json in CI.
+node_modules/
+*.tsbuildinfo
+
+# React prerender intermediates
+.cache/
+
+# Local archives are never part of the public source.
+*.rar

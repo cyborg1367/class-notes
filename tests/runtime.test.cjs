@@ -4,3 +4,10 @@ function fixture(){const added=[];return {added,doc:{createElement(){return {rem
 test('concurrent and completed public script loads share one download',async()=>{const f=fixture(),load=portalCreateScriptLoader(f.doc);const a=load('https://class.test/sdk.js?v=hash'),b=load('https://class.test/sdk.js?v=hash');assert.equal(a,b);assert.equal(f.added.length,1);f.added[0].onload();await a;await load('https://class.test/sdk.js?v=hash');assert.equal(f.added.length,1)});
 test('failed script can be retried and the failed DOM node is removed',async()=>{const f=fixture(),load=portalCreateScriptLoader(f.doc);const a=load('https://class.test/lab.js');f.added[0].onerror();await assert.rejects(a,/SCRIPT_UNAVAILABLE/);assert.equal(f.added[0].removed,true);const b=load('https://class.test/lab.js');assert.equal(f.added.length,2);f.added[1].onload();await b});
 test('a new fingerprint never reuses the previous script result',async()=>{const f=fixture(),load=portalCreateScriptLoader(f.doc);const a=load('https://class.test/lab.js?v=one');f.added[0].onload();await a;const b=load('https://class.test/lab.js?v=two');assert.equal(f.added.length,2);f.added[1].onload();await b});
+test('a stalled script is released so a subsequent attempt can load it',async()=>{
+ const f=fixture(),load=portalCreateScriptLoader(f.doc,10),url='https://class.test/sdk.js';
+ const first=load(url),late=f.added[0].onload;
+ await assert.rejects(first,/SCRIPT_TIMEOUT/);assert.equal(f.added[0].removed,true);
+ const retry=load(url);late();assert.equal(load(url),retry);assert.equal(f.added.length,2);
+ f.added[1].onload();await retry;
+});

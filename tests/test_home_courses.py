@@ -5,11 +5,22 @@ import json
 from pathlib import Path
 import re
 import sys
+import subprocess,hashlib
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from build_assets import render_home_courses,prepare_public_assets
+from build_assets import prepare_public_assets
+
+def render_home_courses(catalog):
+    """Exercise the actual React server renderer; no second Python HTML template."""
+    result=subprocess.run(
+        ['node','--input-type=module','-e',
+         "import fs from 'node:fs';import {renderHomeCourses} from './.cache/react/course-render.mjs';process.stdout.write(renderHomeCourses(JSON.parse(fs.readFileSync(0,'utf8'))));"],
+        input=json.dumps(catalog),cwd=ROOT,capture_output=True,text=True,encoding='utf-8')
+    if result.returncode:
+        raise AssertionError(result.stderr)
+    return result.stdout
 
 
 class Summary(HTMLParser):
@@ -97,10 +108,10 @@ class HomepageCourseTests(unittest.TestCase):
         self.assertIn('&lt;script&gt;',html)
         for invalid in ['https://evil.example','../other','course/../other']:
             data['lessons'][0]['id']=invalid
-            with self.assertRaisesRegex(AssertionError,'public content path'):
+            with self.assertRaisesRegex(AssertionError,'INVALID_PUBLIC_ROUTE'):
                 render_home_courses([data])
         data['lessons'][0]['id']='another/note'
-        with self.assertRaisesRegex(AssertionError,'different course'):
+        with self.assertRaisesRegex(AssertionError,'LATEST_LESSON_OUTSIDE_COURSE'):
             render_home_courses([data])
 
     def test_current_release_shows_four_notes_and_fourth_note_preview(self):
@@ -127,19 +138,29 @@ class HomepageCourseTests(unittest.TestCase):
                 shutil.copy2(ROOT/name,root/name)
             assets=root/'web/assets'
             assets.mkdir(parents=True)
-            (assets/'auth-config.json').write_text('{"supabaseUrl":"","publishableKey":""}')
-            (assets/'catalog.json').write_text(json.dumps([course(2)]))
+            (assets/'auth-config.json').write_text('{"supabaseUrl":"","publishableKey":""}',encoding='utf-8')
+            (assets/'catalog.json').write_text(json.dumps([course(2)]),encoding='utf-8')
+            generated=root/'frontend/generated'
+            generated.mkdir(parents=True)
+            def compile_fixture(catalog):
+                (generated/'home-page.json').write_text(json.dumps({
+                    'catalog_sha256':hashlib.sha256((assets/'catalog.json').read_bytes()).hexdigest(),
+                    'html':render_home_courses(catalog)}),encoding='utf-8')
+            compile_fixture([course(2)])
             page=root/'web/index.html'
-            page.write_text('<p>Existing header and sign-in control</p><!-- home-courses:start --><!-- home-courses:end --><script id="catalog-data" type="application/json"></script>')
+            page.write_text('<p>Existing header and sign-in control</p><!-- home-react:start --><!-- home-react:end --><script id="catalog-data" type="application/json"></script>',encoding='utf-8')
             dist=root/'dist'
             shutil.copytree(root/'web',dist)
             prepare_public_assets(root,dist)
-            self.assertEqual(Summary((dist/'index.html').read_text()).cards[0]['data-note-count'],'2')
-            (assets/'catalog.json').write_text(json.dumps([course(10)]))
+            self.assertEqual(Summary((dist/'index.html').read_text(encoding='utf-8')).cards[0]['data-note-count'],'2')
+            (assets/'catalog.json').write_text(json.dumps([course(10)]),encoding='utf-8')
             shutil.rmtree(dist)
             shutil.copytree(root/'web',dist)
+            with self.assertRaisesRegex(AssertionError,'Homepage catalog changed'):
+                prepare_public_assets(root,dist)
+            compile_fixture([course(10)])
             prepare_public_assets(root,dist)
-            result=(dist/'index.html').read_text()
+            result=(dist/'index.html').read_text(encoding='utf-8')
             self.assertEqual(Summary(result).cards[0]['data-note-count'],'10')
             self.assertIn('href="course/note-10/"',result)
             self.assertIn('Existing header and sign-in control',result)

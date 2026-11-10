@@ -23,17 +23,17 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Build classroom website
-        run: python3 build.py
+      - name: Set up frontend build
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
 
-      - name: Check website
-        run: python3 check.py
+      - name: Install locked frontend dependencies
+        run: npm ci
 
-      - name: Test deterministic build and public assets
-        run: python3 -m unittest discover -s tests
-
-      - name: Test public runtime and dashboard states
-        run: node --test tests/*.test.cjs tests/*.test.mjs
+      - name: Build and test the public website
+        run: npm run check
 
       - name: Upload website
         uses: actions/upload-pages-artifact@v4

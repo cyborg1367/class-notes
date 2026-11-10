@@ -28,6 +28,7 @@
  }
  function mount(){
   const article=main.querySelector('.lesson-body');if(article===mounted)return;cleanup();mounted=article;if(!article)return;
+  const readerOwned=main.hasAttribute('data-reader-react');
   const links=[...main.querySelectorAll('.rail-list a[href^="#"],.mobile-toc a[href^="#"]')],sections=[...article.querySelectorAll('.lesson-section')],bar=main.querySelector('#reading-progress'),side=main.querySelector('#sidebar-progress'),reading=main.querySelector('#reading-label');
   function update(){
    frame=null;let id=sections[0]?.id;for(const section of sections)if(section.getBoundingClientRect().top<=135)id=section.id;
@@ -35,12 +36,13 @@
    const rect=article.getBoundingClientRect(),screen=window.innerHeight||document.documentElement.clientHeight||1,span=Math.max(1,rect.height-screen+135),value=Math.max(0,Math.min(1,(135-rect.top)/span));
    if(bar)bar.style.transform='scaleX('+value+')';if(side)side.style.width=Math.round(value*100)+'%';if(reading)reading.textContent=Math.round(value*100).toLocaleString('fa-IR')+'٪ مطالعه شده';
   }
-  function schedule(){if(frame===null)frame=requestAnimationFrame(update)}
+  function schedule(){if(!readerOwned&&frame===null)frame=requestAnimationFrame(update)}
   const copy=async event=>{const button=event.target.closest?.('.copy-code');if(!button||!article.contains(button))return;const pre=button.closest('.code-block')?.querySelector('pre');if(!pre)return;try{await navigator.clipboard.writeText(pre.textContent);if(button.isConnected){button.textContent='کپی شد';setTimeout(()=>{if(button.isConnected)button.textContent='کپی کد'},1500)}}catch{button.textContent='کد را انتخاب و کپی کنید'}};
   function fit(){for(const table of article.querySelectorAll('.threshold-dataset table,.threshold-five-rows table')){const box=table.closest('.table-scroll')||table.closest('.threshold-five-rows');if(!box)continue;const rows=[...table.querySelectorAll('tbody tr')].slice(0,5),head=table.querySelector('thead');if(!rows.length||!head)continue;const h=head.getBoundingClientRect().height+rows.reduce((s,r)=>s+r.getBoundingClientRect().height,0);if(h>0)box.style.maxHeight=Math.ceil(h+1)+'px'}schedule()}
   const ro=window.ResizeObserver?new ResizeObserver(fit):null;article.querySelectorAll('.threshold-dataset table,.threshold-five-rows table').forEach(t=>ro?.observe(t));
   const disposeExamples=[...article.querySelectorAll('[data-threshold-explorer]')].map(example).filter(Boolean);
-  article.addEventListener('click',copy);article.addEventListener('load',schedule,true);window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',fit);document.fonts?.ready.then(()=>{if(article.isConnected)fit()});fit();
+  if(!readerOwned){article.addEventListener('click',copy);article.addEventListener('load',schedule,true);window.addEventListener('scroll',schedule,{passive:true});}
+  window.addEventListener('resize',fit);document.fonts?.ready.then(()=>{if(article.isConnected)fit()});fit();
   cleanup=()=>{article.removeEventListener('click',copy);article.removeEventListener('load',schedule,true);window.removeEventListener('scroll',schedule);window.removeEventListener('resize',fit);ro?.disconnect();disposeExamples.forEach(fn=>fn());if(frame!==null)cancelAnimationFrame(frame);frame=null};
  }
  new MutationObserver(mount).observe(main,{childList:true,subtree:true});mount();

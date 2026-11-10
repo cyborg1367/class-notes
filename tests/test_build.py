@@ -10,7 +10,7 @@ ROOT=Path(__file__).resolve().parents[1]
 class PublicBuildTests(unittest.TestCase):
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
-  for name in ['build.py','build_assets.py']:shutil.copyfile(ROOT/name,self.root/name)
+  for name in ['build.py','build_assets.py','build_lock.py']:shutil.copyfile(ROOT/name,self.root/name)
   (self.root/'web/assets').mkdir(parents=True)
   self.assets=self.root/'web/assets'
   (self.assets/'catalog.json').write_text(json.dumps([{'id':'course','lessons':[{'id':'course/one'}]}]))
@@ -55,6 +55,55 @@ class PublicBuildTests(unittest.TestCase):
   self.assertEqual(result.returncode,0,result.stderr)
   self.assertFalse((self.root/'dist/assets/lab-checks.py').exists())
   self.assertFalse((self.root/'dist/assets/.DS_Store').exists())
+ def test_parallel_builds_finish_without_discarding_last_valid_output(self):
+  command=[sys.executable,str(self.root/'build.py')]
+  processes=[subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True) for _ in range(2)]
+  try:
+   for child in processes:
+    _,errors=child.communicate(timeout=15);self.assertEqual(child.returncode,0,errors)
+  finally:
+   for child in processes:
+    if child.poll() is None:child.kill();child.communicate()
+  manifest=self.root/'dist/assets/asset-manifest.json'
+  before=manifest.read_bytes()
+  (self.assets/'catalog.json').write_text('[{"id":"course","lessons":[{"id":"same"},{"id":"same"}]}]',encoding='utf-8')
+  failed=subprocess.run(command,capture_output=True,text=True,timeout=15)
+  self.assertNotEqual(failed.returncode,0)
+  self.assertIn('Duplicate lesson',failed.stderr)
+  self.assertEqual(manifest.read_bytes(),before)
+ def test_failed_test_suite_restores_the_previous_public_output(self):
+  command=[sys.executable,str(self.root/'build.py')]
+  subprocess.run(command,check=True,capture_output=True,timeout=15)
+  manifest=self.root/'dist/assets/asset-manifest.json'
+  before=manifest.read_bytes()
+  (self.assets/'app.js').write_text('const candidate = true;',encoding='utf-8')
+  for name in ('node_modules/typescript/bin/tsc','frontend/build.mjs','check.py'):
+   path=self.root/name
+   path.parent.mkdir(parents=True,exist_ok=True)
+   path.write_text('# no-op for this build transaction test',encoding='utf-8')
+  (self.root/'tests').mkdir()
+  (self.root/'tests/test_intentionally_failing.py').write_text(
+   'import unittest\nclass Failing(unittest.TestCase):\n def test_candidate(self):self.fail("candidate failed")\n',encoding='utf-8')
+  result=subprocess.run([*command,'--node',sys.executable,'--test'],capture_output=True,text=True,timeout=15)
+  self.assertNotEqual(result.returncode,0)
+  self.assertIn('candidate failed',result.stderr)
+  self.assertEqual(manifest.read_bytes(),before)
+  self.assertFalse((self.root/'.cache/previous-dist').exists())
+ def test_next_build_recovers_output_left_by_an_interrupted_check(self):
+  command=[sys.executable,str(self.root/'build.py')]
+  subprocess.run(command,check=True,capture_output=True,timeout=15)
+  dist=self.root/'dist'
+  previous=self.root/'.cache/previous-dist'
+  old=(dist/'assets/asset-manifest.json').read_bytes()
+  dist.replace(previous)
+  dist.mkdir()
+  (dist/'interrupted.txt').touch()
+  (self.assets/'catalog.json').write_text('[{"id":"course","lessons":[{"id":"same"},{"id":"same"}]}]',encoding='utf-8')
+  result=subprocess.run(command,capture_output=True,text=True,timeout=15)
+  self.assertNotEqual(result.returncode,0)
+  self.assertEqual((dist/'assets/asset-manifest.json').read_bytes(),old)
+  self.assertFalse(previous.exists())
+  self.assertFalse((dist/'interrupted.txt').exists())
  def test_query_and_fragment_preserved(self):self.assertEqual(with_version('a.css?theme=paper&v=old#x','new'),'a.css?theme=paper&v=new#x')
 
 if __name__=='__main__':unittest.main()

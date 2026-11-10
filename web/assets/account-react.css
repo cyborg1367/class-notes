@@ -1,0 +1,13 @@
+/* Same paper account styles; React portals escape sticky-header containment. */
+.account-react-host,.account-menu-portal{display:contents}
+.account-menu-portal .account-popover{overflow-y:auto;overscroll-behavior:contain}
+.account-controls .shell-icon>.paper-icon{width:19px;height:19px}
+.account-trigger>.shell-icon>.paper-icon{width:15px;height:15px}
+.account-controls-compact .account-trigger>.shell-icon{display:none}
+.account-grid>*{min-width:0}
+.account-grid [data-user-name]{overflow-wrap:anywhere}
+.account-exit-dialog{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain}
+.account-dialog-backdrop{position:fixed;inset:0;z-index:1000;background:#24241f66;display:grid;place-items:center;padding:20px}
+.account-dialog-backdrop .account-exit-dialog{position:relative;inset:auto;margin:0;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow:auto}
+@media(max-width:480px){.account-trigger>.shell-icon>.paper-icon{width:13px;height:13px}}
+@media print{.account-menu-portal,.account-dialog-backdrop{display:none!important}}

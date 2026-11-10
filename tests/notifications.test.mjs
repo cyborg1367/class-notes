@@ -12,6 +12,7 @@ test('unsupported or unsafe notices cannot create links; history updates merge w
  const item={id:'one',episode:'revision1',kind:'review',path:'review/'};
  assert.ok(validNotice(item,base));assert.ok(!validNotice({...item,kind:'unknown'},base));assert.ok(!validNotice({...item,path:'../private/'},base));
  assert.deepEqual(mergeNotices([item],[{...item,read_at:'now'},{...item,id:'two'}]).map(i=>[i.id,i.read_at]),[['one','now'],['two',undefined]]);
+ assert.deepEqual(mergeNotices([item],[{...item,episode:'revision2'}]).map(i=>[i.id,i.episode]),[['one','revision1'],['one','revision2']]);
 });
 test('all page shells include the shared notification stylesheet and the history page is authenticated',()=>{
  const root=new URL('../web/',import.meta.url);let count=0;

@@ -1,0 +1,25 @@
+{
+  "name": "class-notes-public",
+  "private": true,
+  "scripts": {
+    "build:course": "node frontend/project.mjs frontend",
+    "test:course": "node --test tests/course-filter.test.mjs",
+    "typecheck:course": "tsc --project frontend/tsconfig.json",
+    "build": "node frontend/project.mjs build",
+    "dev": "node frontend/project.mjs dev",
+    "check": "node frontend/project.mjs check"
+  },
+  "dependencies": {
+    "anatomy-figures": "0.1.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "jsdom": "26.1.0",
+    "linkedom": "0.18.15",
+    "typescript": "5.9.3",
+    "vite": "8.3.6"
+  }
+}

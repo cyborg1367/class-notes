@@ -1,5 +1,4 @@
 // Presentation only: introduction and feedback never grant XP or unlock tasks.
-const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const messages={
  POSITIVE_SCORES:["ستون کلاس مثبت را بررسی کن", "امتیازهای خروجی با کلاس ۱ و ترتیب سطرها هماهنگ نیستند.", "classes_ ترتیب ستون‌های predict_proba را تعیین می‌کند؛ برچسب predict امتیاز نیست."],
  THRESHOLD_RULE:["مرز تصمیم را بررسی کن", "یکی از تصمیم‌ها با قانون آستانه هماهنگ نیست.", "تساویِ امتیاز و آستانه، مثبت است؛ ورودی را درجا تغییر نده."],
@@ -58,35 +57,138 @@ export function feedbackView(value,status='failed'){
  const code=typeof value?.code==='string'&&Object.hasOwn(messages,value.code)?value.code:status==='error'?'SERVICE_ERROR':status==='passed'?'ALREADY_PASSED':'CONTRACT';
  const [title,text,hint]=messages[code];return {code,title,text,hint,field:fields.has(value?.field)?value.field:null,kind:['SERVICE_ERROR','CHECK_PENDING','CHECK_UNAVAILABLE','EXECUTION_LIMIT','SIGN_IN_REQUIRED','CLASS_ACCESS_REQUIRED','LAB_RATE_LIMIT','LAB_BUDGET_EXHAUSTED','LAB_PAUSED','REQUEST_CONFLICT'].includes(code)?'service':['ALREADY_PASSED','PASSED'].includes(code)?'success':'correction'};
 }
-export function mountExperience(root,{userId,missionId,meta,dataset,stages,hasProgress,onStart}){
- const $=s=>root.querySelector(s),editor=$('#lab-code'),workspace=$('.lab-workspace');
- let disposed=false,last=null,returnPoint=null,reviewing=false,inerted=[];
- const intro=document.createElement('section');intro.className='lab-intro';intro.hidden=true;intro.setAttribute('aria-labelledby','lab-intro-title');
- intro.innerHTML=`<div class="lab-intro-copy"><p class="lab-intro-kicker">پیش از شروع · ${escape(meta.title)}</p><h2 id="lab-intro-title" tabindex="-1">${escape(meta.introTitle)}</h2>${meta.lessonBridge?`<p>${escape(meta.lessonBridge)}</p>`:''}${meta.story}<div class="lab-intro-dataset"><h3>داده‌ها چه معنایی دارند؟</h3>${meta.dataIntro}</div></div><div class="lab-intro-sample"><p class="lab-intro-kicker">نمونه‌ای از داده‌ها · ۳ سطر از ${dataset.X.length} سطر</p><div class="lab-intro-table"><table><thead><tr><th>شناسه</th>${dataset.columns.map(c=>`<th>${escape(c.label)}</th>`).join('')}${dataset.texts?'<th>متن پیامک</th>':''}${dataset.y?'<th>برچسب</th>':''}</tr></thead><tbody>${dataset.X.slice(0,3).map((row,i)=>`<tr><th dir="ltr">${escape(dataset.names[i])}</th>${row.map(v=>`<td dir="ltr">${v}</td>`).join('')}${dataset.texts?`<td class="lab-message-cell">${escape(dataset.texts[i])}</td>`:''}${dataset.y?`<td>${dataset.y[i]}${dataset.texts?` · ${dataset.y[i]?'تبلیغاتی':'عادی'}`:''}</td>`:''}</tr>`).join('')}</tbody></table></div><div class="lab-intro-query"><span>${escape(meta.queryLabel)}${meta.queryText||missionId==='evaluation-knn-v1'?'':' · <code>query</code>'}</span>${dataset.queryText?`<blockquote class="lab-message-text">${escape(dataset.queryText)}</blockquote>`:''}<strong dir="ltr">${meta.queryText?escape(meta.queryText):missionId==='evaluation-knn-v1'?'test_size=0.25 · seed=42 · k=3':escape(JSON.stringify(dataset.query))}</strong><p>${escape(meta.queryHelp)}</p></div></div><div class="lab-intro-path"><h3>چه چیزی خواهی ساخت؟</h3><p>${escape(meta.introGoal)}</p><ol>${stages.map(s=>`<li>${escape(s.title)}</li>`).join('')}</ol></div><footer class="lab-intro-footer"><span lang="en" dir="ltr">${stages.length} Missions · ${stages.reduce((sum,s)=>sum+s.xp,0)} XP</span><button class="button-forest" data-intro-start type="button">شروع مأموریت ←</button></footer>`;
- workspace.before(intro);
- const dialog=document.createElement('dialog');dialog.className='lab-feedback-dialog';dialog.setAttribute('aria-labelledby','lab-feedback-title');dialog.setAttribute('aria-describedby','lab-feedback-message');dialog.setAttribute('dir','rtl');dialog.setAttribute('aria-modal','true');
- dialog.innerHTML='<button class="lab-feedback-close" data-feedback-close type="button" aria-label="بستن بازخورد">×</button><p class="lab-feedback-step" data-feedback-step></p><span class="lab-feedback-symbol" aria-hidden="true">!</span><h2 id="lab-feedback-title" tabindex="-1"></h2><p id="lab-feedback-message" aria-live="polite"></p><p class="lab-feedback-field" hidden>نام یا کلید مورد بررسی: <code data-feedback-field dir="ltr"></code></p><details class="lab-feedback-hint"><summary lang="en" dir="ltr">Hint</summary><p data-feedback-hint></p></details><details class="lab-feedback-example"><summary>دیدن مثال</summary><p>مثال آموزشی این مرحله؛ مستقل از ورودی‌های بررسی نهایی.</p><pre data-feedback-example dir="ltr" tabindex="0"></pre></details><button class="button-forest" data-feedback-return type="button">برگشت به کد</button>';
- root.append(dialog);
- function point(){return {start:editor.selectionStart,end:editor.selectionEnd,top:editor.scrollTop,left:editor.scrollLeft,pageX:window.scrollX||0,pageY:window.scrollY||0};}
- function restore(){editor.focus({preventScroll:true});if(returnPoint&&typeof editor.setSelectionRange==='function')editor.setSelectionRange(returnPoint.start,returnPoint.end);if(returnPoint){editor.scrollTop=returnPoint.top;editor.scrollLeft=returnPoint.left;editor.dispatchEvent(new Event('scroll'));window.scrollTo?.({left:returnPoint.pageX,top:returnPoint.pageY,behavior:'auto'});}}
- function hideFeedback(focus=true){if(dialog.open){if(typeof dialog.close==='function')dialog.close();else{dialog.removeAttribute('open');dialog.open=false;}}for(const [el,value] of inerted)el.inert=value;inerted=[];root.classList.remove('has-feedback-fallback');if(focus&&!disposed)restore();}
- function showIntro(review=false){if(disposed)return;reviewing=review;returnPoint=point();hideFeedback(false);intro.hidden=false;workspace.hidden=true;workspace.inert=true;root.classList.add('is-lab-intro');$('[data-intro-start]').textContent=review?'برگشت به مأموریت ←':hasProgress?'ادامهٔ مأموریت ←':'شروع مأموریت ←';$('#lab-intro-title').focus({preventScroll:true});intro.scrollIntoView?.({block:'start'});}
- function leaveIntro(){intro.hidden=true;workspace.hidden=false;workspace.inert=false;root.classList.remove('is-lab-intro');if(reviewing)restore();else{editor.focus({preventScroll:true});root.scrollIntoView?.({block:'start'});onStart?.();}}
- $('[data-intro-start]').onclick=leaveIntro;
- $('[data-story-review]').onclick=()=>showIntro(true);
- function rememberFeedback(value,status,stage){last={view:feedbackView(value,status),stage};$('[data-last-feedback]').hidden=false;}
- function showFeedback(value,status,stage,savedPoint){
-  if(disposed)return;rememberFeedback(value,status,stage);returnPoint=savedPoint||point();const v=last.view;
-  dialog.dataset.kind=v.kind;$('#lab-feedback-title').textContent=v.title;$('#lab-feedback-message').textContent=v.text;
-  $('[data-feedback-step]').textContent=`${meta.title} · ${stage.title}`;const field=v.field||(['MISSING_FUNCTION','NOT_CALLABLE','MISSING_RETURN'].includes(v.code)?stage.function:null);$('[data-feedback-field]').textContent=field||'';$('.lab-feedback-field').hidden=!field;
-  $('[data-feedback-hint]').textContent=v.hint;$('.lab-feedback-hint').open=false;$('[data-feedback-example]').textContent=stage.example;$('.lab-feedback-example').open=false;$('.lab-feedback-example').hidden=v.kind==='service'||v.kind==='success';
-  $('.lab-feedback-symbol').textContent=v.kind==='service'?'…':v.kind==='success'?'✓':'!';$('[data-last-feedback]').hidden=false;
-  if(typeof dialog.showModal==='function'){if(!dialog.open)dialog.showModal();}else{if(!dialog.open){inerted=[...root.children].filter(el=>el!==dialog).map(el=>[el,el.inert]);for(const [el] of inerted)el.inert=true;}root.classList.add('has-feedback-fallback');dialog.setAttribute('open','');dialog.open=true;}
-  $('#lab-feedback-title').focus({preventScroll:true});dialog.scrollTop=0;
+function outsideDialog(dialog){
+ const elements=[];
+ for(let current=dialog;current.parentElement;current=current.parentElement){
+  const parent=current.parentElement;
+  for(const sibling of parent.children){
+   if(sibling!==current&&!['SCRIPT','LINK','STYLE','TEMPLATE'].includes(sibling.tagName))elements.push(sibling);
+  }
+  if(parent===dialog.ownerDocument.body)break;
  }
- $('[data-last-feedback]').onclick=()=>{if(last)showFeedback({code:last.view.code,field:last.view.field},last.view.kind==='success'?'passed':'failed',last.stage)};
- $('[data-feedback-close]').onclick=$('[data-feedback-return]').onclick=()=>hideFeedback();
- const cancel=e=>{e.preventDefault();e.stopPropagation();hideFeedback()};dialog.addEventListener('cancel',cancel);
- const keys=e=>{if(!dialog.open)return;if(e.key==='Escape'){cancel(e);return;}if(e.key==='Tab'){const list=[...dialog.querySelectorAll('button,summary,pre[tabindex]')].filter(el=>!el.closest('[hidden]')&&(!el.closest('details')||el.tagName==='SUMMARY'||el.closest('details').open));const first=list[0],last=list.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===$('#lab-feedback-title'))){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}};dialog.addEventListener('keydown',keys);
- return {start(){showIntro();},capture:point,showFeedback,rememberFeedback,close:hideFeedback,setBusy(busy){$('[data-story-review]').disabled=busy;$('[data-last-feedback]').disabled=busy;},dispose(){disposed=true;hideFeedback(false);workspace.inert=false;root.classList.remove('is-lab-intro');intro.remove();dialog.remove();}};
+ return elements;
+}
+
+export function mountExperience(root,{missionId,meta,dataset,stages,hasProgress,mountLabPresentation,setStoryVisible}){
+ const doc=root.ownerDocument,win=doc.defaultView;
+ const $=selector=>root.querySelector(selector);
+ const editor=$('#lab-code'),taskHeading=$('#lab-task-title'),workspace=$('.lab-workspace');
+ const reviewButton=$('[data-story-review]'),feedbackButton=$('[data-last-feedback]');
+ const reviewInitiallyHidden=reviewButton.hidden,workspaceInitiallyInert=Boolean(workspace.inert);
+ let disposed=false,entered=false,last=null,feedbackPoint=null,storyPoint=null,reviewing=false,inerted=[];
+ const intro=doc.createElement('section');
+ intro.className='lab-intro';intro.hidden=true;intro.dataset.reactLabStory='';
+ intro.setAttribute('aria-labelledby','lab-intro-title');
+ const introSlot=$('[data-lab-intro-slot]');
+ if(introSlot)introSlot.append(intro);else workspace.before(intro);
+ const dialog=doc.createElement('dialog');
+ dialog.className='lab-feedback-dialog';dialog.dataset.reactLabFeedback='';dialog.dir='rtl';
+ dialog.setAttribute('aria-labelledby','lab-feedback-title');
+ dialog.setAttribute('aria-describedby','lab-feedback-message');
+ dialog.setAttribute('aria-modal','true');
+ ($('[data-lab-feedback-slot]')||root).append(dialog);
+ const ui=mountLabPresentation(intro,dialog);
+ const point=()=>({start:editor.selectionStart,end:editor.selectionEnd,top:editor.scrollTop,left:editor.scrollLeft,pageX:win.scrollX||0,pageY:win.scrollY||0});
+ const feedbackHeading=()=>dialog.querySelector('#lab-feedback-title');
+ function restore(position){
+  if(!root.isConnected||workspace.hidden)return;
+  editor.focus({preventScroll:true});if(!position)return;
+  editor.setSelectionRange(position.start,position.end);
+  editor.scrollTop=position.top;editor.scrollLeft=position.left;
+  editor.dispatchEvent(new win.Event('scroll'));
+  win.scrollTo?.({left:position.pageX,top:position.pageY,behavior:'auto'});
+ }
+ function trapFallbackFocus(event){
+  if(dialog.open&&!dialog.contains(event.target))feedbackHeading()?.focus({preventScroll:true});
+ }
+ function hideFeedback(focus=true){
+  const wasOpen=dialog.open;
+  doc.removeEventListener('focusin',trapFallbackFocus);
+  if(wasOpen){if(typeof dialog.close==='function')dialog.close();else dialog.removeAttribute('open');}
+  for(const [element,inert,ariaHidden] of inerted){
+   element.inert=inert;
+   if(ariaHidden===null)element.removeAttribute('aria-hidden');else element.setAttribute('aria-hidden',ariaHidden);
+  }
+  inerted=[];root.classList.remove('has-feedback-fallback');
+  if(wasOpen&&focus&&!disposed)restore(feedbackPoint);
+ }
+ function leaveIntro(){
+  if(disposed||intro.hidden)return;
+  entered=true;
+  intro.hidden=true;
+  if(setStoryVisible)setStoryVisible(false);
+  else{workspace.hidden=false;workspace.inert=workspaceInitiallyInert;reviewButton.hidden=reviewInitiallyHidden;}
+  root.classList.remove('is-lab-intro');
+  if(reviewing)restore(storyPoint);else{
+   // On touch, let learners read the task before opening the virtual keyboard.
+   const target=win.matchMedia?.('(pointer: coarse)').matches&&taskHeading?taskHeading:editor;
+   target.focus({preventScroll:true});root.scrollIntoView?.({block:'start'});
+  }
+ }
+ function showIntro(review=false){
+  if(disposed||!intro.hidden)return;
+  reviewing=review;storyPoint=review?point():null;hideFeedback(false);
+  const evaluation=missionId==='evaluation-knn-v1';
+  ui.showIntro({meta,dataset,stages,example:meta.queryText||(evaluation?'test_size=0.25 · seed=42 · k=3':JSON.stringify(dataset.query)),
+   showQueryCode:!meta.queryText&&!evaluation,action:review?'return':hasProgress||entered?'resume':'start'},leaveIntro);
+  if(setStoryVisible)setStoryVisible(true);
+  else{workspace.hidden=true;workspace.inert=true;reviewButton.hidden=true;}
+  intro.hidden=false;root.classList.add('is-lab-intro');
+  intro.querySelector('#lab-intro-title').focus({preventScroll:true});intro.scrollIntoView?.({block:'start'});
+ }
+ function rememberFeedback(value,status,stage){
+  if(disposed)return;
+  const view=feedbackView(value,status);
+  const field=view.field||(['MISSING_FUNCTION','NOT_CALLABLE','MISSING_RETURN'].includes(view.code)?stage.function:null);
+  last={...view,field,step:meta.title+' · '+stage.title,example:stage.example};
+  feedbackButton.hidden=false;
+ }
+ function openFeedback(savedPoint){
+  if(disposed||!last||!intro.hidden)return;
+  feedbackPoint=savedPoint||point();
+  dialog.dataset.kind=last.kind;
+  ui.showFeedback(last,hideFeedback);
+  if(!dialog.open){
+   if(typeof dialog.showModal==='function')dialog.showModal();
+   else{
+    dialog.setAttribute('open','');
+    feedbackHeading().focus({preventScroll:true});
+    inerted=outsideDialog(dialog).map(element=>[element,Boolean(element.inert),element.getAttribute('aria-hidden')]);
+    for(const [element] of inerted){element.inert=true;element.setAttribute('aria-hidden','true');}
+    root.classList.add('has-feedback-fallback');
+    doc.addEventListener('focusin',trapFallbackFocus);
+   }
+  }
+  feedbackHeading().focus({preventScroll:true});dialog.scrollTop=0;
+ }
+ function showFeedback(value,status,stage,savedPoint){
+  rememberFeedback(value,status,stage);openFeedback(savedPoint);
+ }
+ const review=()=>{if(!reviewButton.disabled)showIntro(true);};
+ const lastFeedback=()=>{if(!feedbackButton.disabled)openFeedback();};
+ const cancel=event=>{event.preventDefault();event.stopPropagation();hideFeedback();};
+ const keys=event=>{
+  if(!dialog.open)return;
+  if(event.key==='Escape'){cancel(event);return;}
+  if(event.key!=='Tab')return;
+  const list=[...dialog.querySelectorAll('button:not(:disabled),summary,pre[tabindex]')].filter(element=>!element.closest('[hidden]')&&
+   (!element.closest('details')||element.tagName==='SUMMARY'||element.closest('details').open));
+  if(!list.length)return;
+  const first=list[0],last=list.at(-1);
+  if(event.shiftKey&&doc.activeElement===first){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&doc.activeElement===last){event.preventDefault();first.focus();}
+ };
+ reviewButton.addEventListener('click',review);feedbackButton.addEventListener('click',lastFeedback);
+ dialog.addEventListener('cancel',cancel);dialog.addEventListener('keydown',keys);
+ return {
+  start(){showIntro();},capture:point,showFeedback,rememberFeedback,close:hideFeedback,
+  setBusy(busy){reviewButton.disabled=busy;feedbackButton.disabled=busy;},
+  dispose(){
+   if(disposed)return;disposed=true;hideFeedback(false);
+   reviewButton.removeEventListener('click',review);feedbackButton.removeEventListener('click',lastFeedback);
+   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('keydown',keys);
+   if(!setStoryVisible){workspace.inert=workspaceInitiallyInert;reviewButton.hidden=reviewInitiallyHidden;}
+   root.classList.remove('is-lab-intro');ui.dispose();intro.remove();dialog.remove();
+  }
+ };
 }
