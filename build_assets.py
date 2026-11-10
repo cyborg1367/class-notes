@@ -5,7 +5,7 @@ import hashlib, json, re, posixpath
 
 VERSIONED_SUFFIXES={'.css','.js','.mjs','.svg','.png','.webp','.woff','.woff2','.ttf','.csv'}
 CONFIG_FILES={'auth-config.json','lab-service.json'}
-OBSOLETE_ASSETS={'lab-checks.py','dashboard-ui.mjs','coding-lab-layout.mjs'}
+OBSOLETE_ASSETS={'lab-checks.py','dashboard-ui.mjs','coding-lab-layout.mjs','instructor.mjs'}
 
 def lesson_order(lesson, index):
     """Catalog lesson numbers determine teaching order, including 09 -> 10."""
@@ -82,7 +82,7 @@ def prepare_public_assets(root,dist):
                 shells=json.loads(compiled.read_text(encoding='utf-8'))
                 digest=hashlib.sha256()
                 for name in shells['source_files']:
-                    public_inputs={'web/assets/view-channel.mjs','web/assets/course-view-model.mjs','web/assets/home-view-model.mjs','web/assets/paper-icons.mjs','web/assets/notifications.mjs','web/assets/account-model.mjs','web/assets/account-controller.mjs','web/assets/dashboard-model.mjs','web/assets/instructor-model.mjs','web/assets/review.mjs'}
+                    public_inputs={'web/assets/view-channel.mjs','web/assets/course-view-model.mjs','web/assets/home-view-model.mjs','web/assets/paper-icons.mjs','web/assets/notifications.mjs','web/assets/classroom-presence.mjs','web/assets/account-model.mjs','web/assets/account-controller.mjs','web/assets/dashboard-model.mjs','web/assets/instructor-model.mjs','web/assets/review.mjs'}
                     assert (name.startswith('frontend/') or name in public_inputs) and '..' not in Path(name).parts, 'Invalid shell source path'
                     digest.update(name.encode()+b'\0'+(root/name).read_bytes()+b'\0')
                 assert shells['source_sha256']==digest.hexdigest(), 'React shell sources changed; run npm run build:course.'
@@ -109,6 +109,12 @@ def prepare_public_assets(root,dist):
             rendered=json.loads(compiled.read_text(encoding='utf-8'))
             text,count=re.subn(r'<!-- account-react:start -->.*?<!-- account-react:end -->',lambda m:rendered['html'],text,flags=re.S)
             assert count==1, ('Account page needs one React slot',page)
+        if '<!-- about-react:start -->' in text:
+            compiled=root/'frontend/generated/about-page.json'
+            assert compiled.is_file(), 'Run npm run build:course to compile the React about page.'
+            rendered=json.loads(compiled.read_text(encoding='utf-8'))
+            text,count=re.subn(r'<!-- about-react:start -->.*?<!-- about-react:end -->',lambda m:rendered['html'],text,flags=re.S)
+            assert count==1, ('About page needs one React slot',page)
         if '<!-- home-react:start -->' in text:
             compiled=root/'frontend/generated/home-page.json'
             assert compiled.is_file(), 'Run npm run build:course to compile the React homepage.'

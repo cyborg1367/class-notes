@@ -16,6 +16,7 @@ import type {AccountPort,AccountLinks} from './account/contracts';
 import {AccountPage} from './account/AccountPage';
 import {AccountControls} from './account/AccountControls';
 import {accountLinks} from './account/account-links';
+import {AboutPage} from './about/AboutPage';
 export function renderCourse(course:Course){
   return renderToString(<CourseApplication course={course} channel={createViewChannel(INITIAL_COURSE_VIEW)}/>,{identifierPrefix:'course-'});
 }
@@ -33,6 +34,9 @@ export function renderHomeCourses(catalog:PublicCourse[]){
 
 export function renderAccountPage(){
   return renderToString(<AccountPage port={createAccountController({links:accountLinks('../')}) as AccountPort}/>,{identifierPrefix:'account-page-'});
+}
+export function renderAbout(){
+  return renderToString(<AboutPage/>,{identifierPrefix:'about-'});
 }
 export function renderAccountControls(input:unknown,links:AccountLinks,scope:string,compact=false){
   const controller=createAccountController({links}) as AccountPort;
