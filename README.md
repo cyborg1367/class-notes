@@ -1,174 +1,100 @@
-# Class Notes
+<div align="center" dir="rtl">
 
-A Persian, right-to-left classroom portal for course notes, quizzes, and hands-on Python labs. Built around a paper-inspired interface, it combines a static GitHub Pages frontend with authenticated learning services powered by Supabase.
+# دفتر کلاس · Class Notes
 
-Students can read course material, practice code in their browser, submit lab missions for independent grading, and follow their progress through server-recorded XP.
+**هوش مصنوعی را با ساختن یاد بگیر.**
 
- · [Build workflow](.github/workflows/jekyll-gh-pages.yml)
+یک محیط آموزشی فارسی برای پیوند دادن مفهوم، کد و تجربهٔ عملی.
 
-## What students can do
+[مشاهدهٔ سایت](https://cyborgmass.ir/) · [کلاس‌ها و یادداشت‌ها](https://cyborgmass.ir/machine-learning/) · [دربارهٔ مدرس](https://cyborgmass.ir/about/)
 
-- **Study course material:** access authorized lesson content, mathematical notation, and supporting resources.
-- **Check their understanding:** complete lesson quizzes and track learning progress.
-- **Practice Python:** write code in an editor with syntax highlighting and an adjustable output console.
-- **Complete guided missions:** explore a scenario and its dataset, solve tasks, and receive diagnostic feedback with optional hints.
-- **Earn XP:** receive credit for successfully graded missions and see progress in the dashboard.
-- **Review with a purpose:** revisit evidence from earlier work, read a focused explanation, answer a fresh question, and keep a private reflection in the personal review notebook.
-- **Follow relevant updates:** use a quiet in-site notification inbox for unfinished labs, due reviews, newly published material, and class access. Read state, postponed reminders, and category preferences belong to each student's account.
+</div>
 
-### Current labs
+<div dir="rtl">
 
-| Lab | Learning focus | Missions | Available XP |
-| --- | --- | ---: | ---: |
-| Greenhouse Detective | Dataset shapes, vector distances, nearest neighbors, and comparing queries | 6 | 300 |
-| SMS Detective | Labeled examples, neighbor voting, majority decisions, and k-nearest-neighbor classification | 6 | 300 |
-| Before Release | Independent train/test splits, prediction, evaluation metrics, confusion matrices, and decision regions | 6 | 300 |
-| Before Blocking | Positive-class scores, Precision/Recall/F-beta, thresholds, ROC-AUC, and validation-only policy selection | 6 | 300 |
+## دربارهٔ دفتر کلاس
 
-The SMS lab uses synthetic messages and prepared numeric features. Students work with those features rather than implementing a text-processing pipeline.
+دفتر کلاس با هدف آموزش هوش مصنوعی شکل گرفته است؛ محیطی که در آن توضیح مفاهیم، مثال‌های تصویری، تمرین برنامه‌نویسی و بازخورد آموزشی، بخش‌های یک مسیر پیوسته‌اند.
 
-## Architecture
+در این مسیر، از یک مسئلهٔ قابل لمس شروع می‌کنیم، داده‌ها را می‌شناسیم، منطق راه‌حل را قدم‌به‌قدم می‌سازیم و نتیجه را بررسی می‌کنیم. دانشجو باید بتواند توضیح بدهد کدش چه می‌کند، چرا این روش را انتخاب کرده و کجا ممکن است اشتباه کند.
 
-The public website and the private classroom services have separate responsibilities.
+مسیر منتشرشدهٔ فعلی به **یادگیری ماشین** اختصاص دارد؛ از فهم داده و فاصله تا ساختن طبقه‌بند، ارزیابی مدل و انتخاب آستانهٔ تصمیم.
 
-| Component | Responsibility |
+## رویکرد آموزشی
+
+چرخهٔ یادگیری در دفتر کلاس پنج بخش دارد:
+
+1. **مسئله را ببین.** با یک موقعیت، داده یا مثال دیداری شروع کن و سؤال اصلی را بشناس.
+2. **منطق را بفهم.** ارتباط میان توضیح، تصویر، فرمول و کد را دنبال کن.
+3. **خودت بساز.** مفهوم را در مأموریت‌های مرحله‌ای لابراتور به کار بگیر و اثر تغییر کد را ببین.
+4. **نتیجه را بسنج.** با آزمون، بررسی پاسخ و تحلیل خطا، برداشت خودت را محک بزن.
+5. **آگاهانه مرور کن.** به شواهد کار قبلی برگرد، یک سؤال تازه حل کن و برداشتت را در دفتر مرور ثبت کن.
+
+تمرین‌ها به یادداشت‌ها متصل‌اند، اما می‌توانند همان مفهوم را در مسئله‌ای متفاوت به کار بگیرند؛ برای مثال، منطق طبقه‌بندی را در یادداشت با دادهٔ پزشکیِ ساختگی می‌آموزیم و در لابراتور برای تشخیص پیامک‌های تبلیغاتی استفاده می‌کنیم.
+
+## تجربهٔ دانشجو
+
+| بخش | نقش آن در یادگیری |
 | --- | --- |
-| GitHub Pages | Serves public HTML shells, styles, scripts, and public configuration |
-| Supabase Auth | Handles student sign-in and sessions |
-| Supabase database and Storage | Enforce access to private materials and store learning state |
-| Pyodide in a browser worker | Runs local Python practice and displays its output |
-| Supabase `classroom-lab` Edge Function | Authenticates grading requests and coordinates independent checks |
-| E2B | Runs server-side lab evaluation in a sandbox |
+| **یادداشت‌های آموزشی** | توضیح پیوسته، مثال‌های دیداری، روابط ریاضی و کد؛ همراه با فهرست موضوعات و منابع تکمیلی مانند PDF و نوت‌بوک ژوپیتر. |
+| **لابراتور Python** | نوشتن و اجرای کد در مرورگر، مشاهدهٔ خروجی و انجام مأموریت‌های مرتبط با هر یادداشت. |
+| **آزمون و بازخورد** | بررسی فهم مفاهیم و دریافت نتیجه برای بازگشت به بخش‌هایی که به تمرین بیشتری نیاز دارند. |
+| **داشبورد شخصی** | مشاهدهٔ وضعیت یادگیری، نتایج آزمون‌ها، پیشرفت مأموریت‌ها و امتیازهای ثبت‌شده. |
+| **دفتر مرور شخصی** | نگهداری یادداشت و تأمل شخصی، مرور مفهوم، پاسخ به سؤال تازه و پیگیری مرورهای موعددار. |
+| **اعلان‌های داخل سایت** | اطلاع از مطالب تازه، تمرین‌های ناتمام و مرورهای موعددار؛ همراه با تنظیم دسته‌ها و یادآوری‌ها. |
 
-**A successful browser run does not award XP.** The server verifies submissions and returns the authoritative progress snapshot. Repeating an already completed mission does not award its XP again.
+### لابراتور؛ جایی برای آزمودن ایده‌ها
 
-GitHub Pages hosts the frontend; it does not run Python grading or provide a trusted database.
+هر لابراتور یک سناریو، داده و مجموعه‌ای از مأموریت‌های مشخص دارد. دانشجو کد می‌نویسد، آن را اجرا می‌کند، خروجی را می‌بیند و پاسخ خود را برای بررسی نهایی می‌فرستد.
 
-## Repository layout
+**اجرای کد و بررسی پاسخ دو مرحلهٔ جدا هستند.** اجرای محلی به آزمایش و اصلاح راه‌حل کمک می‌کند؛ تأیید مأموریت و ثبت XP بر اساس بررسی سمت سرور انجام می‌شود. تکرار یک مأموریت تکمیل‌شده، امتیاز آن را دوباره اضافه نمی‌کند.
 
-```text
-.
-├── .github/workflows/   # GitHub Pages build and deployment
-├── web/                # Public website source
-│   ├── assets/         # Styles, scripts, fonts, and public configuration
-│   └── ...             # Account, course, lesson, and lab pages
-├── build.py            # Validates public configuration and creates dist/
-├── build_assets.py     # Shared asset fingerprints and canonical catalog rendering
-├── check.py            # Checks generated pages and public-output safety
-├── tests/              # Build and public runtime contracts
-└── README.md           # English project overview
-```
+بخش «کمک آموزشی» نیز در لابراتور برای پرسش دربارهٔ مسئله، داده‌ها و کد در نظر گرفته شده است؛ با رویکرد راهنمایی دانشجو برای پیدا کردن راه‌حل.
 
-`dist/` is generated output and is not committed. Instructor-only server code, migrations, reference solutions, and private test packages are intentionally excluded from the public repository.
+### دفتر مرور؛ ادامهٔ یادگیری پس از تمرین
 
-## Local setup
-### Requirements
+دفتر مرور، فضایی برای ثبت نکته و بازگشت هدفمند به مفاهیم است. دانشجو می‌تواند سابقهٔ مرتبط با کار قبلی خود را ببیند، توضیح مفهوم را مرور کند، یک سؤال تازه پاسخ بدهد و بنویسد چه چیزی را این بار بهتر فهمیده است.
 
-- Node.js 24 and Python 3 to build and check the public website.
-- A modern browser to use the portal and coding labs.
-- A configured Supabase project for authenticated classroom features.
-- The matching instructor backend package and E2B configuration for trusted lab grading.
+این یادداشت‌ها و تأمل‌ها به حساب شخصی دانشجو تعلق دارند و در کنار مرورهای موعددار، به حفظ پیوستگی یادگیری کمک می‌کنند.
 
-Install locked frontend dependencies with `npm ci` before the first build.
+## مسیر منتشرشدهٔ یادگیری ماشین
 
-### 1. Get the source
+| گام | یادداشت | موضوع اصلی | لابراتور |
+| --- | --- | --- | --- |
+| ۰۱ | [از یک جدول تا نزدیک‌ترین نمونه](https://cyborgmass.ir/machine-learning/vector-distance/) | بردار، ماتریس، فاصلهٔ اقلیدسی و انتخاب همسایه‌ها با NumPy | کارآگاه گلخانه |
+| ۰۲ | [از مشورت گرفتن تا طبقه‌بندی باینری](https://cyborgmass.ir/machine-learning/prediction-problem/) | دادهٔ برچسب‌دار، رأی همسایه‌ها و منطق kNN | کارآگاه پیامک |
+| ۰۳ | [از پیش‌بینی یک نمونه تا ارزیابی یک طبقه‌بند](https://cyborgmass.ir/machine-learning/evaluating-knn/) | تفکیک آموزش و آزمون، مرز تصمیم، Accuracy و ماتریس خطا | قبل از انتشار |
+| ۰۴ | [از شمارش خطا تا انتخاب آستانه](https://cyborgmass.ir/machine-learning/thresholds-and-roc/) | Precision، Recall، F-score، آستانه، ROC-AUC و انتخاب با دادهٔ اعتبارسنجی | پیش از مسدودسازی |
 
-Clone this repository and open a terminal in its root directory, alongside `build.py`.
+تمرین‌های این مسیر از **Python، NumPy، pandas و scikit-learn** استفاده می‌کنند. داده‌های پزشکی و پیامکیِ مثال‌ها آموزشی و ساختگی‌اند؛ در لابراتور پیامک نیز ویژگی‌های عددی آماده در اختیار دانشجو قرار می‌گیرند.
 
-### 2. Set public configuration
+## ابزارهای مدرس
 
-`web/assets/auth-config.json` contains only the Supabase project URL and its **publishable** key:
+پنل مدرس نمایی از وضعیت کلاس و فعالیت دانشجویان فراهم می‌کند:
 
-```json
-{
-  "supabaseUrl": "https://YOUR_PROJECT.supabase.co",
-  "publishableKey": "sb_publishable_YOUR_PUBLIC_KEY"
-}
-```
+- مشاهده و مدیریت درخواست‌های عضویت و وضعیت دسترسی دانشجویان؛
+- بررسی پیشرفت لابراتورها، مأموریت‌های تکمیل‌شده و XP ثبت‌شده؛
+- مشاهدهٔ سابقه و جزئیات تلاش‌های آزمون؛
+- بررسی پاسخ‌های سؤال‌ها برای شناسایی مفاهیمی که به توضیح یا تمرین بیشتری نیاز دارند.
 
-`web/assets/lab-service.json` points to the grading endpoint in the same project:
+این اطلاعات به مدرس کمک می‌کند تصمیم بگیرد کدام بخش درس را دوباره توضیح بدهد و کجا تمرین یا بازخورد بیشتری لازم است.
 
-```json
-{
-  "checkURL": "https://YOUR_PROJECT.supabase.co/functions/v1/classroom-lab/check"
-}
-```
+## طراحی و فناوری
 
-These values are public by design. They identify the backend; they do not replace database policies, membership checks, or authenticated server-side authorization.
+رابط فارسی و راست‌به‌چپ دفتر کلاس با هویت بصری الهام‌گرفته از کاغذ و دفتر طراحی شده است. یادداشت، تمرین، مرور و داشبورد، بخش‌های مرتبط یک تجربهٔ آموزشی هستند.
 
-For an existing classroom installation, preserve its configuration when applying frontend updates. Configure allowed authentication redirect URLs for your deployed site and any local development origin you use.
+رابط کاربری با **React و TypeScript** توسعه یافته است. اجرای تمرین‌های Python در مرورگر با **Pyodide** انجام می‌شود و خدمات حساب، دسترسی و داده‌های یادگیری بر پایهٔ **Supabase** قرار دارند. بررسی نهایی لابراتورها از اجرای تمرینی داخل مرورگر مستقل است.
 
-### 3. Build and validate
+این مخزن شامل بخش عمومی وب‌سایت است. خدمات اختصاصی کلاس و محتوای محافظت‌شده، جداگانه مدیریت می‌شوند. برای جزئیات ساختار رابط و مسئولیت ماژول‌ها، [مستند معماری فرانت‌اند](docs/frontend-architecture.md) را ببینید.
 
-```bash
-npm ci
-npm run check
-```
+## شروع یادگیری
 
-The checker compiles the React sources, validates the generated routes and public assets, and runs the Python and JavaScript tests. Build commands share a lock within a checkout; failed validation keeps the previous `dist/` available. Use `npm.cmd` in PowerShell if its script policy blocks `npm.ps1`.
+از [صفحهٔ اصلی دفتر کلاس](https://cyborgmass.ir/) وارد شوید و [یادداشت‌های مسیر یادگیری ماشین](https://cyborgmass.ir/machine-learning/) را ببینید. دسترسی به محتوای اختصاصی و فعالیت‌های کلاس، به ورود به حساب و تأیید عضویت نیاز دارد.
 
-### 4. Preview
+**مدرس: [مسعود آهنگری](https://cyborgmass.ir/about/)** · [LinkedIn](https://www.linkedin.com/in/masoud-ahangary/)
 
-```bash
-python3 -m http.server 8000 --directory dist
-```
+## گزارش ایراد و پیشنهاد
 
-Open <http://localhost:8000>. Serve **`dist/`**, rather than opening HTML files directly. Sign-in, private lessons, and grading also require a correctly configured backend; a local static preview alone does not provision those services.
+برای گزارش مشکل یا پیشنهاد بهبود، از [بخش Issues](https://github.com/cyborg1367/class-notes/issues) استفاده کنید. نام صفحه یا یادداشت، شرح مسئله و مراحل مشاهدهٔ آن، به بررسی دقیق‌تر کمک می‌کند. پیشنهادهای مربوط به وضوح توضیح‌ها، مثال‌ها و تجربهٔ یادگیری نیز به بهتر شدن مسیر آموزش کمک می‌کنند.
 
-## Deploy to GitHub Pages
-
-1. In the repository's **Settings → Pages**, select **GitHub Actions** as the build source.
-2. Commit your public source changes and push them to `main`.
-3. The Pages workflow runs `npm run check`, uploads `dist/`, and deploys the generated site.
-4. Confirm that the workflow succeeds before checking the deployed classroom.
-
-The workflow can also be started manually from the **Actions** tab. Backend deployment is separate: publishing the static site does not apply SQL migrations or deploy a Supabase Edge Function.
-
-### Notification releases
-
-The notification backend is installed through the matching private migration package. It uses existing Supabase services and requires no browser-push permission or additional provider. Meaningful content releases are announced through an authorized publication RPC after the content is ready; routine deploys and asset fingerprint changes do not generate announcements. Existing lessons form a quiet baseline on installation. Reading a notice never completes a mission or grants XP.
-
-### Runtime performance
-
-The matching private performance migration adds one authenticated page bootstrap and progress-only dashboard summaries. Saved lab code is fetched by the editor, not the dashboard. Identical simultaneous reads share a request; writes and completed authorization responses are not cached. Older backends remain compatible through missing-function fallback. HTML, CSS and lesson presentation are unchanged.
-
-For a local timing report in the current browser document, run `console.table(window.ClassroomPerformance.report())`. It reports RPC names, counts and durations without arguments, learner content or tokens, and sends no telemetry. Production latency should be measured from student networks; synthetic request-count or payload reductions do not establish an equivalent page-speed percentage.
-
-## Security boundaries
-
-- **Keep secrets on the server.** Never place Supabase secret/service-role keys, E2B API keys, or other credentials in `web/`, frontend configuration, or public Git history.
-- **Protect private resources with backend authorization.** A hidden navigation item or a client-side route check is not an access policy.
-- **Trust server results for progress.** Browser output, local drafts, and UI animations are not proof of a passed mission.
-- **Keep grading material private.** Do not publish hidden checks, reference solutions, instructor-only packages, or migration bundles with the website.
-- **Review the generated output.** Build checks help catch mistakes but do not replace a review of database policies, Edge Function authorization, or backend configuration.
-
-The frontend uses PKCE authentication and constrains the configured grading endpoint to the same Supabase project. Backend protections must still be installed and maintained separately.
-
-## Maintenance and updates
-
-- Edit migrated React UI in `frontend/` and remaining public UI in `web/`, then rebuild and run the checks. Do not hand-edit generated bundles or prerendered fragments.
-- Keep the existing paper-inspired, Persian RTL interface and keyboard accessibility intact when changing the UI.
-- Review changes to Python execution, grading, and XP separately from presentation changes.
-- Follow the instructor instructions supplied with each release. Some updates change only frontend files; others also require backend deployment or a migration.
-- Review staged files before pushing, particularly when unpacking an instructor update beside the repository.
-
-## Scope
-
-This project is designed for an instructor-managed classroom. The public repository provides the website, not a complete one-command backend installation. A working production classroom also needs its private materials, membership policies, database functions, storage rules, grading service, and provider credentials configured by the instructor.
-Third-party assets retain their respective licenses and notices; see the bundled dependency directories for details.
-
-
-
-## Local React migration workspace
-
-The migration is being reviewed locally before publication. With Node.js 24 and
-Python 3 available, run `npm ci` and `npm run dev` (PowerShell: `npm.cmd`).
-Open `http://127.0.0.1:5173/__preview__/dashboard/` to review the student
-dashboard with sample data, or `http://127.0.0.1:5173/dashboard/` with an
-existing local session. Open `http://127.0.0.1:5173/` for the React homepage, or
-`http://127.0.0.1:5173/machine-learning/` for the course. A separate local-only UI-state
-preview is available at `http://127.0.0.1:5173/__preview__/course/?state=guest`.
-Use `npm run check` for the build, TypeScript and existing test suites.
-See [migration status](docs/react-migration.md) for scope and remaining routes.
-See [frontend architecture](docs/frontend-architecture.md) for ownership boundaries,
-service adapters and the shared React runtime.
+</div>
