@@ -7,7 +7,9 @@
     "typecheck:course": "tsc --project frontend/tsconfig.json",
     "build": "node frontend/project.mjs build",
     "dev": "node frontend/project.mjs dev",
-    "check": "node frontend/project.mjs check"
+    "check": "node frontend/project.mjs check",
+    "preview:cloudflare": "npm run build && wrangler dev --local --port 8787",
+    "deploy:cloudflare": "npm run check && wrangler deploy"
   },
   "dependencies": {
     "anatomy-figures": "0.1.0",
@@ -20,6 +22,7 @@
     "jsdom": "26.1.0",
     "linkedom": "0.18.15",
     "typescript": "5.9.3",
-    "vite": "8.3.6"
+    "vite": "8.3.6",
+    "wrangler": "4.160.0"
   }
 }

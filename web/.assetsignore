@@ -1,0 +1,4 @@
+# Hosting metadata is not part of the public application.
+/.nojekyll
+/CNAME
+/.DS_Store

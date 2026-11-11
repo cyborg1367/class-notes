@@ -29,3 +29,6 @@ node_modules/
 
 # Local archives are never part of the public source.
 *.rar
+
+# Local Cloudflare development state
+.wrangler/
