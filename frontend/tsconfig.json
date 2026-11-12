@@ -13,5 +13,5 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "types": ["react", "react-dom"]
   },
-  "include": ["**/*.tsx", "**/*.d.ts", "course-filter-model.mjs", "../web/assets/view-channel.mjs", "../web/assets/course-view-model.mjs"]
+  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts", "course-filter-model.mjs", "../web/assets/view-channel.mjs", "../web/assets/course-view-model.mjs"]
 }

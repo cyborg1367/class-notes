@@ -32,3 +32,7 @@ node_modules/
 
 # Local Cloudflare development state
 .wrangler/
+
+# Browser regression artifacts contain only synthetic test accounts.
+/playwright-report/
+/test-results/

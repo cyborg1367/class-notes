@@ -12,6 +12,14 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 process.chdir(root);
 await rm(path.join(root,'web/assets/react'),{recursive:true,force:true});
 await build({configFile:path.join(root,'frontend/vite.config.mjs')});
+// Keep the portal's classic-script contract while its source is modular and its
+// transport/session services are strictly typed. There is no extra SDK or React
+// instance in this bundle; dynamic feature imports retain the existing URLs.
+await build({configFile:false,publicDir:false,
+ build:{outDir:path.join(root,'web/assets'),emptyOutDir:false,copyPublicDir:false,
+  target:['es2020','safari15'],minify:false,sourcemap:false,
+  lib:{entry:path.join(root,'frontend/portal/entry.ts'),formats:['iife'],name:'ClassNotesPortal',fileName:()=> 'portal.js'},
+  rolldownOptions:{output:{footer:'if (typeof module !== "undefined" && module.exports) module.exports = ClassNotesPortal;'}}}});
 await build({configFile:false,publicDir:false,define:{'process.env.NODE_ENV':JSON.stringify('production')},
  build:{ssr:path.join(root,'frontend/prerender-entry.tsx'),outDir:path.join(root,'.cache/react'),emptyOutDir:true,
   target:'node24',minify:false,rolldownOptions:{output:{entryFileNames:'course-render.mjs'}}}});

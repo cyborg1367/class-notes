@@ -9,7 +9,11 @@
     "dev": "node frontend/project.mjs dev",
     "check": "node frontend/project.mjs check",
     "preview:cloudflare": "npm run build && wrangler dev --local --port 8787",
-    "deploy:cloudflare": "npm run check && wrangler deploy"
+    "deploy:cloudflare": "npm run check && wrangler deploy",
+    "typecheck:browser": "tsc --project tests/browser/tsconfig.json",
+    "test:browser": "playwright test",
+    "test:browser:chromium": "playwright test --project=desktop-chromium --project=mobile-chromium --project=narrow-chromium",
+    "test:browser:report": "playwright show-report"
   },
   "dependencies": {
     "anatomy-figures": "0.1.0",
@@ -17,6 +21,8 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "24.10.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "jsdom": "26.1.0",

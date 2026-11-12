@@ -26,7 +26,12 @@ test('GateCard paints membership actions and reports a failed request', async t 
   });
   assert.equal(host.querySelector('h2').textContent, 'عضویت در کلاس');
   host.querySelector('.button-forest').click();
-  await new Promise(resolve => setTimeout(resolve, 20));
+  // React commits asynchronously. Wait for the observable result rather than
+  // assuming a 20 ms scheduler turn, especially beside parallel browser tests.
+  const deadline = Date.now() + 2_000;
+  while (!host.querySelector('[data-gate-status]').textContent && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
   assert.equal(requests, 1);
   assert.match(host.querySelector('[data-gate-status]').textContent, /این اعلان تغییر کرده/);
 });

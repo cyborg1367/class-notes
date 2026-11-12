@@ -84,6 +84,10 @@ a.mini-lesson:hover{background:#fffdf5}
 .membership-section article>h3{font-size:18px;color:var(--forest);line-height:1.9}
 [data-dashboard-results]{margin-top:50px;scroll-margin-top:105px}
 .dashboard-results{display:grid;gap:18px}
+/* Result cards must shrink below a table/code block's intrinsic width. */
+.quiz-result .result-items{grid-template-columns:minmax(0,1fr)}
+.quiz-result .result-item{min-inline-size:0}
+.quiz-result .portal-table-scroll,.quiz-result .quiz-code{max-inline-size:100%;overflow-x:auto}
 .result-heading{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:15px}
 .result-heading h3{font-size:17px;color:#294d33;line-height:1.9;margin-top:7px}
 .dashboard-result .portal-actions{margin-top:15px}

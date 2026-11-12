@@ -52,7 +52,7 @@ async function dev(){
   server.watcher.add(watched);
   server.watcher.on('all',(_event,file)=>{
     const relative=path.relative(projectRoot,file).replaceAll('\\','/');
-    if(relative.startsWith('dist/')||relative.startsWith('.cache/')||relative.startsWith('frontend/generated/')||relative.startsWith('web/assets/react/')||['web/assets/course-index.js','web/assets/site-shell.js','web/assets/homepage.js','web/assets/account-page.js','web/assets/dashboard-page.js'].includes(relative))return;
+    if(relative.startsWith('dist/')||relative.startsWith('.cache/')||relative.startsWith('frontend/generated/')||relative.startsWith('web/assets/react/')||['web/assets/portal.js','web/assets/course-index.js','web/assets/site-shell.js','web/assets/homepage.js','web/assets/account-page.js','web/assets/dashboard-page.js'].includes(relative))return;
     if(!relative.startsWith('web/')&&!relative.startsWith('frontend/')&&!buildFiles.includes(relative))return;
     needsFrontend ||= relative.startsWith('frontend/')||relative==='web/assets/catalog.json'||PUBLIC_RENDER_INPUTS.includes(relative);
     clearTimeout(timer);timer=setTimeout(rebuild,250);

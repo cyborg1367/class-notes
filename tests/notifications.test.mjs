@@ -19,6 +19,6 @@ test('all page shells include the shared notification stylesheet and the history
  function walk(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=new URL(entry.name+(entry.isDirectory()?'/':''),dir);if(entry.isDirectory())walk(file);else if(entry.name==='index.html'){const html=fs.readFileSync(file,'utf8');assert.ok(html.includes('notifications.css?v=build'),file.href);assert.equal((html.match(/notifications\.css/g)||[]).length,1);count++}}}walk(root);assert.ok(count>=17);
  const html=fs.readFileSync(new URL('../web/notifications/index.html',import.meta.url),'utf8'),portal=fs.readFileSync(new URL('../web/assets/portal.js',import.meta.url),'utf8'),module=fs.readFileSync(new URL('../web/assets/notifications.mjs',import.meta.url),'utf8');
  assert.ok(html.includes('data-page="notifications"')&&html.includes('data-notifications-page')&&html.includes('aria-busy="true"'));
- assert.ok(portal.includes("'review','notifications'"));
+ assert.match(portal, /["']review["']\s*,\s*["']notifications["']/);
  for(const forbidden of ['requestPermission','localStorage','classroom_lab_finish','classroom_submit','GROQ_API_KEY'])assert.ok(!module.includes(forbidden),forbidden);
 });

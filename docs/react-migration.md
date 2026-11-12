@@ -1,10 +1,24 @@
-# React migration: local review, step 6
+# React migration: browser regression and modular portal services
 
 This is a staged migration of the existing public application. Nothing in this
 package publishes the site, pushes Git or deploys a server function. Keep the
 current production domain and Supabase settings unchanged during UI review.
 
-## Step 6: Student dashboard
+## Current phase
+
+React owns the route UI listed below. Browser regression tests now exercise the
+actual static build with synthetic backend data. The current architecture phase
+extracts strict TypeScript services for config, session lifetime, RPC transport,
+bootstrap and route lifetime into `frontend/portal/services/`. The existing
+classic `web/assets/portal.js` is generated from `frontend/portal/entry.ts`.
+
+`frontend/portal/application.mjs` remains a transitional JavaScript composition
+root; feature-specific route adapters and the vanilla coding-lab orchestrator
+are still future work. This package combines the previous browser-test phase
+with the service extraction. See [portal-services.fa.md](portal-services.fa.md)
+for source ownership and [browser-tests.fa.md](browser-tests.fa.md) for tests.
+
+## Earlier UI phase: Student dashboard
 
 The dashboard uses a single lazy React root. Keep the static HTML neutral; render
 personal progress only after the portal resolves the authenticated account. The
@@ -144,7 +158,7 @@ Stop the server with Ctrl+C before replacing project files.
 | Lesson reader, quizzes, review notebook, instructor panel | React |
 | Coding lab chrome (frame, workspace, mission, tutor, XP) | React islands; `coding-lab.js` remains the vanilla orchestrator |
 | Lesson widgets (`python-lab.js`, `space3d.js`, thresholds) | Authored vanilla; not a route migration |
-| `portal.js` auth/RPC | Stays a service; not a UI renderer |
+| Portal auth/RPC | Typed service modules; transitional JS composition emits classic `portal.js` |
 | Installable/offline PWA | Separate design; not implied by adopting React |
 
 Reuse the component/service contracts and shared ESM runtime when migrating each
@@ -155,9 +169,11 @@ Keep the paper visual identity, independent lab stories, IDs and route contracts
 
 TypeScript, static builds, existing regression tests, isolated service races and
 production-bundle hydration/filter/private-view interactions are checked locally.
-The DOM interaction suite is not a substitute for real browser layout, touch,
-screen-reader, zoom or virtual-keyboard checks. Managed browser preview is not
-available in the authoring environment; the user is reviewing this build locally.
+The Playwright suite additionally checks the actual emitted site in Chromium and
+WebKit at four viewport configurations. Its backend and worker are synthetic;
+it does not verify live Google callbacks, RLS, grading execution or production
+availability. Browser emulation is not a substitute for physical-device,
+screen-reader, zoom, virtual-keyboard or full visual review.
 
 No backend SQL, schema, Edge Function, membership record, XP record, lesson source,
 private PDF/notebook, auth key or domain configuration is changed by this update.
