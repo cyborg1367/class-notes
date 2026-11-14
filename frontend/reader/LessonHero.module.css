@@ -1,0 +1,28 @@
+:global(body[data-page="lesson"]) :global([data-reader-template]) .hero { padding-block: 40px 0; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .grid {
+  display: grid; direction: ltr; grid-template-areas: "figure copy";
+  grid-template-columns: minmax(0,.84fr) minmax(0,1.16fr);
+  align-items: center; gap: 44px; padding-bottom: 0;
+}
+:global(body[data-page="lesson"]) :global([data-reader-template]) .single { grid-template-areas: "copy"; grid-template-columns: minmax(0,1fr); }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .copy { grid-area: copy; direction: rtl; min-width: 0; max-width: none; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .title {
+  width: 100%; max-width: none; max-inline-size: none;
+  font-size: clamp(32px,4.15vw,57px); line-height: 1.55; text-wrap: balance;
+}
+:global(body[data-page="lesson"]) :global([data-reader-template]) .text { display: contents; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .text :global(.hero-lede) { max-width: none; margin-block: 24px 0; font-size: 17px; line-height: 2; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .copy > :global(.hero-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 24px; margin-block-start: 28px; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .grid > :global(.hero-figure),
+:global(body[data-page="lesson"]) :global([data-reader-template]) .figure { grid-area: figure; min-width: 0; width: 100%; max-width: none; padding: 0; margin: 0; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .figure > img { display: block; width: 100%; height: auto; }
+@media (max-width:1024px) {
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .grid { grid-template-areas: "copy" "figure"; grid-template-columns: minmax(0,1fr); gap: 30px; }
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .single { grid-template-areas: "copy"; }
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .figure { max-width: 560px; margin-inline: auto; }
+}
+@media (max-width:760px) {
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .hero { padding-top: 28px; }
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .title { font-size: clamp(28px,7.8vw,43px); }
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .text :global(.hero-lede) { font-size: 16px; }
+}

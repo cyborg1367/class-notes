@@ -43,7 +43,7 @@ test('Hydration, filters and authenticated receipts stay under one React owner',
  assert.match(host.querySelector('[data-course-result]').textContent,/6 \/ 10/);
  input.value='not found';input.dispatchEvent(new window.Event('input',{bubbles:true}));await tick();
  assert.ok(host.querySelector('.course-search-empty'));host.querySelector('.course-search-empty button').click();await tick();
- assert.equal(host.querySelectorAll('[data-course-lesson]').length,4);
+ assert.equal(host.querySelectorAll('[data-course-lesson]').length,course.lessons.length);
  const select=host.querySelector('select');for(const option of select.options)option.removeAttribute('selected');select.querySelector('option[value="NumPy"]').selected=true;
  select.dispatchEvent(new window.Event('change',{bubbles:true}));await tick();assert.equal(host.querySelectorAll('[data-course-lesson]').length,2);
  host.querySelector('.course-filter-meta button').click();await tick();

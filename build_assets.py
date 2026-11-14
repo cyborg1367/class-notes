@@ -82,7 +82,7 @@ def prepare_public_assets(root,dist):
                 shells=json.loads(compiled.read_text(encoding='utf-8'))
                 digest=hashlib.sha256()
                 for name in shells['source_files']:
-                    public_inputs={'web/assets/view-channel.mjs','web/assets/course-view-model.mjs','web/assets/home-view-model.mjs','web/assets/paper-icons.mjs','web/assets/notifications.mjs','web/assets/classroom-presence.mjs','web/assets/account-model.mjs','web/assets/account-controller.mjs','web/assets/dashboard-model.mjs','web/assets/instructor-model.mjs','web/assets/review.mjs'}
+                    public_inputs={'web/assets/python-highlight.mjs','web/assets/view-channel.mjs','web/assets/course-view-model.mjs','web/assets/home-view-model.mjs','web/assets/paper-icons.mjs','web/assets/notifications.mjs','web/assets/classroom-presence.mjs','web/assets/account-model.mjs','web/assets/account-controller.mjs','web/assets/dashboard-model.mjs','web/assets/instructor-model.mjs','web/assets/review.mjs'}
                     assert (name.startswith('frontend/') or name in public_inputs) and '..' not in Path(name).parts, 'Invalid shell source path'
                     digest.update(name.encode()+b'\0'+(root/name).read_bytes()+b'\0')
                 assert shells['source_sha256']==digest.hexdigest(), 'React shell sources changed; run npm run build:course.'

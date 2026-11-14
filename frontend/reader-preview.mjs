@@ -97,6 +97,36 @@ const thresholdSample = `
 <a class="button-outline" data-private-download="machine-learning/sample.ipynb" href="#">دانلود نوت‌بوک انگلیسی ↓</a>
 </aside></article>`;
 
+const referenceSample = `
+<section class="hero lesson-hero"><div class="hero-copy"><p class="eyebrow">صفحهٔ مرجع مطالعه</p>
+<h1>از دادهٔ نمونه تا <em>بررسی نتیجه</em></h1>
+<p class="hero-lede">یک مثال کوچک می‌سازیم، رابطهٔ داده‌ها را می‌بینیم و نتیجه را با کد بررسی می‌کنیم. این صفحه تمام حالت‌های قالب مطالعه را در کنار هم نشان می‌دهد.</p></div>
+<figure class="hero-figure"><svg viewBox="0 0 450 320" role="img" aria-label="دادهٔ نمونه روی دو محور"><path d="M45 25V270H425M45 90H410M45 150H410M45 210H410M120 30V270M200 30V270M280 30V270M360 30V270" stroke="#bdb59e" fill="none"/>
+<g fill="#18564e"><circle cx="105" cy="210" r="8"/><circle cx="160" cy="165" r="8"/><circle cx="220" cy="185" r="8"/></g><g fill="#ad853c"><circle cx="285" cy="90" r="8"/><circle cx="335" cy="120" r="8"/><circle cx="375" cy="65" r="8"/></g></svg><figcaption>هر نقطه یک نمونه است؛ رنگ‌ها دو گروه داده را مشخص می‌کنند.</figcaption></figure></section>
+<article class="lesson-body"><div class="lesson-prose"><p>برای بررسی یک روش، ابتدا باید مسئله را روشن کنیم. جمله‌های مرتبط در همین پاراگراف ادامه پیدا می‌کنند و متن از تمام عرض ستون استفاده می‌کند. مرورگر با توجه به عرض صفحه سطر بعدی را تعیین می‌کند.</p></div>
+<section class="lesson-section" id="reference-text"><header class="section-head"><h2>داده‌ای بسازیم که خودمان بتوانیم آن را بررسی کنیم</h2></header><div class="lesson-prose">
+<p>هر نمونه دو ویژگی دارد. <strong>ویژگی‌ها ورودی مدل هستند</strong> و برچسب، گروه واقعی نمونه را مشخص می‌کند. نام متغیر انگلیسی را هم می‌توانیم در جمله بیاوریم: <code dir="ltr">X_train</code>.</p>
+<h3>رابطهٔ داده و برچسب</h3><ul><li>هر سطر یک نمونه است.</li><li>هر ستون یک ویژگی است.</li></ul><blockquote>داده‌ای که برای ارزیابی کنار می‌گذاریم، وارد آموزش همان نوبت نمی‌شود.</blockquote>
+</div></section>
+<section class="lesson-section" id="reference-code"><header class="section-head"><h2>مثال کوتاه Python و خروجی آن</h2></header><div class="lesson-prose"><pre><code class="language-python">import numpy as np
+
+X = np.array([[2, 5], [4, 1], [3, 6]])
+print(X.shape)
+</code></pre><pre><code class="language-text">(3, 2)
+</code></pre></div></section>
+<section class="lesson-section" id="reference-table"><header class="section-head"><h2>جدول مقایسه و شکل توضیحی</h2></header><div class="lesson-prose">
+<table><caption>نمونه‌های آموزشی</caption><thead><tr><th>نمونه</th><th>ویژگی اول</th><th>ویژگی دوم</th><th>توضیح</th></tr></thead><tbody><tr><td>A</td><td>۲</td><td>۵</td><td>یک مشاهدهٔ نمونه</td></tr><tr><td>B</td><td>۴</td><td>۱</td><td>مشاهدهٔ دوم برای مقایسه</td></tr></tbody></table>
+<figure class="teaching-figure"><svg viewBox="0 0 500 180" role="img" aria-label="جداکردن دادهٔ آموزش و ارزیابی"><rect x="30" y="50" width="315" height="60" fill="#dbe4d6"/><rect x="355" y="50" width="110" height="60" fill="#c9a058"/><text x="185" y="86" text-anchor="middle" font-size="18" fill="#18564e">Training</text><text x="410" y="86" text-anchor="middle" font-size="18">Validation</text></svg><figcaption>توضیح شکل در جای ثابت و با اندازهٔ متن مشترک نمایش داده می‌شود.</figcaption></figure>
+</div></section><section class="lesson-section" id="reference-long"><header class="section-head"><h2>کد کامل در قاب قابل پیمایش</h2></header><div class="lesson-prose"><p>قاب کد ارتفاع مشخصی دارد و کپی، تمام متن را دریافت می‌کند.</p><pre><code class="language-python">def square(value):
+    return value ** 2
+
+${Array.from({length:60},(_,i)=>'# Example line '+(i+1)+'\nprint(square('+i+'))').join('\n')}
+</code></pre></div></section></article>`;
+
+export function readerReferencePayload() {
+  return { title: 'از دادهٔ نمونه تا بررسی نتیجه', body: referenceSample, pdf_path: 'machine-learning/sample.pdf', scripts: [] };
+}
+
 export function readerFixtureSource() {
   return `const shell = document.querySelector('script[data-site-ui]');
 const { loadLessonReader } = await import(shell.src);
@@ -108,7 +138,8 @@ const lesson = course.lessons.find(lesson => lesson.number === selection)
 const sampleRoutes = new Map(course.lessons.map(item => [item.id + '/', item.number]));
 const isThreshold = lesson.hero_kind === 'threshold-scores';
 const isEvaluation = lesson.id === 'machine-learning/evaluating-knn';
-const preview = isThreshold
+const reference = new URLSearchParams(location.search).get('reference') === '1';
+const preview = reference ? ${JSON.stringify(readerReferencePayload())} : isThreshold
   ? { title: 'از شمارش خطا تا انتخاب آستانه', body: ${JSON.stringify(thresholdSample)} }
   : isEvaluation
     ? { title: 'از پیش‌بینی یک نمونه تا ارزیابی یک طبقه‌بند', body: ${JSON.stringify(evaluationSample)} }

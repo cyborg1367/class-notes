@@ -26,6 +26,7 @@ await build({configFile:false,publicDir:false,define:{'process.env.NODE_ENV':JSO
 const renderer=await import(pathToFileURL(path.join(root,'.cache/react/course-render.mjs')).href);
 const bytes=await readFile(path.join(root,'web/assets/catalog.json'));
 const catalog=JSON.parse(bytes.toString('utf8'));
+renderer.validateLessonPresentations(catalog);
 const pages={};
 for(const course of catalog){
  if(!/^[a-z0-9]+(?:[/-][a-z0-9]+)*$/.test(course.id))throw Error('INVALID_COURSE_ROUTE');
@@ -64,6 +65,7 @@ for(const file of (await readdir(path.join(root,'web'),{recursive:true})).filter
  if(!html.includes('data-site-ui'))html=html.replace('<script defer data-portal',`<script type="module" data-site-ui src="${base}assets/site-shell.js?v=build"></script><script defer data-portal`);
  if(!html.includes('assets/account-react.css'))html=html.replace('</head>',`<link rel="stylesheet" href="${base}assets/account-react.css?v=build"></head>`);
  if(!html.includes('assets/site-shell.css'))html=html.replace('</head>',`<link rel="stylesheet" href="${base}assets/site-shell.css?v=build"></head>`);
+ if(page==='lesson'&&!html.includes('assets/reader-template.css'))html=html.replace('</head>',`<link rel="stylesheet" href="${base}assets/reader-template.css?v=build"></head>`);
  if(html!==await readFile(filename,'utf8'))await writeFile(filename,html,'utf8');
 }
 const sources=[...(await readdir(path.join(root,'frontend'),{recursive:true})).filter(file=>/\.(?:tsx?|mjs|svg|css|json)$/.test(file)&&!file.startsWith('generated/')&&!file.startsWith('generated\\')).map(file=>'frontend/'+file.replaceAll('\\','/')),...PUBLIC_RENDER_INPUTS].sort();

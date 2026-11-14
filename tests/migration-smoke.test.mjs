@@ -56,7 +56,8 @@ function page(t, route, { prefix = '', signIn = null, rpc, download, script } = 
 
 test('Every built route boots with a guest and no private requests, at root or below a project prefix', async t => {
   const routes = readdirSync('dist', { recursive: true }).filter(route => route.endsWith('index.html')).sort();
-  assert.equal(routes.length, 20);
+  const authored = readdirSync('web', { recursive: true }).filter(route => route.endsWith('index.html')).sort();
+  assert.deepEqual(routes, authored);
   for (const [index, route] of routes.entries()) {
     await t.test(route, async item => {
       const prefix = index % 2 ? '/class-notes' : '';

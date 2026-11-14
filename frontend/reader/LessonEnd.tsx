@@ -1,3 +1,4 @@
+import './LessonEnd.css';
 import { memo } from 'react';
 import type { EndResources, ReaderOptions } from './contracts';
 import type { ReaderResources } from './resources';

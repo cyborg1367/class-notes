@@ -326,7 +326,7 @@ function N() {
 	return import("./react/mount-dwmjY4NK.mjs");
 }
 function P() {
-	return import("./react/mount-BuY-A8GA.mjs");
+	return import("./react/mount-BOERWEQQ.mjs");
 }
 function F() {
 	return import("./react/mount-C0YH1InO.mjs");

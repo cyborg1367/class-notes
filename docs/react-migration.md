@@ -181,3 +181,12 @@ screen-reader, zoom, virtual-keyboard or full visual review.
 
 No backend SQL, schema, Edge Function, membership record, XP record, lesson source,
 private PDF/notebook, auth key or domain configuration is changed by this update.
+
+### Reference lesson composition
+
+The reader uses one `LessonTemplate` wireframe with mandatory three-item learning
+highlights. Standard body blocks are rendered by React from a sanitized document
+model, and reader styles are colocated with the components. Existing teaching
+widgets remain compatible HTML/SVG/MathML islands. The full article HTML injection
+has been removed. This public update requires no lesson-body SQL or Storage-path
+changes. The local reference fixture exercises the same production components.

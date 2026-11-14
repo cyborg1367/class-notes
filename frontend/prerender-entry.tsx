@@ -44,3 +44,5 @@ export function renderAccountControls(input:unknown,links:AccountLinks,scope:str
   const port={...controller,getServerSnapshot:controller.getSnapshot};
   return renderToString(<AccountControls port={port} scope={scope} compact={compact}/>);
 }
+
+export { validateLessonPresentations } from './reader/lesson-presentation';

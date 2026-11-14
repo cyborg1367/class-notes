@@ -33,8 +33,13 @@ test('The homepage is complete in SSR, with neutral account state, current catal
   assert.equal(document.querySelectorAll('#main h1').length, 1);
   for (const id of ['top', 'classes', 'method', 'instructor']) assert.ok(document.getElementById(id), id);
   const card = document.querySelector('[data-home-course]');
-  assert.equal(card.dataset.noteCount, '4'); assert.equal(card.dataset.labCount, '4'); assert.equal(card.dataset.quizCount, '4');
-  assert.equal(card.dataset.latestLesson, 'machine-learning/thresholds-and-roc');
+  const course = JSON.parse(document.querySelector('#catalog-data').textContent).find(item => item.id === card.dataset.homeCourse);
+  const lessons = course.lessons;
+  assert.equal(card.dataset.noteCount, String(lessons.length));
+  assert.equal(card.dataset.labCount, String(lessons.filter(note => note.lab).length));
+  assert.equal(card.dataset.quizCount, String(lessons.filter(note => Number.isInteger(note.quiz_version) && note.quiz_version > 0).length));
+  const latest = [...lessons].sort((a, b) => Number(a.number) - Number(b.number)).at(-1);
+  assert.equal(card.dataset.latestLesson, latest.id);
   const account = document.querySelector('[data-home-react-account]');
   assert.equal(account.textContent, 'حساب کاربری'); assert.equal(account.getAttribute('aria-disabled'), 'false');
   assert.ok(document.querySelector('[data-gradient-hero] .gradient-hero-placeholder'));

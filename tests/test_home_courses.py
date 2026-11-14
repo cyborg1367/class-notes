@@ -10,7 +10,7 @@ import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from build_assets import prepare_public_assets
+from build_assets import prepare_public_assets, lesson_order
 
 def render_home_courses(catalog):
     """Exercise the actual React server renderer; no second Python HTML template."""
@@ -114,14 +114,17 @@ class HomepageCourseTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError,'LATEST_LESSON_OUTSIDE_COURSE'):
             render_home_courses([data])
 
-    def test_current_release_shows_four_notes_and_fourth_note_preview(self):
-        catalog=json.loads((ROOT/'web/assets/catalog.json').read_text())
+    def test_current_release_matches_catalog_counts_and_latest_note(self):
+        catalog=json.loads((ROOT/'web/assets/catalog.json').read_text(encoding='utf-8'))
         parsed=Summary(render_home_courses(catalog))
         self.assertEqual(len(parsed.cards),1)
-        self.assertEqual(parsed.cards[0]['data-latest-lesson'],'machine-learning/thresholds-and-roc')
-        for key in ['data-note-count','data-lab-count','data-quiz-count']:
-            self.assertEqual(parsed.cards[0][key],'4')
-        self.assertEqual(parsed.links[-1]['href'],'machine-learning/thresholds-and-roc/')
+        lessons=catalog[0]['lessons']
+        latest=max(enumerate(lessons),key=lambda item:(lesson_order(item[1],item[0]),item[0]))[1]
+        self.assertEqual(parsed.cards[0]['data-latest-lesson'],latest['id'])
+        self.assertEqual(parsed.cards[0]['data-note-count'],str(len(lessons)))
+        self.assertEqual(parsed.cards[0]['data-lab-count'],str(sum(bool(l.get('lab')) for l in lessons)))
+        self.assertEqual(parsed.cards[0]['data-quiz-count'],str(sum(type(l.get('quiz_version')) is int and l['quiz_version']>0 for l in lessons)))
+        self.assertEqual(parsed.links[-1]['href'],latest['id']+'/')
 
     def test_summary_html_is_deterministic_and_has_no_runtime_fetch_or_user_state(self):
         catalog=[course(10)]

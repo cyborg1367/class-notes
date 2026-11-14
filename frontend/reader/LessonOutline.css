@@ -1,0 +1,44 @@
+/* Private reader outline; no author-provided layout rules. */
+body[data-page="lesson"] [data-reader-template] .reader-sidebar {
+  display: flex;
+  flex-direction: column;
+  top: var(--reader-anchor-offset, 112px);
+  max-height: calc(100vh - var(--reader-anchor-offset, 112px) - 12px);
+  max-height: calc(100dvh - var(--reader-anchor-offset, 112px) - 12px);
+  padding: 2px 2px 12px;
+  overflow: hidden;
+}
+.reader-sidebar > :is(.reader-progress, .rail-fact) { flex-shrink: 0; }
+.reader-sidebar > nav {
+  min-block-size: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  overscroll-behavior: contain;
+}
+.reader-sidebar .reader-rail-list a { overflow-wrap: anywhere; }
+.reader-sidebar .reader-rail-list a:focus-visible { outline-offset: -2px; }
+.reader-progress { margin-block-end: 20px; }
+.reader-progress-label {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  margin-block-end: 5px; color: var(--muted); font-size: 12px; line-height: 1.7;
+}
+.reader-progress-label bdi { color: var(--teal-deep); font-weight: 700; }
+.reader-progress progress {
+  display: block; width: 100%; height: 4px; appearance: none;
+  border: 0; border-radius: 4px; background: var(--line); accent-color: var(--teal);
+}
+.reader-progress progress::-webkit-progress-bar { border-radius: 4px; background: var(--line); }
+.reader-progress progress::-webkit-progress-value { border-radius: 4px; background: var(--teal); }
+.reader-progress progress::-moz-progress-bar { border-radius: 4px; background: var(--teal); }
+.reader-mobile-outline { display: none; }
+
+@media (max-width:1024px) {
+ body[data-page="lesson"] [data-reader-template] .reader-sidebar { display: none; }
+ .reader-mobile-outline { display: block; margin-block-end: 26px; }
+ .reader-mobile-outline details { border: 1px solid var(--line); border-radius: 2px; }
+ .reader-mobile-outline summary { padding: 10px 13px; min-height: 44px; cursor: pointer; font-size: 14px; }
+ .reader-mobile-outline .reader-mobile-toc { display: grid; grid-template-columns: minmax(0,1fr); position: static; overflow: visible; margin: 0; padding: 5px; gap: 4px; border: 0; }
+ .reader-mobile-outline .reader-mobile-toc a { min-height: 44px; display: flex; align-items: center; white-space: normal; overflow-wrap: anywhere; }
+}
+@media print { .reader-mobile-outline,.reader-sidebar { display: none!important; } }

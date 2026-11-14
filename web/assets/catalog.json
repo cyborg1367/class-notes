@@ -264,6 +264,22 @@
             "label": "سیاست تصمیم"
           }
         ]
+      },
+      {
+        "id": "machine-learning/cross-validation",
+        "slug": "cross-validation",
+        "title": "از یک بار ارزیابی تا انتخاب بهتر مدل",
+        "subtitle": "اعتبارسنجی متقابل با KNN؛ از Pipeline تا انتخاب تنظیم و آزمون نهایی",
+        "number": "05",
+        "description": "با دادهٔ ساختگی، Pipeline، StratifiedKFold، cross_val_score و GridSearchCV را قدم‌به‌قدم یاد می‌گیریم و نتیجهٔ انتخاب مدل را بررسی می‌کنیم.",
+        "tags": [
+          "Cross-validation",
+          "KNN",
+          "scikit-learn"
+        ],
+        "hero_kind": null,
+        "quiz_version": 2,
+        "notebook": "cross-validation/cross-validation-explained.ipynb"
       }
     ],
     "home_description": "از فهم داده تا ساختن و ارزیابی مدل"

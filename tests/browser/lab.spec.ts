@@ -1,7 +1,7 @@
 import {test,expect} from './fixtures/classroom';
-import {course,firstLesson} from './fixtures/content';
+import {labLessons,firstLesson} from './fixtures/content';
 import {expectPageLayout,openLab} from './fixtures/assertions';
-for(const lesson of course.lessons)test(`lab ${lesson.number}: title, filename and toolbar layout`,async({page})=>{
+for(const lesson of labLessons)test(`lab ${lesson.number}: title, filename and toolbar layout`,async({page})=>{
  await openLab(page,'/'+lesson.lab.path);await expect(page.locator('.lab-mission-header h1')).toHaveText(lesson.lab.title);
  await expect(page.locator('.lab-filename')).not.toHaveText(/undefined|^$/);await expect(page.locator('.lab-filename')).toHaveCSS('direction','ltr');
  await expect(page.locator('[data-run]')).toBeVisible();await expect(page.locator('[data-check]')).toBeVisible();await expectPageLayout(page);

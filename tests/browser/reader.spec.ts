@@ -4,6 +4,25 @@ import {expectPageLayout} from './fixtures/assertions';
 for(const[index,lesson]of course.lessons.entries())test(`lesson ${lesson.number}: template, assets, downloads and adjacent navigation`,async({page})=>{
  await page.goto('/'+lesson.id+'/');await expect(page.locator('[data-reader-document]')).toBeVisible();
  await expect(page.locator('main h1')).toHaveCount(1);await expect(page.locator('[data-lesson-start]')).toHaveCount(1);
+ await expect(page.locator('[data-lesson-template-version]')).toHaveAttribute('data-lesson-template-version','1');
+ await expect(page.locator('[data-lesson-highlights] > li')).toHaveCount(3);
+ await expect(page.locator('[data-instructor-credit]')).toHaveCount(1);
+ const standard=await page.locator('[data-reader-document]').evaluate(root=>{
+  const paragraph=root.querySelector('[data-reader-prose] .lesson-section p') as HTMLElement;
+  const code=root.querySelector('#browser-code > code') as HTMLElement;
+  const cell=root.querySelector('[data-lesson-block="table"] td') as HTMLElement;
+  const highlights=Array.from(root.querySelectorAll('[data-lesson-highlights] > li'),n=>n.getBoundingClientRect());
+  const credit=root.querySelector('[data-instructor-credit]')!,start=root.querySelector('[data-lesson-start]')!;
+  return {paragraphWidth:paragraph.getBoundingClientRect().width,containerWidth:paragraph.parentElement!.clientWidth,
+   codeSize:getComputedStyle(code).fontSize,leftBorder:getComputedStyle(cell).borderLeftWidth,rightBorder:getComputedStyle(cell).borderRightWidth,
+   highlights:highlights.map(r=>({x:r.x,y:r.y})),creditBeforeStart:!!(credit.compareDocumentPosition(start)&Node.DOCUMENT_POSITION_FOLLOWING)};
+ });
+ expect(Math.abs(standard.paragraphWidth-standard.containerWidth)).toBeLessThanOrEqual(1);
+ expect(standard.codeSize).toBe(page.viewportSize()!.width<=760?'12px':'13px');
+ expect(standard.leftBorder).toBe('0px');expect(standard.rightBorder).toBe('0px');expect(standard.creditBeforeStart).toBe(true);
+ if(page.viewportSize()!.width>760){expect(Math.abs(standard.highlights[0].y-standard.highlights[2].y)).toBeLessThan(1);expect(standard.highlights[0].x).toBeGreaterThan(standard.highlights[2].x);}
+ else expect(standard.highlights[2].y).toBeGreaterThan(standard.highlights[0].y);
+
  await expect(page.locator('[data-lesson-resources]')).toHaveCount(1);
  await expect.poll(()=>page.locator('img[data-private-path]').evaluate((node:HTMLImageElement)=>node.complete&&node.naturalWidth>0)).toBe(true);
  await expect(page.locator('#browser-code')).toHaveCSS('direction','ltr');await expectPageLayout(page);
@@ -13,7 +32,7 @@ for(const[index,lesson]of course.lessons.entries())test(`lesson ${lesson.number}
   const number=await card.locator('.reader-pager-number').boundingBox(),direction=await card.locator('.reader-pager-direction').boundingBox();
   expect(number!.x).toBeGreaterThan(direction!.x);
  }
- if(page.viewportSize()!.width>=1024){const copy=await page.locator('[data-lesson-hero] .hero-copy').boundingBox(),figure=await page.locator('[data-lesson-hero] .hero-figure').boundingBox();expect(figure!.x+figure!.width).toBeLessThanOrEqual(copy!.x+1);}
+ if(page.viewportSize()!.width>1024){const copy=await page.locator('[data-lesson-hero] .hero-copy').boundingBox(),figure=await page.locator('[data-lesson-hero] .hero-figure').boundingBox();expect(figure!.x+figure!.width).toBeLessThanOrEqual(copy!.x+1);}
  const download=page.waitForEvent('download');await page.locator('[data-lesson-resources]').getByRole('button',{name:/دریافت PDF/}).click();expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
  if(index<course.lessons.length-1){await next.click();await expect(page).toHaveURL(new RegExp('/'+course.lessons[index+1].id+'/$'));await expect(page.locator('[data-reader-document]')).toBeVisible();}
 });

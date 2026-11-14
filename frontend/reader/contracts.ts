@@ -1,3 +1,4 @@
+import type { ContentNode } from './content-model';
 import type { PublicCourse } from '../catalog/types';
 
 export type LessonInfo = {
@@ -50,7 +51,7 @@ export type HeroContent = {
   titleHTML: string;
   copy: string;
   meta: string;
-  highlights: { number: string; html: string }[];
+  highlights: { number: string; label: string }[];
   visual: HeroVisual | null;
 };
 export type LessonDownload = { path: string; label: string };
@@ -63,7 +64,7 @@ export type EndResources = {
 };
 export type PreparedLesson = {
   hero: HeroContent;
-  html: string;
+  document: ContentNode[];
   fact: string;
   slots: Slot[];
   headings: Heading[];

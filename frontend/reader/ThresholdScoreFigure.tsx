@@ -1,3 +1,4 @@
+import './ThresholdScoreFigure.css';
 // Synthetic scores, independent of the lesson dataset or any learner data.
 const scores = [
   { value: 0.10, positive: false }, { value: 0.28, positive: true },

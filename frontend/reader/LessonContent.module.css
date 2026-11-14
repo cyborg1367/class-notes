@@ -1,0 +1,46 @@
+:global(body[data-page="lesson"]) :global([data-reader-template]) .document { min-width: 0; font-size: var(--lesson-prose-size); line-height: 2; font-family: var(--font-body); color: var(--ink-soft); }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .prose { font-size: var(--lesson-prose-size); line-height: 2; font-family: var(--font-body); color: var(--ink-soft); overflow-wrap: break-word; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .paragraph { width: auto; max-width: none; max-inline-size: none; margin-block: var(--lesson-paragraph-space); white-space: normal; text-wrap: wrap; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .section { margin-block-end: var(--lesson-section-space); }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .heading { max-width: none; max-inline-size: none; color: var(--ink); white-space: normal; text-wrap: wrap; overflow-wrap: normal; word-break: normal; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) h2.heading { font-size: var(--lesson-heading-size); line-height: 1.7; font-weight: 700; font-family: var(--font-body); margin-block: 0 22px; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) h3.heading { font-size: 20px; line-height: 1.8; font-weight: 700; font-family: var(--font-body); margin-block: 28px 12px; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .prose :is(strong,b) { color: var(--ink); font-weight: 700; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .prose :not(pre) > code { direction: ltr; unicode-bidi: isolate; font-family: var(--font-mono); font-size: .85em; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code { margin-block: 26px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; background: #faf8ef; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .codeHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; background: var(--paper-deep); border-bottom: 1px solid var(--line); direction: ltr; font-size: 11px; color: var(--muted); }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .codeViewport { margin: 0; padding: 18px; max-width: 100%; max-height: var(--lesson-code-height); overflow: auto; direction: ltr; text-align: left; white-space: pre; font-size: var(--lesson-code-size); line-height: 1.8; font-family: var(--font-mono); tab-size: 4; color: var(--ink-soft); scrollbar-width: thin; scrollbar-gutter: stable; overscroll-behavior: contain; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .codeViewport > code { display: block; padding: 0; border: 0; border-radius: 0; background: none; color: inherit; font: inherit; white-space: inherit; max-width: none; overflow-wrap: normal; word-break: normal; unicode-bidi: normal; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :is(:global(.keyword),:global(.syn-keyword),:global(.syn-return)) { color: #514697; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :is(:global(.string),:global(.syn-string)) { color: #8a4229; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :is(:global(.function),:global(.syn-builtin)) { color: #087267; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :is(:global(.number),:global(.syn-number)) { color: #825618; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :is(:global(.comment),:global(.syn-comment)) { color: #626c59; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :global(.dark-code) { background: #242820; color: #faf6e8; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :global(.dark-code) :is(:global(.keyword),:global(.syn-keyword),:global(.syn-return)) { color: #cec1eb; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :global(.dark-code) :is(:global(.string),:global(.syn-string)) { color: #f1b997; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :global(.dark-code) :is(:global(.function),:global(.syn-builtin)) { color: #72d0b9; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .tableViewport { max-width: 100%; margin-block: 24px; overflow-x: auto; border: 0; border-radius: 0; scrollbar-width: thin; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .table { display: table; width: 100%; margin: 0; border: 0; border-collapse: collapse; border-spacing: 0; background: transparent; font: 14px/1.9 var(--font-body); font-variant-numeric: tabular-nums; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .table thead { display: table-header-group; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .table tbody { display: table-row-group; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .table tr { display: table-row; border: 0; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .table :is(th,td) { display: table-cell; padding: 8px 12px; border: 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .table th { background: var(--highlight-soft); color: var(--ink); font-size: 13px; font-weight: 700; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .table td::before { content: none; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .figure { margin: 26px 0; padding: 0; background: transparent; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .figure img { display: block; width: 100%; height: auto; mix-blend-mode: normal; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .figure figcaption { margin-block-start: 12px; font-size: 12px; line-height: 1.9; color: var(--muted); }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .callout { padding: 18px; margin-block: 24px; border: 1px solid var(--line); border-inline-start: 3px solid var(--teal); background: var(--highlight-soft); }
+:global(body[data-page="lesson"]) :global([data-reader-template]) :is(.codeViewport,.tableViewport):focus-visible { outline: 2px solid var(--teal-deep); outline-offset: -2px; }
+@media (max-width:760px) { :global(body[data-page="lesson"]) :global([data-reader-template]) .table { font-size: 13px; } :global(body[data-page="lesson"]) :global([data-reader-template]) .table th { font-size: 12px; } :global(body[data-page="lesson"]) :global([data-reader-template]) .codeViewport { padding: 14px; } }
+@media print { :global(body[data-page="lesson"]) :global([data-reader-template]) .codeViewport { max-height: none; overflow: visible; } :global(body[data-page="lesson"]) :global([data-reader-template]) .tableViewport { overflow: visible; } }
+@media (forced-colors:active) { :global(body[data-page="lesson"]) :global([data-reader-template]) .code span { color: CanvasText; } }
+
+:global(body[data-page="lesson"]) :global([data-reader-template]) .section :global(.section-head) { margin-block-end: 22px; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .section :global(.section-head) .heading { margin-block-end: 0; }
+
+:global(body[data-page="lesson"]) :global([data-reader-template]) .list { margin-block: 16px; padding-inline-start: 26px; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .list > li { margin-block: 8px; padding-inline-start: 4px; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :global(.dark-code) :is(:global(.number),:global(.syn-number)) { color: #e8c576; }
+:global(body[data-page="lesson"]) :global([data-reader-template]) .code :global(.dark-code) :is(:global(.comment),:global(.syn-comment)) { color: #b3beaa; }

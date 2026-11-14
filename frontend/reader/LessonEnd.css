@@ -1,0 +1,44 @@
+.reader-pager {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+  margin-block: 38px 22px; direction: rtl;
+}
+.reader-pager-link {
+  display: flex; flex-direction: column; gap: 6px;
+  min-width: 0; min-height: 60px; padding: 12px 15px;
+  border: 1px solid var(--line); border-radius: 2px; background: #faf6e7;
+  color: var(--teal-deep); text-align: start; text-decoration: none; overflow-wrap: anywhere;
+}
+.reader-pager-link:hover { border-color: var(--teal); background: var(--highlight-soft); }
+.reader-pager-link:focus-visible { outline-offset: 2px; }
+.reader-pager-previous { grid-column: 1; grid-row: 1; }
+.reader-pager-next { grid-column: 2; grid-row: 1; }
+.reader-pager-link:only-child { grid-column: 1; }
+.reader-pager-label {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 7px; direction: rtl;
+  color: var(--muted); font-size: 12px; line-height: 1.7;
+}
+.reader-pager-number {
+  min-inline-size: 20px; padding-inline: 4px; text-align: center;
+  border: 1px solid var(--line); border-radius: 2px; color: var(--teal-deep);
+}
+.reader-pager-arrow { color: var(--teal-deep); }
+.reader-pager-link strong { font-size: 14px; line-height: 1.8; }
+[data-reader-template] .reader-resources { margin-block: 22px 25px; }
+.reader-resources h2 { color: var(--ink); font-size: clamp(17px, 2vw, 22px); line-height: 1.7; }
+.reader-resources > p { margin-block: 8px 15px; }
+.reader-resources .small-note { margin-block: 6px 0; }
+.reader-resource-actions, .reader-resource-extras {
+  display: flex; flex-wrap: wrap; align-items: start; gap: 8px;
+}
+.reader-resource-extras { margin-block-start: 12px; }
+.reader-resource-actions :is(.button-outline,.button-forest),
+.reader-resource-extras .button-outline { min-height: 44px; margin: 0; text-align: center; }
+.reader-resources .reader-resource-error { flex-basis: 100%; }
+
+@media (max-width:520px) {
+ .reader-pager { grid-template-columns: minmax(0,1fr); gap: 8px; }
+ .reader-pager-link { grid-column: 1; grid-row: auto; text-align: start; }
+ [data-reader-template] .reader-resources { padding: 16px; }
+ .reader-resource-actions { display: grid; grid-template-columns: minmax(0,1fr); }
+}
+@media print { .reader-pager,.reader-resources { display: none; } }

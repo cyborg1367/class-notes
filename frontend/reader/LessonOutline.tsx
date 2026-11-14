@@ -1,3 +1,4 @@
+import './LessonOutline.css';
 import { useEffect, useRef } from 'react';
 import type { Heading } from './contracts';
 import { Contents } from './ReaderControls';

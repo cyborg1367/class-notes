@@ -2,16 +2,12 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { LessonPayload, PreparedLesson, ReaderOptions } from './contracts';
 import { CopyCode, PrivateDownload } from './ReaderControls';
-import { LessonHero } from './LessonHero';
-import { LegacyReaderHooks, LessonSidebar, MobileLessonOutline } from './LessonOutline';
-import { LessonFooter, LessonPager, LessonResources } from './LessonEnd';
+import { LessonTemplate } from './LessonTemplate';
+import { LegacyReaderHooks } from './LessonOutline';
 import { useReaderNavigation } from './navigation';
-import { isCourseObject, localFragment } from './paths';
+import { isCourseObject } from './paths';
 import type { ReaderResources } from './resources';
 
-const Article = memo(function Article({ html }: { html: string }) {
-  return <div data-reader-prose="" dangerouslySetInnerHTML={{ __html: html }} />;
-});
 
 function InlineControls({ scope, lesson, files, preview }: {
   scope: HTMLElement; lesson: PreparedLesson; files: ReaderResources; preview?: boolean;
@@ -34,9 +30,6 @@ export const ReaderDocument = memo(function ReaderDocument({ lesson, payload, op
   const [widgetError, setWidgetError] = useState(false);
   const { active, percent } = useReaderNavigation(scope, lesson.headings);
   const outline = { headings: lesson.headings, active, percent, doc };
-  const routes = { info: options.info, href: options.href };
-  const first = lesson.headings.find(({ id }) => id !== lesson.resources.id);
-  const start = first ? localFragment('#' + encodeURIComponent(first.id), doc) : undefined;
   useEffect(() => {
     if (!scope || !files.alive()) return;
     let live = true;
@@ -70,20 +63,10 @@ export const ReaderDocument = memo(function ReaderDocument({ lesson, payload, op
   }, [files, options, payload, scope]);
   return <>
     {widgetError && <p className="shell reader-widget-note" role="status">بعضی ابزارهای تعاملی بارگذاری نشدند. متن یادداشت در دسترس است.</p>}
-    <div ref={setScope} data-reader-document="" data-reader-template="">
+    <div ref={setScope} data-reader-document="" data-reader-template="" data-lesson-template-version="1" data-lesson-document-id={options.info.id}>
       <LegacyReaderHooks />
       <div id="reader-reading-progress" aria-hidden="true" style={{ transform: 'scaleX(' + percent / 100 + ')' }} />
-      <LessonHero hero={lesson.hero} title={options.info.title} start={start} />
-      <div className="shell lesson-shell">
-        <LessonSidebar {...outline} fact={lesson.fact} />
-        <article className="lesson-body">
-          <MobileLessonOutline {...outline} />
-          <Article html={lesson.html} />
-          <LessonPager {...routes} />
-          <LessonResources {...routes} data={lesson.resources} files={files} preview={options.preview} />
-          <LessonFooter {...routes} />
-        </article>
-      </div>
+      <LessonTemplate lesson={lesson} info={options.info} href={options.href} outline={outline} files={files} preview={options.preview} />
     </div>
     {scope && <InlineControls scope={scope} lesson={lesson} files={files} preview={options.preview} />}
   </>;

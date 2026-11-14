@@ -11,7 +11,7 @@ export default defineConfig({
       'dashboard-page':fileURLToPath(new URL('./dashboard-page.tsx',import.meta.url)),
       'account-page':fileURLToPath(new URL('./account-page.tsx',import.meta.url)),
       'site-shell':fileURLToPath(new URL('./site-shell.tsx',import.meta.url))},
-      formats:['es'],fileName:(_format,name)=>name+'.js'},
+      cssFileName:'reader-template',formats:['es'],fileName:(_format,name)=>name+'.js'},
     rolldownOptions:{output:{chunkFileNames:'react/[name]-[hash].mjs'}},
   },
 });

@@ -1,7 +1,7 @@
 import {test as base,expect,type BrowserContext,type Route} from '@playwright/test';
 import {makeInstructorFixture,instructorFixture} from '../../../frontend/instructor-preview.mjs';
 import {prompts,record} from '../../../frontend/quiz-result-preview.mjs';
-import {course,firstLesson,lessonPayload,sampleDate,sampleImage,workerFixture} from './content';
+import {course,labLessons,firstLesson,lessonPayload,sampleDate,sampleImage,workerFixture} from './content';
 const backend='https://classroom-e2e.supabase.co',studentId='11111111-1111-4111-8111-111111111111';
 type Role='guest'|'student'|'teacher';
 type Membership='active'|'pending'|'suspended';
@@ -31,7 +31,7 @@ export class ClassroomFixture{
  private readonly quizDrafts=new Map<string,unknown>();
  constructor(readonly role:Role,readonly membership:Membership){
   this.currentSession=session(role);
-  for(const lesson of course.lessons)this.snapshots.set(lesson.lab.mission,{mission:lesson.lab.mission,revision:0,draft:null,completed:[],xp:0,maximum:300,attempts:0,badge:false,tasks:lesson.lab_steps.map(({id},position)=>({id,position}))});
+  for(const lesson of labLessons)this.snapshots.set(lesson.lab.mission,{mission:lesson.lab.mission,revision:0,draft:null,completed:[],xp:0,maximum:300,attempts:0,badge:false,tasks:lesson.lab_steps.map(({id},position)=>({id,position}))});
  }
  private state(){return {memberships:[{course_id:course.id,title:course.title,status:this.membership,role:this.role==='teacher'?'teacher':'student'}],results:[]};}
  private async rpc(name:string,args:Args):Promise<unknown>{

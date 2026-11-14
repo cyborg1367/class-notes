@@ -1,0 +1,39 @@
+/* Threshold example: the dots stay fixed while the decision cut changes. */
+[data-reader-template] .reader-threshold-figure {
+  --threshold-lower: #80601e;
+  --threshold-higher: #a14e3d;
+  min-width: 0;
+  padding: clamp(12px, 2vw, 22px);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--white);
+}
+.reader-threshold-heading {
+  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px 12px;
+  margin-block-end: 8px;
+}
+.reader-threshold-heading strong { color: var(--ink); font-size: 16px; }
+.reader-threshold-heading span { color: var(--muted); font-size: 11px; }
+.reader-threshold-chart { display: block; width: 100%; height: auto; direction: ltr; }
+.reader-threshold-grid { stroke: var(--line); fill: none; }
+.reader-threshold-axis { fill: var(--ink-soft); font: 12px system-ui, sans-serif; }
+.reader-threshold-axis path { stroke: var(--ink-soft); }
+.reader-threshold-lower { --cut-color: var(--threshold-lower); }
+.reader-threshold-higher { --cut-color: var(--threshold-higher); }
+.reader-threshold-chart [data-threshold] line { stroke: var(--cut-color); stroke-width: 2; }
+.reader-threshold-chart [data-threshold] text { fill: var(--cut-color); font: 700 14px system-ui, sans-serif; }
+.reader-threshold-positive { fill: var(--teal); stroke: var(--teal-deep); stroke-width: 1; }
+.reader-threshold-negative { fill: var(--white); stroke: var(--ink-soft); stroke-width: 1.7; }
+.reader-threshold-results {
+  display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; margin-block-start: 13px;
+}
+.reader-threshold-result {
+  min-width: 0; padding: 7px 9px; border: 1px solid var(--line); border-top: 2px solid var(--cut-color);
+  background: var(--paper); text-align: left; font: 12px/1.5 system-ui, sans-serif;
+}
+.reader-threshold-cut { color: var(--cut-color); font-weight: 700; }
+.reader-threshold-result dl { display: flex; flex-wrap: wrap; column-gap: 12px; row-gap: 3px; margin: 5px 0 0; }
+.reader-threshold-result dt { color: var(--ink-soft); font-size: 11px; }
+.reader-threshold-result dd { margin: 0; color: var(--ink); font-size: 16px; font-weight: 700; }
+[data-reader-template] .reader-threshold-figure figcaption { margin-block-start: 12px; text-align: start; }
+

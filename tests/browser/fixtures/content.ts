@@ -1,9 +1,15 @@
 import { readFileSync } from 'node:fs';
+type Lab = {mission:string;title:string;path:string};
+type Lesson = {id:string;title:string;number:string;notebook:string;quiz_version:number;
+  lab?:Lab;lab_steps?:{id:string;title:string}[]};
 export const catalog = JSON.parse(readFileSync(new URL('../../../web/assets/catalog.json',import.meta.url),'utf8')) as {
-  id:string; title:string; lessons:{id:string;title:string;number:string;notebook:string;quiz_version:number;
-    lab:{mission:string;title:string;path:string};lab_steps:{id:string;title:string}[]}[];
+  id:string; title:string; lessons:Lesson[];
 }[];
-export const course = catalog[0], firstLesson = course.lessons[0], quizLesson = course.lessons[1];
+export const course = catalog[0];
+export const labLessons = course.lessons.filter((lesson): lesson is Lesson & {
+  lab:Lab;lab_steps:{id:string;title:string}[]
+} => Boolean(lesson.lab && lesson.lab_steps));
+export const firstLesson = labLessons[0], quizLesson = labLessons[1];
 export const sampleDate = '2026-11-01T08:00:00Z';
 export const sampleImage = '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180"><rect width="320" height="180" fill="#f6efdc"/><circle cx="120" cy="90" r="35" fill="#18564e"/><path d="M190 55v70m-35-35h70" stroke="#ad853c" stroke-width="8"/></svg>';
 export function lessonPayload(id:string) {

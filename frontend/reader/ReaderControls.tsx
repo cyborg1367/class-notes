@@ -1,3 +1,4 @@
+import styles from './ReaderControls.module.css';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import type { Heading } from './contracts';
 import type { ReaderResources } from './resources';
@@ -22,7 +23,7 @@ export function CopyCode({ label, text }: { label: string; text: string }) {
     const timer = setTimeout(() => setStatus('idle'), 1500);
     return () => clearTimeout(timer);
   }, [status]);
-  return <button type="button" className="reader-copy" aria-label={status === 'idle' ? label : undefined}
+  return <button type="button" className={'reader-copy ' + styles.copy} aria-label={status === 'idle' ? label : undefined}
     disabled={status === 'copying'} onClick={async event => {
       const clipboard = event.currentTarget.ownerDocument.defaultView?.navigator.clipboard;
       const ticket = ++revision.current;

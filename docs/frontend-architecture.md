@@ -147,3 +147,23 @@ session lifetime, public config retries and identity reset during page startup.
 The existing Auth/XP/draft
 contracts are preserved; no backend schema, lesson body, Storage object, server
 function or production configuration is changed by this public package.
+
+## Canonical lesson template
+
+`frontend/reader/LessonTemplate.tsx` owns the one lesson wireframe. Header,
+three-item highlights, layout, article blocks, navigation and resources compose
+there. `lesson-presentation.ts` contains public learning highlights; build rejects
+catalog lessons with no complete definition. Protected content remains in Supabase.
+
+The sanitized compatibility adapter now produces a serializable document model.
+`LessonContent` renders standard sections, paragraphs, headings, lists, code,
+tables, figures and callouts as React components. The entire article is no longer
+inserted as one HTML string. Existing SVG, MathML and teaching widgets retain
+sanitized compatibility islands and stable DOM hooks. They are not all rewritten
+as React-controlled visualizations.
+
+Reader CSS Modules live next to the owning components; outline/end/threshold
+styles are also colocated. Vite emits `reader-template.css`, linked only on lesson
+routes by the build. Edit source styles, not emitted CSS or lesson-specific
+paragraph/table overrides. See `lesson-reference.fa.md` for tokens, authoring and
+local reference-page instructions.

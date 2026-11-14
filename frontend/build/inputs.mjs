@@ -2,6 +2,7 @@
 // stale-output detection aligned without rebuilding for every legacy service edit.
 export const PUBLIC_RENDER_INPUTS = Object.freeze([
   'web/assets/view-channel.mjs',
+  'web/assets/python-highlight.mjs',
   'web/assets/dashboard-model.mjs',
   'web/assets/instructor-model.mjs',
   'web/assets/review.mjs',

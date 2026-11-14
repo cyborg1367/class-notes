@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { evaluateBuiltModule, evaluateClassicAsset } from './helpers/built-module.mjs';
-import { readerFixtureSource, readerPreviewDocument } from '../frontend/reader-preview.mjs';
+import { readerFixtureSource, readerPreviewDocument, readerReferencePayload } from '../frontend/reader-preview.mjs';
 
 const id = 'machine-learning/prediction-problem';
 const path = 'machine-learning/prediction/medical-k3-detail.svg';
@@ -366,7 +366,7 @@ test('The pager isolates the number before the RTL label and right-aligns an onl
   assert.equal(label.children[2].textContent, '←');
 
   const sheet = document.createElement('style');
-  sheet.textContent = fs.readFileSync('dist/assets/paper.css', 'utf8');
+  sheet.textContent = fs.readFileSync('dist/assets/paper.css', 'utf8') + fs.readFileSync('dist/assets/reader-template.css', 'utf8');
   document.head.append(sheet);
   assert.equal(window.getComputedStyle(card).gridColumn, '1');
   assert.equal(window.getComputedStyle(label).direction, 'rtl');
@@ -385,4 +385,139 @@ test('The fourth lesson uses an exact threshold comparison rather than its old d
   assert.deepEqual(metrics('0.4'), ['0.60', '0.75']);
   assert.deepEqual(metrics('0.7'), ['0.67', '0.50']);
   assert.ok(calls.every(([path]) => !path.endsWith('hero-space.svg')));
+});
+
+test('Shared lesson blocks highlight Python, preserve exact copying and keep semantic scrollable tables', async t => {
+  const source = 'from sklearn.model_selection import GridSearchCV\n# keep <tags> inert\nprint("<img src=x onerror=alert(1)>", 31)\n';
+  const escape = s => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  const codeBlock = (id, code, language) => `<div class="code-block"><div class="code-head"><span>${language}</span><button class="copy-code" data-copy-code="${id}">کپی کد</button></div><pre id="${id}"><code class="language-${language}">${code}</code></pre></div>`;
+  const body = { ...payload, scripts: [], body: `<article class="lesson-body"><section id="topic" class="lesson-section"><h2>نمونه</h2><div class="lesson-prose"><p>پاراگراف اول. جملهٔ دوم.</p><p>پاراگراف دوم.</p>${codeBlock('python',escape(source),'python')}${codeBlock('output', 'import is output, not Python', 'text')}${codeBlock('authored','<span class="keyword">import</span> numpy','python')}<pre id="markdown-code"><code class="language-python">print(5)</code></pre><table><caption>تنظیم‌ها</caption><thead><tr><th>نام</th><th>مقدار</th></tr></thead><tbody><tr><td>k</td><td>31</td></tr></tbody></table><div class="threshold-table-scroll"><table><tbody><tr><td>keep wrapper</td></tr></tbody></table></div></div></section></article>` };
+  const { $, clipboard } = await fixture(t, { body });
+  await until(() => $('#python .syn-keyword') && $('.reader-copy'));
+  assert.equal($('#python').textContent, source);
+  for (const kind of ['keyword','comment','string','number','builtin']) assert.ok($('#python .syn-' + kind));
+  assert.equal($('#python img'), null);
+  assert.equal($('#output span'), null);
+  assert.ok($('#markdown-code').closest('.code-block').querySelector('.reader-copy'));
+  assert.ok($('#markdown-code .syn-builtin'));
+  assert.equal($('#markdown-code').closest('.code-block').querySelector('.code-head span').textContent, 'Python');
+  assert.equal($('#authored').querySelectorAll('span').length, 1);
+  assert.equal($('.lesson-prose').querySelectorAll(':scope > p').length, 2, 'do not merge author paragraphs at runtime');
+  assert.equal($('.reader-code').tabIndex, 0);
+  assert.equal($('.reader-table-scroll').getAttribute('role'), 'region');
+  assert.equal($('.reader-table-scroll').tabIndex, 0);
+  assert.equal($('.reader-table-scroll').getAttribute('aria-label'), 'تنظیم‌ها');
+  assert.equal($('.reader-table th').getAttribute('scope'), 'col');
+  assert.equal($('.threshold-table-scroll').querySelectorAll('.reader-table-scroll').length, 0, 'no nested scroll wrappers');
+  $('.reader-copy').click();
+  await until(() => clipboard.length);
+  assert.equal(clipboard[0], source);
+});
+
+
+for (const [slug, legacy] of [
+  ['vector-distance', 'credit'],
+  ['prediction-problem', 'credit'],
+  ['evaluating-knn', 'credit'],
+  ['thresholds-and-roc', 'none'],
+  ['cross-validation', 'author-meta'],
+]) {
+  test(`Shared instructor credit appears once above study actions: ${slug}`, async t => {
+    const lessonId = 'machine-learning/' + slug;
+    const author = legacy === 'credit'
+      ? '<p class="instructor-credit" dir="ltr"><span>Instructor</span><strong>Masoud Ahangary</strong></p>'
+      : legacy === 'author-meta' ? '<p class="hero-meta"><bdi>Masoud Ahangary</bdi></p>' : '';
+    const counts = legacy === 'author-meta' ? '' : '<p class="hero-meta">۸ نمونه · ۳ ویژگی</p>';
+    const hero = `<section class="hero lesson-hero"><div class="hero-copy"><h1>عنوان یادداشت</h1><p class="hero-lede">توضیح یادداشت</p>${author}${counts}<a class="button-primary" href="#start">شروع مطالعه</a></div></section>`;
+    const body = { ...payload, scripts: [], body: payload.body.replace(/^[\s\S]*?<\/section>/, hero) };
+    const { $, window } = await fixture(t, { lessonId, url: base + lessonId + '/', body });
+    await until(() => $('[data-instructor-credit]') && $('[data-lesson-start]'));
+    const copy = $('.lesson-hero .hero-copy'), credit = $('[data-instructor-credit]');
+    assert.equal(copy.querySelectorAll('.instructor-credit').length, 1);
+    assert.equal((copy.textContent.match(/Masoud Ahangary/g) || []).length, 1);
+    assert.equal(credit.lang, 'en');
+    assert.equal(credit.dir, 'ltr');
+    assert.equal(credit.querySelector('span').textContent, 'Instructor');
+    assert.equal(credit.querySelector('strong').textContent, 'Masoud Ahangary');
+    assert.equal(credit.nextElementSibling.className, 'hero-actions');
+    assert.ok(credit.compareDocumentPosition($('[data-lesson-start]')) & window.Node.DOCUMENT_POSITION_FOLLOWING);
+    assert.equal(copy.querySelectorAll('[data-lesson-start]').length, 1);
+    assert.equal(copy.querySelectorAll('.hero-meta').length, legacy === 'author-meta' ? 0 : 1);
+    if (legacy !== 'author-meta') assert.ok(copy.textContent.includes('۸ نمونه · ۳ ویژگی'));
+  });
+}
+
+for (const slug of ['vector-distance','prediction-problem','evaluating-knn','thresholds-and-roc','cross-validation']) {
+  test(`Reference wireframe supplies all three highlights independently of authored HTML: ${slug}`, async t => {
+    const lessonId = 'machine-learning/' + slug;
+    const { $ } = await fixture(t, { lessonId, url: base + lessonId + '/', body: { ...payload, scripts: [] } });
+    await until(() => $('[data-lesson-highlights]'));
+    assert.equal($('[data-lesson-highlights]').tagName, 'OL');
+    assert.equal($('[data-lesson-highlights]').children.length, 3);
+    assert.deepEqual(Array.from($('[data-lesson-highlights]').querySelectorAll('.strip-number'), n => n.textContent), ['01','02','03']);
+    assert.equal($('[data-lesson-layout]').firstElementChild.getAttribute('data-lesson-sidebar'), '');
+    assert.equal($('[data-lesson-template-version]').getAttribute('data-lesson-template-version'), '1');
+    assert.equal($('[data-lesson-template-version]').getAttribute('data-lesson-document-id'), lessonId);
+    assert.equal($('[data-reader-prose]').querySelectorAll('[data-lesson-block="section"]').length, 2);
+    assert.equal($('[data-reader-prose]').querySelectorAll('[data-lesson-block="code"]').length, 1);
+    assert.equal($('[data-lesson-start]')?.closest('[data-lesson-hero]')?.querySelectorAll('[data-instructor-credit]').length, 1);
+  });
+}
+
+test('Reference content is React-owned while formulas, widgets, code text and private resources survive adaptation', async t => {
+  const body = { ...payload, scripts: [], body: `<article class="lesson-body"><section class="lesson-section" id="reference"><h2>عنوان بدون محدودیت عرض</h2><div class="lesson-prose"><p style="max-width:10px;color:red">متن پاراگراف، مستقل از استایل تألیفی.</p><blockquote>نکتهٔ آموزشی</blockquote><pre id="raw-code"><code class="language-python">print(31)\n</code></pre><table><thead><tr><th>ستون</th></tr></thead><tbody><tr><td>مقدار</td></tr></tbody></table><div class="mini-lab" id="legacy-widget"><button type="button" data-private-widget="">اجرای ابزار</button><span class="widget-result">۰</span></div><span class="katex"><math><mi>x</mi></math></span><script type="application/json" id="teaching-data">{"x":31}</script><figure class="teaching-figure"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="2"/></svg><figcaption>توضیح شکل</figcaption></figure></div></section></article>` };
+  let enhancements = 0;
+  const { $, clipboard, window } = await fixture(t, { body, options: { enhance(scope) {
+    enhancements++;
+    scope.querySelector('#legacy-widget button').addEventListener('click', () => { scope.querySelector('.widget-result').textContent = '۳۱'; });
+  } } });
+  await until(() => $('[data-lesson-block="code"]') && enhancements === 1);
+  assert.equal($('.lesson-prose > p').getAttribute('style'), null);
+  assert.equal($('[data-lesson-block="callout"]').tagName, 'BLOCKQUOTE');
+  assert.ok($('[data-lesson-block="table"] table th[scope="col"]'));
+  assert.ok($('[data-lesson-block="figure"] figcaption'));
+  assert.ok($('#legacy-widget[data-lesson-island]'));
+  assert.ok($('.katex math mi'));
+  assert.equal($('#teaching-data').textContent, '{"x":31}');
+  $('#legacy-widget button').click();
+  assert.equal($('.widget-result').textContent, '۳۱');
+  window.dispatchEvent(new window.Event('scroll'));
+  await tick();
+  assert.equal($('.widget-result').textContent, '۳۱');
+  assert.equal(enhancements, 1, 'progress does not remount interactive islands');
+  $('[data-lesson-block="code"] .reader-copy').click();
+  await until(() => clipboard.length);
+  assert.equal(clipboard[0], 'print(31)\n');
+});
+
+test('Unusual legacy wrappers keep extra content rather than silently discarding it', async t => {
+  const body = { ...payload, scripts: [], body: `<article class="lesson-body"><section class="lesson-section" id="old"><h2>سازگاری</h2><div class="lesson-prose"><div class="portal-table-scroll"><p>راهنمای جدول</p><table><tr><td>۳۱</td></tr></table><p>توضیح پس از جدول</p></div><div class="code-block"><div class="code-head"><button class="copy-code" data-copy-code="multi-a">کپی</button></div><pre id="multi-a"><code>print(1)</code></pre><pre id="multi-b"><code>print(2)</code></pre></div></div></section></article>` };
+  const { $, clipboard } = await fixture(t, { body });
+  await until(() => $('.reader-copy'));
+  assert.ok($('[data-reader-prose]').textContent.includes('راهنمای جدول'));
+  assert.ok($('[data-reader-prose]').textContent.includes('توضیح پس از جدول'));
+  assert.equal($('#multi-b').textContent, 'print(2)');
+  $('.reader-copy').click();await until(() => clipboard.length);assert.equal(clipboard[0], 'print(1)');
+});
+
+test('Reference preview renders the real shared template, long code and all standard blocks', async t => {
+  const html = await readerPreviewDocument(process.cwd());
+  const lessonId = 'machine-learning/cross-validation';
+  const { $, clipboard } = await fixture(t, {
+    html, lessonId, url: 'http://class.test/__preview__/lesson/?reference=1&note=05',
+    body: readerReferencePayload(), options: { preview: true },
+  });
+  await until(() => $('#reference-long .reader-copy'));
+  assert.match(html, /reader-template\.css/);
+  assert.equal($('[data-lesson-highlights]').children.length, 3);
+  assert.equal($('[data-reader-prose]').querySelectorAll('[data-lesson-block="section"]').length, 4);
+  assert.equal($('[data-reader-prose]').querySelectorAll('[data-lesson-block="code"]').length, 3);
+  assert.equal($('[data-reader-prose]').querySelectorAll('[data-lesson-block="table"]').length, 1);
+  assert.equal($('[data-reader-prose]').querySelectorAll('[data-lesson-block="figure"]').length, 1);
+  assert.equal($('[data-reader-prose]').querySelectorAll('[data-lesson-block="callout"]').length, 1);
+  assert.equal($('[data-lesson-resources]').querySelectorAll('button:disabled').length, 2);
+  const full = $('#reference-long pre').textContent;
+  assert.ok(full.split('\n').length > 120);
+  $('#reference-long .reader-copy').click();await until(() => clipboard.length);
+  assert.equal(clipboard[0], full);
 });

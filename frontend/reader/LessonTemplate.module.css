@@ -1,0 +1,39 @@
+:global(body[data-page="lesson"]) :global([data-reader-template]) {
+  --lesson-prose-size: 17px;
+  --lesson-code-size: 13px;
+  --lesson-heading-size: clamp(24px, 2.3vw, 30px);
+  --lesson-section-space: 64px;
+  --lesson-paragraph-space: 14px;
+  --lesson-sidebar-width: 190px;
+  --lesson-column-gap: 24px;
+  --lesson-code-height: min(32rem, 65vh);
+}
+:global(body[data-page="lesson"]) :global([data-reader-template]) .frame {
+  display: grid; grid-template-areas: "body rail";
+  grid-template-columns: minmax(0,1fr) var(--lesson-sidebar-width);
+  direction: ltr; align-items: start; justify-content: normal;
+  column-gap: var(--lesson-column-gap); padding-top: 42px;
+}
+:global(body[data-page="lesson"]) :global([data-reader-template]) .body {
+  grid-area: body; direction: rtl; min-width: 0; padding: clamp(20px, 3vw, 40px);
+  background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+}
+:global(body[data-page="lesson"]) :global([data-reader-template]) :global(.lesson-section),
+:global(body[data-page="lesson"]) :global([data-reader-template]) :global(.reader-resources),
+:global(body[data-page="lesson"]) :global([data-reader-template]) :global([data-lesson-hero]),
+:global([data-reader-prose]) :is(h2,h3,h4)[id] { scroll-margin-top: var(--reader-anchor-offset,112px); }
+@media (max-width:1100px) and (min-width:1025px) {
+  :global(body[data-page="lesson"]) :global([data-reader-template]) { --lesson-sidebar-width: 165px; --lesson-column-gap: 20px; }
+}
+@media (max-width:1024px) {
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .frame { grid-template-areas: "body"; grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width:760px) {
+  :global(body[data-page="lesson"]) :global([data-reader-template]) { --lesson-prose-size: 16px; --lesson-code-size: 12px; --lesson-section-space: 48px; }
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .frame { padding-top: 28px; }
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .body { padding: 18px 14px; }
+}
+@media print {
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .frame { display: block; padding: 0; }
+  :global(body[data-page="lesson"]) :global([data-reader-template]) .body { padding: 0; border: 0; background: white; }
+}

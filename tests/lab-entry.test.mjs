@@ -6,7 +6,7 @@ const catalog=JSON.parse(fs.readFileSync(new URL('../web/assets/catalog.json',im
 const course=fs.readFileSync(new URL('../web/machine-learning/index.html',import.meta.url),'utf8');
 // Register all tests together. Top-level import between test definitions
 // can leave the runner waiting on a module after an earlier test finishes.
-const fixtures=await Promise.all(catalog[0].lessons.map(async lesson=>[
+const fixtures=await Promise.all(catalog[0].lessons.filter(lesson=>lesson.lab).map(async lesson=>[
  lesson,await import(new URL('../web/assets/'+lesson.lab.model,import.meta.url)),
 ]));
 for(const [lesson,model] of fixtures){

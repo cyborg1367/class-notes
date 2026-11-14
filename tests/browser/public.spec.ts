@@ -1,5 +1,5 @@
 import {test,expect} from './fixtures/classroom';
-import {course} from './fixtures/content';
+import {course,labLessons,firstLesson} from './fixtures/content';
 import {expectPageLayout} from './fixtures/assertions';
 test.use({classroomRole:'guest'});
 test('the production homepage hydrates and navigates to the course',async({page})=>{
@@ -13,7 +13,7 @@ test('the production homepage hydrates and navigates to the course',async({page}
 test('search and topics filter the lesson cards and preserve lab links',async({page})=>{
  await page.goto('/machine-learning/');await expect(page.locator('.course-access-guest')).toBeVisible();
  await expect(page.locator('[data-course-lesson]')).toHaveCount(course.lessons.length);
- for(const lesson of course.lessons)await expect(page.locator(`[data-course-lesson="${lesson.id}"]`).getByRole('link',{name:`لابراتورِ ${lesson.title}`,exact:true})).toBeVisible();
+ for(const lesson of labLessons)await expect(page.locator(`[data-course-lesson="${lesson.id}"]`).getByRole('link',{name:`لابراتورِ ${lesson.title}`,exact:true})).toBeVisible();
  await page.getByRole('searchbox').fill('آستانه');await expect(page.locator('[data-course-lesson]')).toHaveCount(1);await expectPageLayout(page);
  await page.getByRole('button',{name:/پاک‌کردن فیلترها/}).click();
  await page.getByRole('combobox',{name:'انتخاب موضوع'}).selectOption({label:'NumPy'});await expect(page.locator('[data-course-lesson]')).toHaveCount(2);
@@ -21,7 +21,7 @@ test('search and topics filter the lesson cards and preserve lab links',async({p
  await page.getByRole('button',{name:/نمایش همهٔ یادداشت‌ها/}).click();await expect(page.locator('[data-course-lesson]')).toHaveCount(course.lessons.length);
 });
 test('a guest cannot read protected pages or trigger private RPCs',async({page,classroom})=>{
- for(const path of ['/dashboard/','/review/','/instructor/','/quiz/'+course.lessons[0].id+'/','/'+course.lessons[0].id+'/','/'+course.lessons[0].lab.path]){
+ for(const path of ['/dashboard/','/review/','/instructor/','/quiz/'+course.lessons[0].id+'/','/'+course.lessons[0].id+'/','/'+firstLesson.lab.path]){
   await page.goto(path);await expect(page.locator('[data-login-link]').first()).toBeVisible();
   await expect(page.locator('[data-reader-document], #lab-code, [data-react-instructor]')).toHaveCount(0);await expectPageLayout(page);
  }expect(classroom.calls).toEqual([]);

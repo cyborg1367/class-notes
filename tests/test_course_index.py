@@ -14,12 +14,13 @@ class Cards(HTMLParser):
   if tag=='a':self.links.append(attrs)
 
 class CourseIndexTests(unittest.TestCase):
- def test_four_prerendered_cards_have_independent_rows_and_existing_destinations(self):
+ def test_catalog_cards_have_independent_rows_and_existing_destinations(self):
   text=(ROOT/'web/machine-learning/index.html').read_text(encoding='utf-8');cards=Cards(text)
   catalog=json.loads((ROOT/'web/assets/catalog.json').read_text(encoding='utf-8'))[0]
   self.assertEqual([row[1] for row in cards.rows],[lesson['id'] for lesson in catalog['lessons']])
-  self.assertEqual(len({row[0] for row in cards.rows}),4)
+  self.assertEqual(len({row[0] for row in cards.rows}),len(catalog['lessons']))
   for lesson in catalog['lessons']:
+   if not lesson.get('lab'):continue
    self.assertTrue(any(link.get('href')=='../'+lesson['lab']['path'] for link in cards.links))
  def test_initial_html_has_no_private_receipts_or_personal_results_link(self):
   text=(ROOT/'web/machine-learning/index.html').read_text(encoding='utf-8')

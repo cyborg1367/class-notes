@@ -1,3 +1,7 @@
+import { presentationHighlights } from './lesson-presentation';
+import { readContent, isStandardCodeBlock } from './content-model';
+import { INSTRUCTOR_NAME } from '../components/InstructorCredit';
+import { prepareReadingBlocks } from './reading-blocks';
 import type { EndResources, Heading, HeroContent, HeroVisual, LessonInfo, LessonPayload, PreparedLesson, Slot, SlotContent } from './contracts';
 import { binaryPlot } from './lesson-model';
 import { downloadTypes, imageTypes, isCourseObject, lessonLink, localFragment } from './paths';
@@ -104,8 +108,13 @@ function collectHero(source: Element | null, tree: DocumentFragment, info: Lesso
   title?.querySelectorAll('br').forEach(node => node.replaceWith(doc.createTextNode(' ')));
   const titleHTML = title?.innerHTML.trim() || '';
   title?.remove();
+  // The shared hero owns the author credit. Remove only its legacy copies;
+  // unrelated hero metadata (sample/feature counts) remains intact.
+  copy?.querySelectorAll('.instructor-credit').forEach(node => node.remove());
   const meta = copy?.querySelector('.hero-meta');
-  const metaHTML = meta?.innerHTML || '';
+  const metaLabel = meta ? text(meta).replace(/[\u200e\u200f\u2066-\u2069]/g, '')
+    .replace(/^Instructor[\s|:·—–-]*/i, '').trim() : '';
+  const metaHTML = metaLabel === INSTRUCTOR_NAME ? '' : meta?.innerHTML || '';
   meta?.remove();
   for (const link of copy?.querySelectorAll<HTMLElement>('a,button') ?? []) {
     if (!legacyStudyControl(link, doc)) continue;
@@ -116,13 +125,8 @@ function collectHero(source: Element | null, tree: DocumentFragment, info: Lesso
   const actions = copy?.querySelector('.hero-actions');
   if (actions && !actions.children.length && !text(actions)) actions.remove();
   const figure = source?.querySelector<HTMLElement>('.hero-figure');
-  const highlights = Array.from(source?.querySelectorAll('.hero-strip li') ?? [], (item, index) => {
-    const number = item.querySelector('.strip-number');
-    const label = item.querySelector('.strip-text');
-    const display = number?.textContent?.trim() || String(index + 1).padStart(2, '0');
-    number?.remove();
-    return { number: display, html: label?.innerHTML || item.innerHTML };
-  }).filter(item => item.html.trim());
+  const authoredHighlights = Array.from(source?.querySelectorAll('.hero-strip .strip-text') ?? [], item => text(item));
+  const highlights = presentationHighlights(info.id, authoredHighlights);
   const binary = !figure && info.hero_kind === 'binary2d'
     ? binaryPlot(tree.querySelector('#medical-knn-data')?.textContent) : null;
   const visual: HeroVisual | null = info.hero_kind === 'threshold-scores' ? { kind: 'threshold-scores' }
@@ -161,7 +165,9 @@ export function prepareLesson(doc: Document, payload: LessonPayload, info: Lesso
     slots.push({ ...slot, key });
     return node;
   };
+  prepareReadingBlocks(body || tree, doc);
   for (const button of tree.querySelectorAll<HTMLElement>('.copy-code')) {
+    if (isStandardCodeBlock(button.closest('.code-block'))) continue; // React LessonCodeBlock owns this control.
     const code = targets.get(button.dataset.copyCode || '') || button.closest('.code-block')?.querySelector('pre');
     if (!code?.textContent) continue;
     button.replaceWith(place(doc.createElement('span'), {
@@ -200,5 +206,5 @@ export function prepareLesson(doc: Document, payload: LessonPayload, info: Lesso
     headings.push({ id: resources.id, label: 'منابع و تمرین' });
   }
   const numbered = headings.map((heading, index) => ({ ...heading, number: String(index + 1).padStart(2, '0') }));
-  return { hero, html: body?.innerHTML ?? template.innerHTML, fact, slots, headings: numbered, resources };
+  return { hero, document: readContent(content.childNodes), fact, slots, headings: numbered, resources };
 }

@@ -12,7 +12,7 @@ const snapshot = (lesson, done = 0, xp = 0) => ({
   mission: lesson.lab.mission, tasks: lesson.lab_steps.map(({ id }, position) => ({ id, position })),
   completed: lesson.lab_steps.slice(0, done).map(task => task.id), xp, maximum: 300, badge: done === 6, attempts: done,
 });
-const labs = Object.fromEntries(course.lessons.map(lesson => [lesson.lab.mission, {
+const labs = Object.fromEntries(course.lessons.filter(lesson => lesson.lab).map(lesson => [lesson.lab.mission, {
   status: 'fulfilled', value: snapshot(lesson, lesson === first ? 3 : 0, lesson === first ? 90 : 0),
 }]));
 const receipt = { lesson_id: first.id, version: first.quiz_version, attempts: 2,

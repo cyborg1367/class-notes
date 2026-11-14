@@ -1,10 +1,13 @@
 import { memo } from 'react';
+import { LessonHighlights } from './LessonHighlights';
+import styles from './LessonHero.module.css';
+import { InstructorCredit } from '../components/InstructorCredit';
 import type { BinaryPlot, HeroContent } from './contracts';
 import { ThresholdScoreFigure } from './ThresholdScoreFigure';
 
 function BinaryFigure({ plot }: { plot: BinaryPlot }) {
   const [qx, qy] = [64 + 37.6 * plot.query[0], 426 - 37.6 * plot.query[1]];
-  return <figure className="hero-figure binary-hero">
+  return <figure className={'hero-figure binary-hero ' + styles.figure}>
     <svg viewBox="0 0 540 510" role="img"
       aria-label="نمونه‌های ساختگی در فضای دو ویژگی؛ دایره کلاس صفر، مربع کلاس یک و لوزی پرس‌وجو است.">
       {[0, 2, 4, 6, 8, 10].map(n => {
@@ -44,27 +47,23 @@ function BinaryFigure({ plot }: { plot: BinaryPlot }) {
 
 export const LessonHero = memo(function LessonHero({ hero, title, start }: { hero: HeroContent; title: string; start?: string }) {
   const { visual } = hero;
-  return <section className="hero lesson-hero" id="top" data-lesson-hero="">
-    <div className={'shell hero-grid' + (visual ? '' : ' hero-grid--single')}>
-      <div className="hero-copy">
+  return <section className={'hero lesson-hero ' + styles.hero} id="top" data-lesson-hero="">
+    <div className={'shell hero-grid ' + styles.grid + (visual ? '' : ' hero-grid--single ' + styles.single)}>
+      <div className={'hero-copy ' + styles.copy}>
         {hero.eyebrow && <p className="eyebrow" dangerouslySetInnerHTML={{ __html: hero.eyebrow }} />}
-        {hero.titleHTML ? <h1 className="reader-hero-title" dangerouslySetInnerHTML={{ __html: hero.titleHTML }} />
-          : <h1 className="reader-hero-title">{title}</h1>}
-        {hero.copy && <div className="reader-hero-text" dangerouslySetInnerHTML={{ __html: hero.copy }} />}
+        {hero.titleHTML ? <h1 className={'reader-hero-title ' + styles.title} dangerouslySetInnerHTML={{ __html: hero.titleHTML }} />
+          : <h1 className={'reader-hero-title ' + styles.title}>{title}</h1>}
+        {hero.copy && <div className={'reader-hero-text ' + styles.text} dangerouslySetInnerHTML={{ __html: hero.copy }} />}
+        <InstructorCredit />
         {(start || hero.meta) && <div className="hero-actions">
           {start && <a className="button-primary" data-lesson-start="" href={start}>شروع مطالعه <span aria-hidden="true">←</span></a>}
           {hero.meta && <p className="hero-meta" dangerouslySetInnerHTML={{ __html: hero.meta }} />}
         </div>}
       </div>
       {visual?.kind === 'binary' && <BinaryFigure plot={visual.plot} />}
-      {visual?.kind === 'authored' && <figure className={visual.className} dangerouslySetInnerHTML={{ __html: visual.html }} />}
+      {visual?.kind === 'authored' && <figure className={visual.className + ' ' + styles.figure} dangerouslySetInnerHTML={{ __html: visual.html }} />}
       {visual?.kind === 'threshold-scores' && <ThresholdScoreFigure />}
     </div>
-    {hero.highlights.length > 0 && <div className="shell"><ul className="hero-strip" aria-label="نکات کلیدی یادداشت">
-      {hero.highlights.map(({ number, html }, index) => <li key={index}>
-        <span className="strip-number" dir="ltr" aria-hidden="true">{number}</span>
-        <span className="strip-text" dangerouslySetInnerHTML={{ __html: html }} />
-      </li>)}
-    </ul></div>}
+    <LessonHighlights items={hero.highlights} />
   </section>;
 });
