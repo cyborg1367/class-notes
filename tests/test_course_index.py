@@ -32,6 +32,10 @@ class CourseIndexTests(unittest.TestCase):
   self.assertEqual(value['catalog_sha256'],hashlib.sha256((ROOT/'web/assets/catalog.json').read_bytes()).hexdigest())
   text=(ROOT/'web/machine-learning/index.html').read_text(encoding='utf-8')
   self.assertIn(value['pages']['machine-learning'],text)
+ def test_generated_course_markup_has_canonical_line_endings(self):
+  value=json.loads((ROOT/'frontend/generated/course-pages.json').read_text(encoding='utf-8'))
+  for course,markup in value['pages'].items():
+   self.assertNotIn('\r',markup,'Non-canonical inline markup in '+course)
  def test_stale_catalog_cannot_silently_ship_old_react_content(self):
   with tempfile.TemporaryDirectory() as directory:
    root=Path(directory);(root/'web/assets').mkdir(parents=True);(root/'frontend/generated').mkdir(parents=True)

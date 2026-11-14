@@ -67,6 +67,8 @@ npx.cmd playwright install chromium webkit
 
 ## آنچه باقی مانده است
 
-آداپترهای صفحه در `application.mjs` هنوز باید feature به feature جدا شوند. همچنین
+آداپتر داشبورد اکنون در `frontend/dashboard/route.ts` مستقل شده است؛ جزئیات در
+[dashboard-route.fa.md](dashboard-route.fa.md) آمده است. آداپترهای سایر صفحه‌ها در
+`application.mjs` هنوز باید feature به feature جدا شوند. همچنین
 `coding-lab.js` همچنان هماهنگ‌کنندهٔ اجرایی لابراتور است؛ React بخش‌های نمایشی آن را
 در اختیار دارد. تبدیل صرف فایل‌ها به TSX یا افزودن router برای سایت چندصفحه‌ای، هدف این مرحله نیست.

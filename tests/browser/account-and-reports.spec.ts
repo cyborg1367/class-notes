@@ -12,6 +12,20 @@ test('a backend failure stays distinct from sign-in and the dashboard can retry'
  classroom.failBootstrap=true;await page.goto('/dashboard/');await expect(page.getByRole('heading',{name:'اطلاعات کلاس دریافت نشد.'})).toBeVisible();
  await expect(page.locator('[data-dashboard] [data-login-link]')).toHaveCount(0);classroom.failBootstrap=false;await page.locator('[data-dashboard-retry]').click();await expect(page.locator('[data-dashboard-lesson]')).toHaveCount(4);await expectPageLayout(page);
 });
+test('a failed dashboard module shows a scoped fallback and a full reload recovers',async({page})=>{
+ let unavailable=true;
+ await page.route('**/assets/dashboard-page.js*',route=>unavailable?route.abort('failed'):route.continue());
+ await page.goto('/dashboard/#results');
+ await expect(page.getByRole('heading',{name:'داشبورد دریافت نشد.',exact:true})).toBeVisible();
+ await expect(page.locator('[data-dashboard-lesson]')).toHaveCount(0);
+ await expect(page.locator('[data-dashboard] [data-login-link]')).toHaveCount(0);
+ await expectPageLayout(page);
+ unavailable=false;
+ await page.getByRole('button',{name:'بازخوانی داشبورد',exact:true}).click();
+ await expect(page).toHaveURL(/\/dashboard\/#results$/);
+ await expect(page.locator('[data-dashboard-lesson]')).toHaveCount(4);
+ await expectPageLayout(page);
+});
 test('notification count is visible before opening the inbox',async({page})=>{
  await page.goto('/dashboard/');await expect(page.locator('.notice-badge').first()).toBeVisible();await page.goto('/notifications/');await expect(page.getByText('یادداشت تازه منتشر شد',{exact:true}).first()).toBeVisible();await expectPageLayout(page);
 });

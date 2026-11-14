@@ -24,6 +24,8 @@ delivery and trusted grading stay behind their current service contracts.
 | `web/assets/account-model.mjs`, `account-controller.mjs` | Project identity, guard actions/owner races and safe continuation URLs | React or SDK calls |
 | `web/assets/sign-out-service.mjs` | Existing save/confirm/sign-out sequence | Rendering or deciding whether a lesson is authorized |
 | `frontend/dashboard/` | Typed dashboard views, learning path, bookmarks and result disclosure | SDK access or authorization |
+| `frontend/dashboard/route.ts` | Lazy feature attachment, controller/root ownership and account-scoped reset | SDK, rendering markup or XP writes |
+| `frontend/dashboard/controller-contracts.ts` | Typed context, renderer and action ports between route and controller | Runtime side effects |
 | `frontend/dashboard/dashboard-controller.mjs` | Project authenticated state to dashboard views and discard stale responses | React and DOM mutation |
 | `web/assets/dashboard-model.mjs` | Pure projection of lab snapshots, quiz receipts and study history | Storage access, network, XP awards |
 | `frontend/portal/services/` | Strict TypeScript ports for config, sessions, RPC, bootstrap and page lifetime | React rendering, access or XP decisions |
@@ -72,6 +74,22 @@ use bootstrap snapshots or the existing fallback reads. Its revision guard
 covers progress and the separately requested review count. The portal disposes
 the old root before replacing protected content during an account change.
 Bookmark persistence stays per browser and account; those values never affect XP.
+
+The dashboard route adapter now owns lazy startup, its renderer/controller and
+account resets. The portal supplies dependencies and registers `mount`/`reset`
+with the shared page lifecycle; it no longer owns dashboard UI variables or
+dashboard startup logic. Simultaneous initial mounts share one pending import.
+Account generation, user identity, route revision and host connection guard late
+imports, refresh completions and error views. Reset invalidates before disposing.
+The controller remains JavaScript with a typed JSDoc port contract; the new adapter
+and contracts are strict TypeScript, not a claim that every controller is typed.
+
+A failed dashboard feature import shows the shared React gate with a full reload
+button that also preserves `#results`; a same-document anchor link cannot replace
+this recovery action. This also fixes the old startup failure path's out-of-scope `loadingError`
+reference. The fallback checks current ownership after loading its own UI; it
+cannot replace a new account's dashboard. Existing data errors and retries stay
+in the dashboard controller. Neither error path changes server authorization.
 
 ## Build and delivery
 

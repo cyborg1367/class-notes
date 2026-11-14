@@ -357,6 +357,108 @@ var ClassNotesPortal = (function(exports) {
 			}
 		};
 	}
+	// frontend/dashboard/route.ts
+	function createDashboardRoute(ports) {
+		let revision = 0;
+		let mounted = null;
+		let pending = null;
+		let ownedHost = null;
+		function current(owner) {
+			const context = ports.context();
+			return owner.revision === revision && owner.host.isConnected && owner.generation === context.generation && owner.userId === (context.user?.id ?? null);
+		}
+		function reset() {
+			revision++;
+			const previous = mounted, host = ownedHost;
+			mounted = null;
+			pending = null;
+			ownedHost = null;
+			try {
+				previous?.controller.dispose();
+			} finally {
+				if (host) ports.releaseFallback(host);
+			}
+		}
+		async function initialize(owner) {
+			const alive = () => current(owner);
+			let renderer = null, controller = null;
+			let adopted = false;
+			try {
+				const feature = await ports.loadFeature();
+				if (!alive()) return;
+				ports.releaseFallback(owner.host);
+				renderer = feature.mountDashboard(owner.host);
+				if (!alive()) {
+					renderer.dispose();
+					return;
+				}
+				controller = feature.createDashboardController({
+					renderer,
+					catalog: ports.catalog,
+					context: ports.context,
+					isCurrent: alive,
+					rpc: ports.rpc,
+					refreshAccess: async () => {
+						if (!alive()) return;
+						await ports.refreshAccess();
+						if (alive()) ports.afterAccessRefresh();
+					},
+					studyFor: ports.studyFor,
+					login: ports.login,
+					link: ports.link,
+					storage: ports.storage
+				});
+				if (!alive()) {
+					controller.dispose();
+					return;
+				}
+				mounted = {
+					owner,
+					controller
+				};
+				adopted = true;
+				await controller.load();
+			} catch {
+				if (!adopted) renderer?.dispose();
+				if (!alive()) return;
+				if (mounted?.controller === controller) {
+					mounted = null;
+					controller?.dispose();
+				}
+				await ports.unavailable(owner.host, alive);
+			}
+		}
+		function mount() {
+			const host = ports.host();
+			if (!host) {
+				if (ownedHost) reset();
+				return Promise.resolve();
+			}
+			if (ownedHost && ownedHost !== host || mounted && !current(mounted.owner) || pending && (!current(pending.owner) || pending.owner.host !== host)) reset();
+			if (mounted) return mounted.controller.load();
+			if (pending) return pending.task;
+			const context = ports.context();
+			const owner = {
+				host,
+				generation: context.generation,
+				userId: context.user?.id ?? null,
+				revision
+			};
+			ownedHost = host;
+			const task = initialize(owner).finally(() => {
+				if (pending?.task === task) pending = null;
+			});
+			pending = {
+				owner,
+				task
+			};
+			return task;
+		}
+		return {
+			mount,
+			reset
+		};
+	}
 	// frontend/portal/application.mjs
 	function startPortal() {
 		const $ = (s, p = document) => p.querySelector(s), $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
@@ -372,7 +474,6 @@ var ClassNotesPortal = (function(exports) {
 		let instructorUI = null, instructorTicket = 0;
 		let courseController = null, courseTicket = 0;
 		let homeController = null;
-		let dashboardUI = null, dashboardTicket = 0;
 		let readerUI = null, readerTicket = 0;
 		let quizUI = null, quizResultUI = null, quizTicket = 0;
 		let accountNotice = {
@@ -393,10 +494,10 @@ var ClassNotesPortal = (function(exports) {
 				gateUIs.delete(ui);
 			}
 		}
-		async function paintGate(host, view) {
+		async function paintGate(host, view, isCurrent = () => true) {
 			try {
 				const { mountGate } = await gates();
-				if (!document?.defaultView || !host?.isConnected) return;
+				if (!document?.defaultView || !host?.isConnected || !isCurrent()) return;
 				disposeGates(host);
 				host.replaceChildren();
 				const ui = mountGate(host);
@@ -1319,49 +1420,6 @@ var ClassNotesPortal = (function(exports) {
 				}
 			});
 		}
-		async function dashboard() {
-			const host = $("[data-dashboard]");
-			if (!host) return;
-			if (dashboardUI) {
-				await dashboardUI.load();
-				return;
-			}
-			const generation = app.generation, ticket = ++dashboardTicket;
-			const current = () => generation === app.generation && ticket === dashboardTicket && host.isConnected;
-			try {
-				const { mountDashboard, createDashboardController } = await portalDeadline(import(assetURL("dashboard-page.js").href), 12e3, "DASHBOARD_UI_TIMEOUT");
-				if (!current()) return;
-				dashboardUI = createDashboardController({
-					renderer: mountDashboard(host),
-					catalog,
-					isCurrent: current,
-					rpc,
-					context: () => ({
-						user: app.user,
-						state: app.state,
-						serviceError: app.serviceError,
-						labSnapshots: bootData?.labs
-					}),
-					refreshAccess: async () => {
-						await refreshState();
-						if (current()) {
-							mountNotices();
-							mountClassroomPresence();
-						}
-					},
-					studyFor: studyState,
-					login: loginURL,
-					link: url,
-					storage: {
-						read: storageGet,
-						write: storageSet
-					}
-				});
-				await dashboardUI.load();
-			} catch {
-				if (current()) loadingError("داشبورد دریافت نشد؛ صفحه را دوباره باز کن.");
-			}
-		}
 		async function loadLesson() {
 			const info = lesson(lid), host = $("#main");
 			if (!info || !host) return;
@@ -1644,9 +1702,46 @@ var ClassNotesPortal = (function(exports) {
 				});
 			}
 		}
+		const dashboardRoute = createDashboardRoute({
+			host: () => $("[data-dashboard]"),
+			catalog,
+			rpc,
+			context: () => ({
+				generation: app.generation,
+				user: app.user,
+				state: app.state,
+				serviceError: app.serviceError,
+				labSnapshots: bootData?.labs
+			}),
+			loadFeature: () => portalDeadline(import(assetURL("dashboard-page.js").href), 12e3, "DASHBOARD_UI_TIMEOUT"),
+			refreshAccess: refreshState,
+			afterAccessRefresh: () => {
+				mountNotices();
+				mountClassroomPresence();
+			},
+			studyFor: studyState,
+			login: loginURL,
+			link: url,
+			storage: {
+				read: storageGet,
+				write: storageSet
+			},
+			releaseFallback: disposeGates,
+			unavailable: (host, isCurrent) => paintGate(host, {
+				title: "داشبورد دریافت نشد.",
+				body: "صفحه را دوباره بارگذاری کن تا دریافت داشبورد تکرار شود.",
+				heading: "h1",
+				actions: [{
+					label: "بازخوانی داشبورد",
+					onClick: () => {
+						if (isCurrent()) location.reload();
+					}
+				}]
+			}, isCurrent)
+		});
 		const pageLifecycle = createPageLifecycle({
 			routes: {
-				dashboard,
+				dashboard: dashboardRoute.mount,
 				review: reviewNotebook,
 				course,
 				instructor: teacher,
@@ -1679,11 +1774,7 @@ var ClassNotesPortal = (function(exports) {
 					quizResultUI?.dispose();
 					quizResultUI = null;
 				},
-				() => {
-					dashboardTicket++;
-					dashboardUI?.dispose();
-					dashboardUI = null;
-				},
+				dashboardRoute.reset,
 				() => {
 					instructorTicket++;
 					instructorUI?.dispose();
@@ -1765,6 +1856,7 @@ var ClassNotesPortal = (function(exports) {
 	exports.createAuthSession = createAuthSession;
 	exports.createClassroomBootstrap = createClassroomBootstrap;
 	exports.createClassroomTransport = createClassroomTransport;
+	exports.createDashboardRoute = createDashboardRoute;
 	exports.createPageLifecycle = createPageLifecycle;
 	exports.createPublicConfiguration = createPublicConfiguration;
 	exports.portalAbortable = portalAbortable;

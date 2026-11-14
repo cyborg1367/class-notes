@@ -1,5 +1,7 @@
 // Adapts the existing portal services to dashboard views. No React, DOM mutation,
 // SDK access, or learner writes outside the existing membership action.
+/** @param {import('./controller-contracts').DashboardControllerPorts} ports
+ * @returns {import('./controller-contracts').DashboardController} */
 export function createDashboardController({
   renderer, catalog, context, isCurrent, rpc, refreshAccess, studyFor, login, link, storage,
 }) {

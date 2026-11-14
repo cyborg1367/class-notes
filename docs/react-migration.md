@@ -1,4 +1,4 @@
-# React migration: browser regression and modular portal services
+# React migration: independent dashboard route adapter
 
 This is a staged migration of the existing public application. Nothing in this
 package publishes the site, pushes Git or deploys a server function. Keep the
@@ -6,16 +6,20 @@ current production domain and Supabase settings unchanged during UI review.
 
 ## Current phase
 
-React owns the route UI listed below. Browser regression tests now exercise the
-actual static build with synthetic backend data. The current architecture phase
-extracts strict TypeScript services for config, session lifetime, RPC transport,
-bootstrap and route lifetime into `frontend/portal/services/`. The existing
+The dashboard now has an independent route adapter under
+`frontend/dashboard/route.ts`, with typed ports, lazy startup ownership, account
+reset and a scoped startup error view. `application.mjs` supplies dependencies
+and registers the adapter, while the existing dashboard controller retains data
+projection. See [dashboard-route.fa.md](dashboard-route.fa.md).
+
+Earlier phases added browser regression tests of the actual static build with
+synthetic backend data and strict TypeScript services for config, sessions, RPC,
+bootstrap and route lifetime under `frontend/portal/services/`. The existing
 classic `web/assets/portal.js` is generated from `frontend/portal/entry.ts`.
 
 `frontend/portal/application.mjs` remains a transitional JavaScript composition
-root; feature-specific route adapters and the vanilla coding-lab orchestrator
-are still future work. This package combines the previous browser-test phase
-with the service extraction. See [portal-services.fa.md](portal-services.fa.md)
+root; adapters for the other features and the vanilla coding-lab orchestrator
+are still future work. See [portal-services.fa.md](portal-services.fa.md)
 for source ownership and [browser-tests.fa.md](browser-tests.fa.md) for tests.
 
 ## Earlier UI phase: Student dashboard
@@ -150,7 +154,7 @@ Stop the server with Ctrl+C before replacing project files.
 
 | Area | Status |
 | --- | --- |
-| Course, homepage, account, dashboard, shell | React |
+| Course, homepage, account, dashboard, shell | React; dashboard also has an independent route adapter |
 | Notifications inbox | React island; portal owns RPC |
 | Presence widget and visibility setting | React island; portal owns RPC and realtime |
 | Membership/login/error cards | Shared React `GateCard`; portal decides when to show them |

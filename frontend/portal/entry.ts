@@ -9,6 +9,7 @@ import { portalMissingBootstrap, createClassroomBootstrap, createClassroomTransp
 import { portalAbortable, portalDeadline } from './services/async';
 import { connectAuthProvider, createAuthSession } from './services/auth';
 import { createPageLifecycle } from './services/routes';
+import { createDashboardRoute } from '../dashboard/route';
 
 // The build's classic bundle footer preserves the existing Node helper API.
 // Browser initialization keeps the existing bounded async boot promise.
@@ -16,6 +17,6 @@ export {
   portalEscape, portalInline, portalReturn, portalConfig, portalLabEndpoint, portalCreateScriptLoader,
   portalFigure, portalBlankValue, portalBlankError, portalBlankHelp, portalCreateReadCoordinator,
   portalCreatePublicConfigLoader, portalMissingBootstrap, portalAbortable, portalDeadline,
-  createPublicConfiguration, createClassroomBootstrap, createClassroomTransport, connectAuthProvider, createAuthSession, createPageLifecycle,
+  createPublicConfiguration, createClassroomBootstrap, createClassroomTransport, connectAuthProvider, createAuthSession, createPageLifecycle, createDashboardRoute,
 };
 if (typeof document !== 'undefined') startPortal();

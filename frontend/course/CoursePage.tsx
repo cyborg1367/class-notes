@@ -3,7 +3,11 @@ import type {PublicLesson,PublicCourse} from '../catalog/types';
 import {lessonNumber, orderedLessons} from '../catalog/order';
 import {courseTopics,matchCourseRows} from '../course-filter-model.mjs';
 import {PaperButton} from '../components/PaperButton';
-import artwork from '../assets/course-figure.svg?raw';
+import sourceArtwork from '../assets/course-figure.svg?raw';
+
+// Raw assets keep checkout line endings; HTML parsing and Python text I/O
+// normalize them. Share canonical markup between prerender and hydration.
+const artwork = sourceArtwork.replace(/\r\n?/g, '\n');
 
 export type Lesson=PublicLesson;
 export type Course=PublicCourse;

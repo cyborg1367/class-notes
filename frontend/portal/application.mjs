@@ -6,6 +6,7 @@ import { createClassroomTransport, createClassroomBootstrap } from './services/c
 import { createPublicConfiguration } from './services/public-config';
 import { connectAuthProvider, createAuthSession } from './services/auth';
 import { createPageLifecycle } from './services/routes';
+import { createDashboardRoute } from '../dashboard/route';
 
 // Transitional composition root. UI belongs to the existing React features;
 // account lifetime and route-specific adapters are extracted in subsequent steps.
@@ -18,7 +19,6 @@ export function startPortal() {
  let instructorUI=null,instructorTicket=0;
  let courseController=null,courseTicket=0;
  let homeController=null;
- let dashboardUI=null,dashboardTicket=0;
  let readerUI=null,readerTicket=0;
  let quizUI=null,quizResultUI=null,quizTicket=0;
  let accountNotice={text:'در حال بررسی ورود…',error:false};
@@ -30,10 +30,10 @@ export function startPortal() {
   return gateModule;
  }
  function disposeGates(host){for(const ui of [...gateUIs]){if(!host||ui.host===host||host.contains(ui.host)){ui.dispose();gateUIs.delete(ui);}}}
- async function paintGate(host,view){
+ async function paintGate(host,view,isCurrent=()=>true){
   try{
    const {mountGate}=await gates();
-   if(!document?.defaultView||!host?.isConnected)return;
+   if(!document?.defaultView||!host?.isConnected||!isCurrent())return;
    disposeGates(host);host.replaceChildren();const ui=mountGate(host);ui.host=host;gateUIs.add(ui);ui.render(view);
   }catch(error){if(document?.defaultView)throw error;}
  }
@@ -397,23 +397,6 @@ export function startPortal() {
    requestAccess:async()=>{if(!alive()||!app.user)throw Error('SIGN_IN_REQUIRED');await rpc('classroom_request_access',{p_course:c.id});}
   });
  }
- async function dashboard(){
-  const host=$('[data-dashboard]');if(!host)return;
-  if(dashboardUI){await dashboardUI.load();return;}
-  const generation=app.generation,ticket=++dashboardTicket;
-  const current=()=>generation===app.generation&&ticket===dashboardTicket&&host.isConnected;
-  try{
-   const {mountDashboard,createDashboardController}=await portalDeadline(import(assetURL('dashboard-page.js').href),12000,'DASHBOARD_UI_TIMEOUT');
-   if(!current())return;
-   dashboardUI=createDashboardController({
-    renderer:mountDashboard(host),catalog,isCurrent:current,rpc,
-    context:()=>({user:app.user,state:app.state,serviceError:app.serviceError,labSnapshots:bootData?.labs}),
-    refreshAccess:async()=>{await refreshState();if(current()){void mountNotices();void mountClassroomPresence();}},
-    studyFor:studyState,login:loginURL,link:url,storage:{read:storageGet,write:storageSet},
-   });
-   await dashboardUI.load();
-  }catch{if(current())loadingError('داشبورد دریافت نشد؛ صفحه را دوباره باز کن.');}
- }
  async function loadLesson(){
   const info=lesson(lid),host=$('#main');if(!info||!host)return;
   const gen=app.generation,ticket=++readerTicket,owner=app.user?.id;
@@ -546,15 +529,25 @@ export function startPortal() {
    if(!alive()){ui.dispose();return;}instructorUI=ui;
   }catch{if(alive()){void paintGate(root,{title:'پنل مدرس دریافت نشد.',heading:'h1',actions:[{label:'تلاش دوباره',onClick:()=>teacher()}]});}}
  }
+ const dashboardRoute=createDashboardRoute({
+  host:()=>$('[data-dashboard]'),catalog,rpc,
+  context:()=>({generation:app.generation,user:app.user,state:app.state,serviceError:app.serviceError,labSnapshots:bootData?.labs}),
+  loadFeature:()=>portalDeadline(import(assetURL('dashboard-page.js').href),12000,'DASHBOARD_UI_TIMEOUT'),
+  refreshAccess:refreshState,afterAccessRefresh:()=>{void mountNotices();void mountClassroomPresence();},
+  studyFor:studyState,login:loginURL,link:url,storage:{read:storageGet,write:storageSet},
+  releaseFallback:disposeGates,
+  unavailable:(host,isCurrent)=>paintGate(host,{title:'داشبورد دریافت نشد.',body:'صفحه را دوباره بارگذاری کن تا دریافت داشبورد تکرار شود.',heading:'h1',
+   actions:[{label:'بازخوانی داشبورد',onClick:()=>{if(isCurrent())location.reload();}}]},isCurrent),
+ });
  const pageLifecycle=createPageLifecycle({
-  routes:{dashboard,review:reviewNotebook,course,instructor:teacher,lesson:loadLesson,lab:loadCodingLab,quiz:loadQuiz},
+  routes:{dashboard:dashboardRoute.mount,review:reviewNotebook,course,instructor:teacher,lesson:loadLesson,lab:loadCodingLab,quiz:loadQuiz},
   before:async()=>{if(page==='notifications')await notificationsPage();void mountNotices();},
   after:()=>{void mountClassroomPresence();},
   cleanups:[
    ()=>{courseTicket++;courseController?.dispose();courseController=null;},
    ()=>{readerTicket++;readerUI?.dispose();readerUI=null;},
    ()=>{quizTicket++;quizUI?.dispose();quizUI=null;quizResultUI?.dispose();quizResultUI=null;},
-   ()=>{dashboardTicket++;dashboardUI?.dispose();dashboardUI=null;},
+   dashboardRoute.reset,
    ()=>{instructorTicket++;instructorUI?.dispose();instructorUI=null;},
    ()=>{reads.reset();stateTicket++;bootData=null;},
    ()=>{noticeTicket++;noticeUI?.dispose();noticeUI=null;},
