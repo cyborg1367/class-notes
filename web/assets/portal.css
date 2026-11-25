@@ -105,3 +105,6 @@ a.mini-lesson:hover{background:#fffdf5}
 .page-loading>p[data-error="true"]{color:var(--coral-ink,#88432d);}
 .page-loading:has([data-error="true"]) .page-loading-line{display:none;}
 @media(max-width:760px){.page-loading{min-height:155px;padding-block:18px 24px;}.page-loading-line{height:10px;margin-bottom:15px;}}
+
+/* Independent course examinations are separate from lesson practice quizzes. */
+.course-exams{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-block:42px;padding:24px 27px;border:1px solid #d0d9c9;border-radius:10px;background:#f7f8f1}.course-exams h2{font-size:19px;color:#31523a;line-height:1.8;margin:0}.course-exams p:last-child{font-size:12px;line-height:2;color:#62705a;margin:5px 0 0}.course-exams .exam-eyebrow{margin-bottom:4px}@media(max-width:760px){.course-exams{display:block;padding:20px}.course-exams>.button-outline{display:inline-flex;margin-top:15px}}

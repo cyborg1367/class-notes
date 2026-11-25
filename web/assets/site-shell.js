@@ -8,6 +8,8 @@ var l = /* @__PURE__ */ e(t(), 1), u = n(), d = [
 	"quiz",
 	"lab",
 	"review",
+	"exams",
+	"exam",
 	"notifications",
 	"account",
 	"dashboard",
@@ -30,7 +32,7 @@ function p({ route: e, page: t }, n = "build") {
 		"lesson",
 		"quiz",
 		"lab"
-	].includes(t) ? "classes" : t, s = [
+	].includes(t) ? "classes" : ["exams", "exam"].includes(t) ? "exams" : t, s = [
 		{
 			id: "home",
 			label: "صفحهٔ اصلی",
@@ -48,6 +50,12 @@ function p({ route: e, page: t }, n = "build") {
 			label: "دفتر مرور",
 			href: r + "review/",
 			icon: "review"
+		},
+		{
+			id: "exams",
+			label: "امتحانات",
+			href: r + "exams/",
+			icon: "quiz"
 		},
 		{
 			id: "about",
@@ -335,33 +343,36 @@ function I() {
 	return import("./react/mount-DxSipj7w.mjs");
 }
 function L() {
-	return import("./react/mount-DnbhajIK.mjs");
+	return import("./react/mount-CaYeSC9i.mjs");
 }
 function R() {
-	return import("./react/mount-eZv4x-V_.mjs");
+	return import("./react/mount-BDm5ItHO.mjs");
 }
 function z() {
-	return import("./react/mount-BAg8hL8X.mjs");
+	return import("./react/mount-eZv4x-V_.mjs");
 }
 function B() {
-	return import("./react/mount-CUciKT-0.mjs");
+	return import("./react/mount-BAg8hL8X.mjs");
 }
 function V() {
-	return import("./react/mount-D_v_9toj.mjs");
+	return import("./react/mount-CUciKT-0.mjs");
 }
 function H() {
-	return import("./react/mount-G8Dg4BHU.mjs");
+	return import("./react/mount-D_v_9toj.mjs");
 }
 function U() {
-	return import("./react/mount-DqxTzlzD.mjs");
+	return import("./react/mount-G8Dg4BHU.mjs");
 }
 function W() {
-	return import("./react/mount-CoTK0AHh.mjs");
+	return import("./react/mount-DqxTzlzD.mjs");
 }
 function G() {
-	return import("./react/mount-CHPFYm21.mjs");
+	return import("./react/mount-CoTK0AHh.mjs");
 }
 function K() {
+	return import("./react/mount-CHPFYm21.mjs");
+}
+function q() {
 	return import("./react/mount-Cx93Ssck.mjs");
 }
-export { j as dispose, K as loadGate, L as loadInstructor, U as loadLabFrame, z as loadLabMission, R as loadLabPresentation, V as loadLabTutor, B as loadLabWorkspace, H as loadLabXp, P as loadLessonReader, W as loadNotifications, G as loadPresence, I as loadQuizForm, F as loadQuizResult, N as loadReviewNotebook, M as mountAccountUI, A as mountShell, D as ready };
+export { j as dispose, L as loadExamFeatures, q as loadGate, R as loadInstructor, W as loadLabFrame, B as loadLabMission, z as loadLabPresentation, H as loadLabTutor, V as loadLabWorkspace, U as loadLabXp, P as loadLessonReader, G as loadNotifications, K as loadPresence, I as loadQuizForm, F as loadQuizResult, N as loadReviewNotebook, M as mountAccountUI, A as mountShell, D as ready };

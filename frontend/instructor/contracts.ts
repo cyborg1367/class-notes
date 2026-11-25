@@ -1,8 +1,8 @@
 import type { QuizFigure } from '../quiz/contracts';
 import type { QuizResultProps } from '../quiz-result/QuizResult';
 
-export type View = 'overview' | 'students' | 'attempts' | 'labs' | 'requests';
-export type ListView = Exclude<View, 'overview'>;
+export type View = 'overview' | 'students' | 'attempts' | 'labs' | 'requests' | 'exam-results';
+export type ListView = Exclude<View, 'overview' | 'exam-results'>;
 export type Status = 'active' | 'pending' | 'suspended';
 type Score = { score?: number | null; maximum?: number | null };
 export type Attempt = Score & { id: string; name?: string; email?: string; lesson_id: string; title?: string; version: number; attempt_no: number; created_at: string };

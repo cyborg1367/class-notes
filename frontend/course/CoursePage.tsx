@@ -80,6 +80,11 @@ export function CoursePage({course,view,channel}:{course:Course;view:CourseView;
       {filtered&&<div className="course-filter-meta"><button type="button" onClick={reset}>پاک‌کردن فیلترها <span aria-hidden="true">×</span></button></div>}
       {matches.size===0&&<div className="course-search-empty"><p>یادداشتی با این جست‌وجو پیدا نشد.</p><button type="button" onClick={reset}>نمایش همهٔ یادداشت‌ها ←</button></div>}</div>
       <ol className="lesson-path" id="course-lessons-list">{lessons.filter(lesson=>matches.has(lesson.id)).map((lesson,index)=><LessonCard key={lesson.id} lesson={lesson} index={index} course={course} view={view}/>)}</ol>
-    </section><CourseAccess view={view} channel={channel}/>
+    </section>
+    <section className="course-exams" aria-labelledby="course-exams-title">
+      <div><p className="exam-eyebrow">INDEPENDENT ASSESSMENTS</p><h2 id="course-exams-title">امتحانات مستقل کلاس</h2><p>امتحانات میان‌ترم و پایان‌ترم در بخشی جدا از تمرین‌های هر یادداشت برگزار می‌شوند و نتیجهٔ مستقلی دارند.</p></div>
+      <PaperButton href={hrefFor(course,'exams')} secondary>مشاهدهٔ امتحانات ←</PaperButton>
+    </section>
+    <CourseAccess view={view} channel={channel}/>
   </>;
 }

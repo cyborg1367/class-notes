@@ -73,6 +73,10 @@ export function loadQuizForm() {
     return import('./quiz/mount');
 }
 
+export function loadExamFeatures() {
+    return import('./exam/mount');
+}
+
 export function loadInstructor() {
     return import('./instructor/mount');
 }

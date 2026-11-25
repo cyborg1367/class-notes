@@ -7,7 +7,7 @@ type Options = { request(name: string, args: RPCArguments): unknown; clock?: () 
 // Coalesce only simultaneous allowlisted reads. Completed data, drafts, access
 // grants and grading responses are never cached here.
 export function portalCreateReadCoordinator({ request, clock = () => Date.now(), limit = 120 }: Options) {
-  const reads = new Set(['classroom_bootstrap', 'classroom_state', 'classroom_lesson', 'classroom_lab_state', 'classroom_review_summary']);
+  const reads = new Set(['classroom_bootstrap', 'classroom_state', 'classroom_lesson', 'classroom_lab_state', 'classroom_review_summary', 'classroom_exams', 'classroom_exam', 'classroom_exam_attempt']);
   const pending = new Map<string, Promise<unknown>>(), events: Timing[] = [];
   let generation = 0;
   function record(name: string, start: number, error = false, shared = false) {

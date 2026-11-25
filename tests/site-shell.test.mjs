@@ -20,13 +20,17 @@ async function fixture(t,route='machine-learning/index.html',html){
  return{dom,window:dom.window,document:dom.window.document,diagnostics};
 }
 test('Shared shell hydrates public, student, instructor and deeply nested routes without changing the page body',async t=>{
- for(const route of ['index.html','about/index.html','dashboard/index.html','instructor/index.html','machine-learning/prediction-problem/index.html','lab/machine-learning/thresholds-and-roc/index.html']){
+ for(const route of ['index.html','about/index.html','dashboard/index.html','instructor/index.html','machine-learning/prediction-problem/index.html','lab/machine-learning/thresholds-and-roc/index.html','exams/index.html','exams/machine-learning-midterm/index.html']){
   const html=fs.readFileSync('dist/'+route,'utf8'),baseline=new JSDOM(html);const expected=baseline.window.document.querySelector('#main').innerHTML;baseline.window.close();
   const {document}=await fixture(t,route);
   assert.equal(document.querySelector('#main').innerHTML,expected,route);
   assert.equal(new URL(document.querySelector('.brand').href).pathname,'/index.html',route);
   assert.equal(document.querySelectorAll('[data-shell-account-slot]').length,1);
   assert.equal(document.querySelectorAll('[data-shell-presence-slot]').length,1);
+  const examsLink=[...document.querySelectorAll('.portal-links a')].find(link=>link.textContent.includes('امتحانات'));
+  assert.ok(examsLink,route+' should expose the independent exams section');
+  assert.equal(new URL(examsLink.href).pathname,'/exams/');
+  if(route.startsWith('exams/'))assert.equal(examsLink.getAttribute('aria-current'),'page');
  }
 });
 test('Navigation has one React event owner and preserves account/presence nodes during updates',async t=>{

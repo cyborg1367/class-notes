@@ -20,7 +20,7 @@ export function createClassroomTransport({ client, page, clock, timeout = 15_000
 }) {
   return portalCreateReadCoordinator({ clock, request: async (name, args) => {
     const request = client().rpc(name, args);
-    const startup = ['classroom_bootstrap', 'classroom_state', 'classroom_lesson', 'classroom_review_state', 'classroom_review_context'].includes(name) ||
+    const startup = ['classroom_bootstrap', 'classroom_state', 'classroom_lesson', 'classroom_review_state', 'classroom_review_context', 'classroom_exams', 'classroom_exam', 'classroom_exam_attempt'].includes(name) ||
       (page === 'dashboard' && name === 'classroom_lab_state');
     const controller = startup ? new AbortController() : null;
     const task = controller && typeof request.abortSignal === 'function' ? request.abortSignal(controller.signal) : request;

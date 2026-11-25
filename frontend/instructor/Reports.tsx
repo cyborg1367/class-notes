@@ -139,7 +139,7 @@ function Concepts({ state, labels, actions }: Props) {
 export function Reports(props: Props) {
   const { state, labels, actions } = props, view = state.view;
   if (view === 'requests') return <Requests {...props} />;
-  if (view === 'overview') return null;
+  if (view === 'overview' || view === 'exam-results') return null;
   const definitions = state.overview?.labs || (state.pages.labs?.data?.rows[0] as Person | undefined)?.lab.missions || [];
   const mission = state.filters.labs.mission, selected = definitions.find(item => item.mission === mission);
   return <>

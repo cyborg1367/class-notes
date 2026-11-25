@@ -212,10 +212,10 @@ function b({ lesson: e, index: t, course: n, view: r }) {
 	}) });
 }
 function x({ course: e, view: t, channel: n }) {
-	let [r, a] = (0, c.useState)(""), [o, s] = (0, c.useState)(""), l = (0, c.useId)(), u = (0, c.useId)(), p = (0, c.useMemo)(() => i(e.lessons).map(({ lesson: e, number: t }) => ({
+	let [r, a] = (0, c.useState)(""), [s, l] = (0, c.useState)(""), u = (0, c.useId)(), p = (0, c.useId)(), _ = (0, c.useMemo)(() => i(e.lessons).map(({ lesson: e, number: t }) => ({
 		...e,
 		ordinal: t
-	})), [e]), _ = (0, c.useMemo)(() => p.map((e) => ({
+	})), [e]), x = (0, c.useMemo)(() => _.map((e) => ({
 		id: e.id,
 		tags: e.tags || [],
 		search: [
@@ -226,12 +226,12 @@ function x({ course: e, view: t, channel: n }) {
 			e.description || "",
 			...e.tags || []
 		].join(" ")
-	})), [p]), x = (0, c.useMemo)(() => f(_), [_]), S = (0, c.useMemo)(() => new Set(d(_, r, o).map((e) => e.id)), [
-		_,
+	})), [_]), S = (0, c.useMemo)(() => f(x), [x]), C = (0, c.useMemo)(() => new Set(d(x, r, s).map((e) => e.id)), [
+		x,
 		r,
-		o
-	]), C = !!(r.trim() || o), w = t.phase === "active" ? p.find((e) => e.id === t.last) : null, T = w || p[0], E = () => {
-		a(""), s("");
+		s
+	]), w = !!(r.trim() || s), T = t.phase === "active" ? _.find((e) => e.id === t.last) : null, E = T || _[0], D = () => {
+		a(""), l("");
 	};
 	return /* @__PURE__ */ (0, m.jsxs)(m.Fragment, { children: [
 		/* @__PURE__ */ (0, m.jsxs)("header", {
@@ -272,24 +272,24 @@ function x({ course: e, view: t, channel: n }) {
 							children: "Masoud Ahangary"
 						})] })]
 					}),
-					T && /* @__PURE__ */ (0, m.jsxs)("section", {
+					E && /* @__PURE__ */ (0, m.jsxs)("section", {
 						className: "course-start",
 						"aria-labelledby": "course-start-title",
 						children: [/* @__PURE__ */ (0, m.jsxs)("div", {
 							className: "course-start-copy",
-							hidden: !w,
+							hidden: !T,
 							children: [/* @__PURE__ */ (0, m.jsx)("h2", {
 								id: "course-start-title",
 								children: "آخرین یادداشت بازشده در این مرورگر"
 							}), /* @__PURE__ */ (0, m.jsx)("p", {
 								"data-course-start-description": "",
-								children: w?.title || T.title
+								children: T?.title || E.title
 							})]
 						}), /* @__PURE__ */ (0, m.jsxs)("a", {
 							className: "button-forest",
 							"data-course-continue": "",
-							href: v(e, T.id),
-							children: [w ? "ادامهٔ مطالعه" : /* @__PURE__ */ (0, m.jsxs)(m.Fragment, { children: ["شروع از یادداشت ", /* @__PURE__ */ (0, m.jsx)("bdi", { children: String(T.ordinal).padStart(2, "0") })] }), /* @__PURE__ */ (0, m.jsx)("span", {
+							href: v(e, E.id),
+							children: [T ? "ادامهٔ مطالعه" : /* @__PURE__ */ (0, m.jsxs)(m.Fragment, { children: ["شروع از یادداشت ", /* @__PURE__ */ (0, m.jsx)("bdi", { children: String(E.ordinal).padStart(2, "0") })] }), /* @__PURE__ */ (0, m.jsx)("span", {
 								"aria-hidden": "true",
 								children: "←"
 							})]
@@ -345,7 +345,7 @@ function x({ course: e, view: t, channel: n }) {
 									children: [
 										/* @__PURE__ */ (0, m.jsx)("label", {
 											className: "course-visually-hidden",
-											htmlFor: l,
+											htmlFor: u,
 											children: "جست‌وجوی عنوان یا موضوع یادداشت"
 										}),
 										/* @__PURE__ */ (0, m.jsxs)("svg", {
@@ -363,7 +363,7 @@ function x({ course: e, view: t, channel: n }) {
 											}), /* @__PURE__ */ (0, m.jsx)("path", { d: "m16 16 5 5" })]
 										}),
 										/* @__PURE__ */ (0, m.jsx)("input", {
-											id: l,
+											id: u,
 											type: "search",
 											value: r,
 											onInput: (e) => a(e.currentTarget.value),
@@ -377,17 +377,17 @@ function x({ course: e, view: t, channel: n }) {
 									className: "course-topic-field",
 									children: [/* @__PURE__ */ (0, m.jsx)("label", {
 										className: "course-visually-hidden",
-										htmlFor: u,
+										htmlFor: p,
 										children: "انتخاب موضوع"
 									}), /* @__PURE__ */ (0, m.jsxs)("select", {
-										id: u,
-										value: o,
-										onChange: (e) => s(e.currentTarget.value),
+										id: p,
+										value: s,
+										onChange: (e) => l(e.currentTarget.value),
 										"aria-controls": "course-lessons-list",
 										children: [/* @__PURE__ */ (0, m.jsx)("option", {
 											value: "",
 											children: "همهٔ موضوع‌ها"
-										}), x.map((e) => /* @__PURE__ */ (0, m.jsx)("option", {
+										}), S.map((e) => /* @__PURE__ */ (0, m.jsx)("option", {
 											value: e,
 											children: e
 										}, e))]
@@ -398,25 +398,25 @@ function x({ course: e, view: t, channel: n }) {
 								role: "status",
 								"aria-live": "polite",
 								"aria-atomic": "true",
-								children: C ? `${g(S.size)} از ${g(_.length)} یادداشت` : `${g(_.length)} یادداشت`
+								children: w ? `${g(C.size)} از ${g(x.length)} یادداشت` : `${g(x.length)} یادداشت`
 							})]
 						}),
-						C && /* @__PURE__ */ (0, m.jsx)("div", {
+						w && /* @__PURE__ */ (0, m.jsx)("div", {
 							className: "course-filter-meta",
 							children: /* @__PURE__ */ (0, m.jsxs)("button", {
 								type: "button",
-								onClick: E,
+								onClick: D,
 								children: ["پاک‌کردن فیلترها ", /* @__PURE__ */ (0, m.jsx)("span", {
 									"aria-hidden": "true",
 									children: "×"
 								})]
 							})
 						}),
-						S.size === 0 && /* @__PURE__ */ (0, m.jsxs)("div", {
+						C.size === 0 && /* @__PURE__ */ (0, m.jsxs)("div", {
 							className: "course-search-empty",
 							children: [/* @__PURE__ */ (0, m.jsx)("p", { children: "یادداشتی با این جست‌وجو پیدا نشد." }), /* @__PURE__ */ (0, m.jsx)("button", {
 								type: "button",
-								onClick: E,
+								onClick: D,
 								children: "نمایش همهٔ یادداشت‌ها ←"
 							})]
 						})
@@ -425,7 +425,7 @@ function x({ course: e, view: t, channel: n }) {
 				/* @__PURE__ */ (0, m.jsx)("ol", {
 					className: "lesson-path",
 					id: "course-lessons-list",
-					children: p.filter((e) => S.has(e.id)).map((n, r) => /* @__PURE__ */ (0, m.jsx)(b, {
+					children: _.filter((e) => C.has(e.id)).map((n, r) => /* @__PURE__ */ (0, m.jsx)(b, {
 						lesson: n,
 						index: r,
 						course: e,
@@ -433,6 +433,25 @@ function x({ course: e, view: t, channel: n }) {
 					}, n.id))
 				})
 			]
+		}),
+		/* @__PURE__ */ (0, m.jsxs)("section", {
+			className: "course-exams",
+			"aria-labelledby": "course-exams-title",
+			children: [/* @__PURE__ */ (0, m.jsxs)("div", { children: [
+				/* @__PURE__ */ (0, m.jsx)("p", {
+					className: "exam-eyebrow",
+					children: "INDEPENDENT ASSESSMENTS"
+				}),
+				/* @__PURE__ */ (0, m.jsx)("h2", {
+					id: "course-exams-title",
+					children: "امتحانات مستقل کلاس"
+				}),
+				/* @__PURE__ */ (0, m.jsx)("p", { children: "امتحانات میان‌ترم و پایان‌ترم در بخشی جدا از تمرین‌های هر یادداشت برگزار می‌شوند و نتیجهٔ مستقلی دارند." })
+			] }), /* @__PURE__ */ (0, m.jsx)(o, {
+				href: v(e, "exams"),
+				secondary: !0,
+				children: "مشاهدهٔ امتحانات ←"
+			})]
 		}),
 		/* @__PURE__ */ (0, m.jsx)(y, {
 			view: t,

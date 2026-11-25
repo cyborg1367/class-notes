@@ -141,7 +141,10 @@ var ClassNotesPortal = (function(exports) {
 			"classroom_state",
 			"classroom_lesson",
 			"classroom_lab_state",
-			"classroom_review_summary"
+			"classroom_review_summary",
+			"classroom_exams",
+			"classroom_exam",
+			"classroom_exam_attempt"
 		]);
 		const pending = /* @__PURE__ */ new Map(), events = [];
 		let generation = 0;
@@ -236,7 +239,10 @@ var ClassNotesPortal = (function(exports) {
 					"classroom_state",
 					"classroom_lesson",
 					"classroom_review_state",
-					"classroom_review_context"
+					"classroom_review_context",
+					"classroom_exams",
+					"classroom_exam",
+					"classroom_exam_attempt"
 				].includes(name) || page === "dashboard" && name === "classroom_lab_state" ? new AbortController() : null;
 				const task = controller && typeof request.abortSignal === "function" ? request.abortSignal(controller.signal) : request;
 				const result = await (controller ? portalDeadline(task, timeout, "CLASSROOM_STATE_TIMEOUT", () => controller.abort()) : task);
@@ -472,6 +478,7 @@ var ClassNotesPortal = (function(exports) {
 		};
 		window.Classroom = app;
 		let instructorUI = null, instructorTicket = 0;
+		let examCatalogUI = null, examUI = null, examTicket = 0;
 		let courseController = null, courseTicket = 0;
 		let homeController = null;
 		let readerUI = null, readerTicket = 0;
@@ -583,6 +590,12 @@ var ClassNotesPortal = (function(exports) {
 		function friendly(err) {
 			const m = String(err?.message || "");
 			if (/CLASS_ACCESS_REQUIRED/.test(m)) return "دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.";
+			if (/EXAM_NOT_AVAILABLE/.test(m)) return "این امتحان در حال حاضر برای شرکت فعال نیست.";
+			if (/EXAM_ATTEMPTS_EXHAUSTED/.test(m)) return "تعداد تلاش‌های مجاز این امتحان به پایان رسیده است.";
+			if (/EXAM_CODE_INVALID/.test(m)) return "کد ورود امتحان صحیح نیست. کد اعلام‌شده توسط مدرس را بررسی کن.";
+			if (/EXAM_PREVIEW_BUSY/.test(m)) return "یک تلاش آزمایشی مدرس در حال انجام است؛ همان تلاش را ادامه بده.";
+			if (/EXAM_EXPIRED/.test(m)) return "مهلت این امتحان به پایان رسیده است.";
+			if (/EXAM_ALREADY_SUBMITTED/.test(m)) return "این تلاش قبلاً ثبت نهایی شده است؛ نتیجه را از سوابق امتحان باز کن.";
 			if (/TEACHER_REQUIRED/.test(m)) return "این صفحه فقط برای مدرسِ این کلاس در دسترس است.";
 			if (/SIGN_IN_REQUIRED/.test(m)) return "برای ادامه به حساب خودت وارد شو.";
 			if (/QUIZ_VERSION_CHANGED/.test(m)) return "نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.";
@@ -674,7 +687,7 @@ var ClassNotesPortal = (function(exports) {
 			bootData = null;
 			try {
 				const { bundle, state } = await bootstrap.load({
-					p_page: page,
+					p_page: ["exams", "exam"].includes(page) ? "course" : page,
 					p_lesson: lid || null,
 					p_mission: page === "lab" ? lesson(lid)?.lab?.mission || null : null,
 					p_missions: page === "dashboard" ? catalog.flatMap((c) => c.lessons.filter((l) => l.lab).map((l) => l.lab.mission)) : []
@@ -712,7 +725,9 @@ var ClassNotesPortal = (function(exports) {
 					"instructor",
 					"course",
 					"review",
-					"notifications"
+					"notifications",
+					"exams",
+					"exam"
 				].includes(page);
 				if (old && page === "course") window.ClassNotesCourseApp?.disposeAll();
 				if (old && privatePage) {
@@ -873,7 +888,9 @@ var ClassNotesPortal = (function(exports) {
 						"instructor",
 						"course",
 						"review",
-						"notifications"
+						"notifications",
+						"exams",
+						"exam"
 					].includes(page)) {
 						try {
 							sessionStorage.setItem("class-notes-signout:" + base.pathname, "1");
@@ -1652,6 +1669,117 @@ var ClassNotesPortal = (function(exports) {
 				}
 			}
 		}
+		async function loadExams() {
+			const root = $("[data-exams-root]"), gen = app.generation, ticket = ++examTicket;
+			examCatalogUI?.dispose();
+			examCatalogUI = null;
+			examUI?.dispose();
+			examUI = null;
+			beforeSignOut = null;
+			if (!root) return;
+			if (!app.user || app.serviceError || !member("machine-learning")) {
+				await renderGate(root, "machine-learning");
+				return;
+			}
+			const alive = () => gen === app.generation && ticket === examTicket && root.isConnected && app.user?.id;
+			try {
+				const [payload, { mountExamCatalog }] = await Promise.all([rpc("classroom_exams", { p_course: "machine-learning" }), portalDeadline(import(assetURL("site-shell.js").href).then((module) => module.loadExamFeatures()), 12e3, "EXAM_UI_TIMEOUT")]);
+				if (!alive()) return;
+				const exams = Array.isArray(payload) ? payload : payload?.exams;
+				if (!Array.isArray(exams)) throw Error("EXAM_CATALOG_INVALID");
+				examCatalogUI = mountExamCatalog(root, {
+					exams,
+					examURL: (id) => {
+						if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) throw Error("INVALID_EXAM_ROUTE");
+						return url("exams/" + id + "/");
+					}
+				});
+			} catch (error) {
+				if (alive()) paintGate(root, {
+					title: "فهرست امتحانات دریافت نشد.",
+					body: friendly(error),
+					actions: [{
+						label: "تلاش دوباره",
+						onClick: () => loadExams()
+					}]
+				});
+			}
+		}
+		async function loadExam() {
+			const root = $("[data-exam-root]"), examId = document.body.dataset.examId, gen = app.generation, ticket = ++examTicket;
+			examUI?.dispose();
+			examUI = null;
+			examCatalogUI?.dispose();
+			examCatalogUI = null;
+			beforeSignOut = null;
+			if (!root || !examId) return;
+			if (!app.user || app.serviceError || !member("machine-learning")) {
+				await renderGate(root, "machine-learning");
+				return;
+			}
+			const owner = app.user.id, alive = () => gen === app.generation && ticket === examTicket && root.isConnected && app.user?.id === owner;
+			try {
+				const prior = new URL(location.href).searchParams.get("attempt");
+				const [payload, { mountExamRunner }] = await Promise.all([prior ? rpc("classroom_exam_attempt", { p_id: prior }) : rpc("classroom_exam", { p_exam: examId }), portalDeadline(import(assetURL("site-shell.js").href).then((module) => module.loadExamFeatures()), 12e3, "EXAM_UI_TIMEOUT")]);
+				if (!alive()) return;
+				const exam = payload?.exam || payload;
+				if (!exam || exam.id !== examId) throw Error("EXAM_NOT_AVAILABLE");
+				const receipt = prior ? payload?.receipt || payload?.result || payload : payload?.receipt || null;
+				examUI = mountExamRunner(root, {
+					exam,
+					activeAttempt: prior ? null : payload?.active_attempt || payload?.attempt || null,
+					receipt,
+					examListURL: url("exams/"),
+					storage: {
+						read: storageGet,
+						write: storageSet
+					},
+					isCurrent: alive,
+					errorText: friendly,
+					isTeacher: !!app.state?.memberships?.some((m) => m.course_id === exam.course_id && m.role === "teacher" && m.status === "active"),
+					onStart: async (code) => {
+						const result = await rpc("classroom_exam_start", {
+							p_exam: examId,
+							p_code: code
+						});
+						return result?.attempt || result;
+					},
+					onSave: (attemptId, answers) => rpc("classroom_exam_save", {
+						p_id: attemptId,
+						p_answers: answers
+					}),
+					onSubmit: async (attemptId, answers) => {
+						const result = await rpc("classroom_exam_submit", {
+							p_id: attemptId,
+							p_answers: answers
+						});
+						return result?.receipt || result;
+					},
+					onFeedback: async (attemptId, rating, comment) => {
+						return await rpc("classroom_exam_feedback", {
+							p_id: attemptId,
+							p_rating: rating,
+							p_comment: comment
+						});
+					},
+					onCommitted: () => document.dispatchEvent(new CustomEvent("classroom-exam-progress-changed"))
+				});
+				beforeSignOut = examUI.prepareSignOut;
+			} catch (error) {
+				if (alive()) {
+					examUI?.dispose();
+					examUI = null;
+					paintGate(root, {
+						title: "امتحان دریافت نشد.",
+						body: friendly(error),
+						actions: [{
+							label: "تلاش دوباره",
+							onClick: () => loadExam()
+						}]
+					});
+				}
+			}
+		}
 		async function teacher() {
 			const root = $("[data-teacher]"), notice = $("[data-page-status]"), gen = app.generation, ticket = ++instructorTicket;
 			instructorUI?.dispose();
@@ -1747,7 +1875,9 @@ var ClassNotesPortal = (function(exports) {
 				instructor: teacher,
 				lesson: loadLesson,
 				lab: loadCodingLab,
-				quiz: loadQuiz
+				quiz: loadQuiz,
+				exams: loadExams,
+				exam: loadExam
 			},
 			before: async () => {
 				if (page === "notifications") await notificationsPage();
@@ -1773,6 +1903,13 @@ var ClassNotesPortal = (function(exports) {
 					quizUI = null;
 					quizResultUI?.dispose();
 					quizResultUI = null;
+				},
+				() => {
+					examTicket++;
+					examUI?.dispose();
+					examUI = null;
+					examCatalogUI?.dispose();
+					examCatalogUI = null;
 				},
 				dashboardRoute.reset,
 				() => {

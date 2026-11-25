@@ -17,6 +17,7 @@ export function startPortal() {
  const catalog=JSON.parse($('#catalog-data').textContent),fa=n=>Number(n).toLocaleString('fa-IR'),url=p=>new URL(p,base).href;
  const app={client:null,user:null,state:null,generation:0,serviceError:null};window.Classroom=app;
  let instructorUI=null,instructorTicket=0;
+ let examCatalogUI=null,examUI=null,examTicket=0;
  let courseController=null,courseTicket=0;
  let homeController=null;
  let readerUI=null,readerTicket=0;
@@ -50,7 +51,7 @@ export function startPortal() {
  async function renderGate(root,courseId){await paintGate(root,accessGate(courseId));}
  let initializing=true;
  function status(el,text,error=false){if(el?.matches('[data-auth-status]')&&$('[data-account-react-root]')){accountNotice={text,error};accountUI?.setNotice(text,error);return;}if(el){el.textContent=text;el.dataset.error=String(error);}}
- function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
+ function friendly(err){const m=String(err?.message||'');if(/CLASS_ACCESS_REQUIRED/.test(m))return 'دسترسی این کلاس هنوز فعال نیست؛ وضعیت عضویتت را در داشبورد بررسی کن.';if(/EXAM_NOT_AVAILABLE/.test(m))return 'این امتحان در حال حاضر برای شرکت فعال نیست.';if(/EXAM_ATTEMPTS_EXHAUSTED/.test(m))return 'تعداد تلاش‌های مجاز این امتحان به پایان رسیده است.';if(/EXAM_CODE_INVALID/.test(m))return 'کد ورود امتحان صحیح نیست. کد اعلام‌شده توسط مدرس را بررسی کن.';if(/EXAM_PREVIEW_BUSY/.test(m))return 'یک تلاش آزمایشی مدرس در حال انجام است؛ همان تلاش را ادامه بده.';if(/EXAM_EXPIRED/.test(m))return 'مهلت این امتحان به پایان رسیده است.';if(/EXAM_ALREADY_SUBMITTED/.test(m))return 'این تلاش قبلاً ثبت نهایی شده است؛ نتیجه را از سوابق امتحان باز کن.';if(/TEACHER_REQUIRED/.test(m))return 'این صفحه فقط برای مدرسِ این کلاس در دسترس است.';if(/SIGN_IN_REQUIRED/.test(m))return 'برای ادامه به حساب خودت وارد شو.';if(/QUIZ_VERSION_CHANGED/.test(m))return 'نسخهٔ آزمون تغییر کرده است. پاسخ‌هایت را نگه دار و صفحه را دوباره باز کن.';if(/SUBMISSION_CONFLICT/.test(m))return 'این ارسال قبلاً ثبت شده است؛ نتیجه را از داشبورد باز کن.';if(/INVALID_|UNKNOWN_|TOO_LONG/.test(m))return 'بعضی پاسخ‌ها قالب معتبر ندارند؛ گزینه‌ها و جای خالی‌ها را بررسی کن.';return 'دریافت یا ثبت اطلاعات کامل نشد. اتصال را بررسی کن و دوباره تلاش کن؛ اگر ادامه داشت با مدرس در میان بگذار.';}
  const reads=createClassroomTransport({client:()=>app.client,page,clock:()=>window.performance?.now?.()??Date.now()});
  window.ClassroomPerformance=Object.freeze({snapshot:()=>reads.snapshot(),report:()=>reads.report()});
  const publicConfig=createPublicConfiguration(fetch);
@@ -79,7 +80,7 @@ export function startPortal() {
   $$('[data-teacher-link]').forEach(a=>{a.hidden=!app.state?.memberships?.some(m=>m.role==='teacher'&&m.status==='active');});
  }
  async function refreshState(){const gen=app.generation,ticket=++stateTicket;bootData=null;try{
-   const {bundle,state}=await bootstrap.load({p_page:page,p_lesson:lid||null,
+   const {bundle,state}=await bootstrap.load({p_page:['exams','exam'].includes(page)?'course':page,p_lesson:lid||null,
     p_mission:page==='lab'?lesson(lid)?.lab?.mission||null:null,
     p_missions:page==='dashboard'?catalog.flatMap(c=>c.lessons.filter(l=>l.lab).map(l=>l.lab.mission)):[]});
    if(gen===app.generation&&ticket===stateTicket){bootData=bundle;app.state=state;app.serviceError=null;authUI();}
@@ -88,7 +89,7 @@ export function startPortal() {
  function onUser(user,manualExit=false){const old=app.user?.id||null,next=user?.id||null;app.user=user;if(old!==next){app.generation++;pageLifecycle.reset();app.state=null;beforeSignOut=null;}
   authUI();
   if(!initializing&&old!==next){
-   const privatePage=['lesson','lab','quiz','dashboard','instructor','course','review','notifications'].includes(page);
+   const privatePage=['lesson','lab','quiz','dashboard','instructor','course','review','notifications','exams','exam'].includes(page);
    if(old&&page==='course')window.ClassNotesCourseApp?.disposeAll();
    if(old&&privatePage){const main=$('#main');disposeGates(main);if(main){const text=document.createElement('p');text.className='status-line';text.setAttribute('role','status');text.textContent='در حال تغییر حساب…';main.replaceChildren(text);}}
    if(manualExit)return;
@@ -146,7 +147,7 @@ export function startPortal() {
     function commitExit(){
      if(committed||!isCurrent())return;
      committed=true;onUser(null,true);notify('از حساب خارج شدی.');
-     if(['lesson','lab','quiz','dashboard','instructor','course','review','notifications'].includes(page)){
+     if(['lesson','lab','quiz','dashboard','instructor','course','review','notifications','exams','exam'].includes(page)){
       try{sessionStorage.setItem('class-notes-signout:'+base.pathname,'1');}catch{}
       location.replace(url('index.html'));
      }
@@ -515,6 +516,53 @@ export function startPortal() {
   }}
  }
 
+ async function loadExams(){
+  const root=$('[data-exams-root]'),gen=app.generation,ticket=++examTicket;
+  examCatalogUI?.dispose();examCatalogUI=null;examUI?.dispose();examUI=null;beforeSignOut=null;
+  if(!root)return;
+  if(!app.user||app.serviceError||!member('machine-learning')){await renderGate(root,'machine-learning');return;}
+  const alive=()=>gen===app.generation&&ticket===examTicket&&root.isConnected&&app.user?.id;
+  try{
+   const [payload,{mountExamCatalog}]=await Promise.all([
+    rpc('classroom_exams',{p_course:'machine-learning'}),
+    portalDeadline(import(assetURL('site-shell.js').href).then(module=>module.loadExamFeatures()),12000,'EXAM_UI_TIMEOUT'),
+   ]);
+   if(!alive())return;
+   const exams=Array.isArray(payload)?payload:payload?.exams;
+   if(!Array.isArray(exams))throw Error('EXAM_CATALOG_INVALID');
+   examCatalogUI=mountExamCatalog(root,{exams,examURL:id=>{if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id))throw Error('INVALID_EXAM_ROUTE');return url('exams/'+id+'/');}});
+  }catch(error){if(alive())void paintGate(root,{title:'فهرست امتحانات دریافت نشد.',body:friendly(error),actions:[{label:'تلاش دوباره',onClick:()=>loadExams()}]});}
+ }
+ async function loadExam(){
+  const root=$('[data-exam-root]'),examId=document.body.dataset.examId,gen=app.generation,ticket=++examTicket;
+  examUI?.dispose();examUI=null;examCatalogUI?.dispose();examCatalogUI=null;beforeSignOut=null;
+  if(!root||!examId)return;
+  if(!app.user||app.serviceError||!member('machine-learning')){await renderGate(root,'machine-learning');return;}
+  const owner=app.user.id,alive=()=>gen===app.generation&&ticket===examTicket&&root.isConnected&&app.user?.id===owner;
+  try{
+   const prior=new URL(location.href).searchParams.get('attempt');
+   const [payload,{mountExamRunner}]=await Promise.all([
+    prior?rpc('classroom_exam_attempt',{p_id:prior}):rpc('classroom_exam',{p_exam:examId}),
+    portalDeadline(import(assetURL('site-shell.js').href).then(module=>module.loadExamFeatures()),12000,'EXAM_UI_TIMEOUT'),
+   ]);
+   if(!alive())return;
+   const exam=payload?.exam||payload;
+   if(!exam||exam.id!==examId)throw Error('EXAM_NOT_AVAILABLE');
+   const receipt=prior?(payload?.receipt||payload?.result||payload):(payload?.receipt||null);
+   const activeAttempt=prior?null:(payload?.active_attempt||payload?.attempt||null);
+   const examListURL=url('exams/');
+   examUI=mountExamRunner(root,{exam,activeAttempt,receipt,examListURL,storage:{read:storageGet,write:storageSet},isCurrent:alive,errorText:friendly,
+    isTeacher:!!app.state?.memberships?.some(m=>m.course_id===exam.course_id&&m.role==='teacher'&&m.status==='active'),
+    onStart:async(code)=>{const result=await rpc('classroom_exam_start',{p_exam:examId,p_code:code});return result?.attempt||result;},
+    onSave:(attemptId,answers)=>rpc('classroom_exam_save',{p_id:attemptId,p_answers:answers}),
+    onSubmit:async(attemptId,answers)=>{const result=await rpc('classroom_exam_submit',{p_id:attemptId,p_answers:answers});return result?.receipt||result;},
+    onFeedback:async(attemptId,rating,comment)=>{const result=await rpc('classroom_exam_feedback',{p_id:attemptId,p_rating:rating,p_comment:comment});return result;},
+    onCommitted:()=>document.dispatchEvent(new CustomEvent('classroom-exam-progress-changed')),
+   });
+   beforeSignOut=examUI.prepareSignOut;
+  }catch(error){if(alive()){examUI?.dispose();examUI=null;void paintGate(root,{title:'امتحان دریافت نشد.',body:friendly(error),actions:[{label:'تلاش دوباره',onClick:()=>loadExam()}]});}}
+ }
+
  async function teacher(){
   const root=$('[data-teacher]'),notice=$('[data-page-status]'),gen=app.generation,ticket=++instructorTicket;
   instructorUI?.dispose();instructorUI=null;status(notice,'');
@@ -540,13 +588,14 @@ export function startPortal() {
    actions:[{label:'بازخوانی داشبورد',onClick:()=>{if(isCurrent())location.reload();}}]},isCurrent),
  });
  const pageLifecycle=createPageLifecycle({
-  routes:{dashboard:dashboardRoute.mount,review:reviewNotebook,course,instructor:teacher,lesson:loadLesson,lab:loadCodingLab,quiz:loadQuiz},
+  routes:{dashboard:dashboardRoute.mount,review:reviewNotebook,course,instructor:teacher,lesson:loadLesson,lab:loadCodingLab,quiz:loadQuiz,exams:loadExams,exam:loadExam},
   before:async()=>{if(page==='notifications')await notificationsPage();void mountNotices();},
   after:()=>{void mountClassroomPresence();},
   cleanups:[
    ()=>{courseTicket++;courseController?.dispose();courseController=null;},
    ()=>{readerTicket++;readerUI?.dispose();readerUI=null;},
    ()=>{quizTicket++;quizUI?.dispose();quizUI=null;quizResultUI?.dispose();quizResultUI=null;},
+   ()=>{examTicket++;examUI?.dispose();examUI=null;examCatalogUI?.dispose();examCatalogUI=null;},
    dashboardRoute.reset,
    ()=>{instructorTicket++;instructorUI?.dispose();instructorUI=null;},
    ()=>{reads.reset();stateTicket++;bootData=null;},

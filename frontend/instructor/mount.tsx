@@ -4,6 +4,7 @@ import { PaperIcon } from '../components/PaperIcon';
 import { date, fa, message } from '../../web/assets/instructor-model.mjs';
 import { Overview } from './Overview';
 import { Reports } from './Reports';
+import { InstructorExamResults } from './InstructorExamResults';
 import { Details } from './Details';
 import { Empty, viewLabels } from './Presentation';
 import { createInstructorController, type Controller } from './controller';
@@ -12,7 +13,8 @@ import type { InstructorOptions, View } from './contracts';
 const views = [
   { id: 'overview', icon: 'dashboard', name: 'نمای کلی', title: 'نمای کلی کلاس', description: 'درخواست‌های منتظر، پیشرفت کلاس و موضوعات نیازمند مرور را ببینید.' },
   { id: 'students', icon: 'user', name: 'دانشجویان', title: 'دانشجویان', description: 'دسترسی، آخرین نتیجه و پیشرفت لابراتور هر دانشجو را بررسی کنید.' },
-  { id: 'attempts', icon: 'quiz', name: 'آزمون‌ها', title: 'آزمون‌ها', description: 'پاسخ‌های ثبت‌شده و سؤال‌های نیازمند توضیح دوباره را ببینید.' },
+  { id: 'attempts', icon: 'quiz', name: 'تمرین‌های یادداشت‌ها', title: 'تمرین‌های یادداشت‌ها', description: 'پاسخ‌های ثبت‌شده و سؤال‌های نیازمند توضیح دوباره را ببینید.' },
+  { id: 'exam-results', icon: 'quiz', name: 'میان‌ترم و امتحانات', title: 'نتایج امتحانات مستقل', description: 'نمرهٔ دانشجویان، پاسخ‌های هر سؤال و بازخوردهای ثبت‌شده را بررسی کنید.' },
   { id: 'labs', icon: 'lab', name: 'لابراتورها', title: 'لابراتورها', description: 'پیشرفت مأموریت‌ها را با XP ثبت‌شده دنبال کنید.' },
   { id: 'requests', icon: 'bell', name: 'درخواست‌ها', title: 'درخواست‌های عضویت', description: 'مشخصات حساب‌های تازه را بررسی کنید و دربارهٔ دسترسی تصمیم بگیرید.' },
 ] as const;
@@ -28,7 +30,8 @@ function Instructor({ controller, options }: { controller: Controller; options: 
   }, [state.view]);
   const canExport = ['students','attempts','labs'].includes(state.view) &&
     !(state.view === 'attempts' && state.filters.attempts.section === 'concepts');
-  const refreshing = state.view === 'overview' ? state.overviewLoading : state.pages[state.view]?.loading || state.conceptLoading;
+  const refreshing = state.view === 'overview' ? state.overviewLoading :
+    state.view === 'exam-results' ? false : Boolean(state.pages[state.view]?.loading || state.conceptLoading);
 
   return <div data-react-instructor="" className="instructor-react">
     <div className="instructor-app">
@@ -61,9 +64,9 @@ function Instructor({ controller, options }: { controller: Controller; options: 
               {canExport && <button className="btn" type="button" disabled={state.exporting || Boolean(refreshing)} onClick={() => void controller.exportCSV()}>
                 <PaperIcon name="download" />{state.exporting ? 'در حال آماده‌سازی…' : 'دریافت CSV'}
               </button>}
-              <button className="btn" type="button" disabled={state.mutating || Boolean(refreshing)} onClick={() => void controller.refresh()}>
+              {state.view !== 'exam-results' && <button className="btn" type="button" disabled={state.mutating || Boolean(refreshing)} onClick={() => void controller.refresh()}>
                 {refreshing ? 'در حال دریافت…' : 'به‌روزرسانی'}
-              </button>
+              </button>}
             </div>}
           </div>
           {state.exporting && <p className="small muted" role="status">{state.exportProgress}</p>}
@@ -71,6 +74,7 @@ function Instructor({ controller, options }: { controller: Controller; options: 
         {state.accessError ? <section className="card"><Empty title="دسترسی مدرس تأیید نشد"
           action={<a className="btn" href={options.url('dashboard/')}>داشبورد ←</a>}>{message(state.accessError)}</Empty></section>
           : state.view === 'overview' ? <Overview state={state} labels={labels} actions={controller} />
+          : state.view === 'exam-results' ? <InstructorExamResults key={state.course} course={state.course} rpc={options.rpc} />
           : <Reports state={state} labels={labels} actions={controller} />}
       </section>
     </div>

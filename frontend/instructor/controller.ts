@@ -76,12 +76,13 @@ export function createInstructorController(options: InstructorOptions, download:
   function loadCurrent() {
     clearTimeout(searchTimer);
     if (state.view === 'overview') return loadOverview();
+    if (state.view === 'exam-results') return Promise.resolve();
     if (state.view === 'attempts' && state.filters.attempts.section === 'concepts') return loadConcepts();
     return loadList(state.view);
   }
   function cancelExport() { gate.cancel('export'); publish({ exporting: false, exportProgress: '' }); }
   function navigate(view: View) {
-    if (!views.some(([id]) => id === view) || state.mutating || state.accessError || view === state.view) return;
+    if (!(view === 'exam-results' || views.some(([id]) => id === view)) || state.mutating || state.accessError || view === state.view) return;
     clearTimeout(searchTimer);cancelExport();publish({ view });void loadCurrent();
   }
   function changeCourse(course: string) {
@@ -93,14 +94,14 @@ export function createInstructorController(options: InstructorOptions, download:
     void loadOverview();if (state.view !== 'overview') void loadCurrent();
   }
   function query(value: string, defer = true) {
-    if (state.view === 'overview' || state.view === 'requests' || state.accessError) return;
+    if (state.view === 'overview' || state.view === 'exam-results' || state.view === 'requests' || state.accessError) return;
     const view = state.view;
     gate.cancel('list-' + view);cancelExport();clearTimeout(searchTimer);
     setFilter(view, { query: value.slice(0, 120) }, true);
     if (defer) searchTimer = setTimeout(() => { if (gate.current() && state.view === view) void loadList(view); }, 250);
   }
   function changeFilter(field: 'status'|'lesson'|'kind', value: string) {
-    const view = state.view;if (view === 'overview') return;
+    const view = state.view;if (view === 'overview' || view === 'exam-results') return;
     cancelExport();setFilter(view, { [field]: field === 'lesson' ? value || null : value }, true);void loadCurrent();
   }
   function setSection(section: 'attempts'|'concepts') {
@@ -109,7 +110,7 @@ export function createInstructorController(options: InstructorOptions, download:
   }
   function mission(value: string) { cancelExport();setFilter('labs', { mission: value }); }
   function page(direction: -1|1) {
-    const view = state.view;if (view === 'overview') return;
+    const view = state.view;if (view === 'overview' || view === 'exam-results') return;
     const filter = state.filters[view], cursor = state.pages[view]?.data?.next_cursor;
     if (state.pages[view]?.loading || (direction > 0 && !cursor) || (direction < 0 && !filter.index)) return;
     const cursors = filter.cursors.slice(), index = filter.index + direction;
@@ -119,6 +120,7 @@ export function createInstructorController(options: InstructorOptions, download:
   function refresh() {
     cancelExport();
     if (state.view === 'overview') return loadOverview();
+    if (state.view === 'exam-results') return Promise.resolve();
     if (state.accessError) return;
     setFilter(state.view, {}, true);
     return Promise.allSettled([loadOverview(), loadCurrent()]);
@@ -213,7 +215,7 @@ export function createInstructorController(options: InstructorOptions, download:
   }
   async function exportCSV() {
     const view = state.view;
-    if (state.exporting || state.accessError || view === 'overview' || view === 'requests' ||
+    if (state.exporting || state.accessError || view === 'overview' || view === 'exam-results' || view === 'requests' ||
         (view === 'attempts' && state.filters.attempts.section === 'concepts')) return;
     const current = gate.ticket('export'), filter = { ...state.filters[view], index: 0, cursors: [null] };
     publish({ exporting: true, exportProgress: 'در حال دریافت همهٔ ردیف‌های فیلترشده…' });
@@ -231,7 +233,7 @@ export function createInstructorController(options: InstructorOptions, download:
     subscribe(fn: () => void) { listeners.add(fn);return () => listeners.delete(fn); },
     loadOverview, navigate, changeCourse, query, changeFilter, setSection, mission, page, refresh, closeSheet, student, attempt,
     question, askMembership, commitMembership, cancelConfirmation, exportCSV, historyPage, loadHistory, loadConcepts,
-    clearQuery() { query('', false);if (state.view !== 'overview') void loadList(state.view); },
+    clearQuery() { query('', false);if (state.view !== 'overview' && state.view !== 'exam-results') void loadList(state.view); },
     dispose() { gate.dispose();clearTimeout(searchTimer);clearTimeout(toastTimer);listeners.clear(); },
   };
 }
